@@ -109,3 +109,4 @@ opsit-dockers/data
 opsit-dockers/data/
 opsit-frontend/node_modules
 opsit-frontend/dist
+opsit-load-testing/opsit-load-testing.iml
