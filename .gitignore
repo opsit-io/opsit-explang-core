@@ -17,7 +17,8 @@ hs_err_pid*
 .idea/
 *.iml
 *.iws
-
+package-lock.json
+.node_modules/
 # Mac
 .DS_Store
 
