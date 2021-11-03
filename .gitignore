@@ -12,7 +12,7 @@ hs_err_pid*
 .classpath
 .project
 .settings/
-
+node_modules
 # Intellij
 .idea/
 *.iml
@@ -112,3 +112,4 @@ opsit-dockers/data/
 opsit-frontend/node_modules
 opsit-frontend/dist
 opsit-load-testing/opsit-load-testing.iml
+/node_modules/
