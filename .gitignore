@@ -19,6 +19,7 @@ hs_err_pid*
 *.iws
 package-lock.json
 .node_modules/
+node_modules/
 # Mac
 .DS_Store
 
