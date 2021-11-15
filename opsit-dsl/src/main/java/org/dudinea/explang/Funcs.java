@@ -2437,7 +2437,8 @@ public class Funcs {
 		if (ctx.contains(varname)) {
 		    return null;
 		}
-                throw new RuntimeException("variable '"+varname+"' does not exist in this context");
+		ctx.onMissingVar(varname);
+                //throw new RuntimeException("variable '"+varname+"' does not exist in this context");
             }
 	    //if (obj instanceof LazyEval) {
 	    //	return ((LazyEval)obj).getValue(backtrace);

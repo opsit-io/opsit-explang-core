@@ -22,7 +22,11 @@ public class Compiler {
     protected static Threads threads = new Threads();
     protected IParser parser = new SexpParser();
     //protected IParser parser = new LispReader();
-    
+    protected boolean failOnMissingVariables = true;
+
+    public void setFailOnMissingVariables(boolean val) {
+        this.failOnMissingVariables = val;
+    }
     
     public IParser getParser() {
         return parser;
@@ -1081,7 +1085,8 @@ public class Compiler {
     public interface ICtx {
 	public ICtx getPrev();
 	public ICtx getLevel0();
-	
+
+        public void onMissingVar(String varname);
 	//public Object get(String name);
 	public Object get(String name, Backtrace bt);
 	public boolean contains(String name);
@@ -1107,9 +1112,37 @@ public class Compiler {
 	public void remove(String name);
     }
 
+    public interface IMissHandler {
+        Object handleMiss(ICtx ctx, String key);
+    }
+
+    public static class NilMissHandler implements IMissHandler {
+        public Object handleMiss(ICtx ctx, String key) {
+            return null;
+        }
+    }
+    public static class ErrorMissHandler implements IMissHandler {
+        public Object handleMiss(ICtx ctx, String key) {
+            throw new RuntimeException("variable '"+key+"' does not exist in this context");
+        }
+    }
+
     public class Ctx implements ICtx {
 	final Map<String, Object> mappings = new HashMap<String, Object>();
 	ICtx prev;
+        IMissHandler missHandler = new ErrorMissHandler();
+
+        @Override
+        public void onMissingVar(String varname) {
+            missHandler.handleMiss(this, varname);
+        }
+
+        public void setMissHandler(IMissHandler handler) {
+            this.missHandler = handler;
+        }
+        public IMissHandler getMissHandler() {
+            return this.missHandler;
+        }
 
 	public Ctx(Map<String, Object> vars) {
 	    super();
@@ -1294,7 +1327,10 @@ public class Compiler {
     }
     
     public ICtx newCtx() {
-        return new Ctx();
+        final Ctx ctx = new Ctx();
+        ctx.setMissHandler(this.failOnMissingVariables ?
+                           new ErrorMissHandler() : new NilMissHandler());
+        return ctx;
     }
 
     public ICtx newCtx(ICtx ctx) {
