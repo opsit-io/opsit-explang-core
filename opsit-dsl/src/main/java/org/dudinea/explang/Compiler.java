@@ -1194,14 +1194,22 @@ public class Compiler {
 	    return ctx;
 	}
 
+        protected ICtx findCtxOrLocal(String name) {
+            ICtx ctx = findCtxFor(name);
+            return null == ctx ? this : ctx;
+	}
+        
+        protected ICtx findCtxOrGlobal(String name) {
+            ICtx ctx = findCtxFor(name);
+            return null == ctx ? this.getLevel0() : ctx;
+	}
+        
 	protected Map getMappingsOrLocal(String name) {
-	    final ICtx ctx = findCtxFor(name);
-	    return null==ctx ? this.mappings : ctx.getMappings();
+            return findCtxOrLocal(name).getMappings();
         }
 
 	protected Map getMappingsOrGlobal(String name) {
-	    final ICtx ctx = findCtxFor(name);
-	    return null==ctx ? this.getLevel0().getMappings() : ctx.getMappings();
+            return findCtxOrGlobal(name).getMappings();
         }
 
 	
