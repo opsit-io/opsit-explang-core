@@ -1007,6 +1007,7 @@ public class Compiler {
         }
     }
 
+
     @Arguments(text="{var form}*")
     @Docstring(text="Assigns values to variables. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"+
 	       "var - a symbol naming a variable.\n"+
@@ -1019,7 +1020,6 @@ public class Compiler {
         }
     }
 
-    
     public  class LET extends AbstractForm  {
         protected List<ICompiled> blocks = null;
         protected List<ICompiled> varExprs = new ArrayList<ICompiled>();
@@ -1089,11 +1089,17 @@ public class Compiler {
         public void onMissingVar(String varname);
 	//public Object get(String name);
 	public Object get(String name, Backtrace bt);
+	public Map <Object,Object> getProps(String name, Backtrace bt);
+	public Object getProp(String name, Object prop, Backtrace bt);
+
 	public boolean contains(String name);
 	// put value in the outer context
 	public void put(String name, Object expr);
 	// replace value if found at some depth, otherwise
 	// perform put()
+	public void  putProp(String name, Object pkey, Object pval);
+	public void  putProps(String name, Object ... pobjs);
+	public void  putProps(String name, Map<Object,Object> props);
 	public void replace(String name, Object expr);
 	// replace value if found at some depth, otherwise
 	// place it in global scope
@@ -1105,6 +1111,7 @@ public class Compiler {
 	public String toStringShort();
 	
 	public Map<String, Object> getMappings();
+	public Map<String, Map<Object, Object>> getPropsMap();
 
 	public Map<String, Object> findMatches(String pattern);
 	public void addMatches(Map<String, Object> matches,
@@ -1129,8 +1136,61 @@ public class Compiler {
 
     public class Ctx implements ICtx {
 	final Map<String, Object> mappings = new HashMap<String, Object>();
+	final Map<String, Map<Object,Object>> propsMap =
+	    new HashMap<String, Map<Object,Object>>();
 	ICtx prev;
         IMissHandler missHandler = new ErrorMissHandler();
+
+		public Map<String, Map<Object, Object>> getPropsMap() {
+			return propsMap;
+		}
+
+	@Override
+	public Map<Object, Object> getProps(String name, Backtrace bt) {
+	    ICtx ctx = this.findCtxFor(name);
+	    return  (null == ctx) ?  null:
+		ctx.getPropsMap().get(name);
+	}
+
+	@Override
+	public Object getProp(String name, Object prop, Backtrace bt) {
+	    ICtx ctx = this.findCtxFor(name);
+	    if (null != ctx) {
+		final Map<Object, Object> pmap = ctx.getPropsMap().get(name);
+		if (null != pmap) {
+		    return pmap.get(prop);
+		}
+	    }
+	    return null;
+	}
+
+	public void putProp(String name, Object pkey, Object pval) {
+	    getPropsMapForPut(name).put(pkey, pval);
+	}
+
+	public void putProps(String name, Object... pobjs) {
+	    Map<Object, Object> pmap = getPropsMapForPut(name);
+	    for (int i = 0; i < pobjs.length; i+=2) {
+		pmap.put(pobjs[i], pobjs[i+1]);
+	    }
+	}
+
+	public void putProps(String name, Map<Object, Object> newProps) {
+	    getPropsMapForPut(name).putAll(newProps);
+	}
+
+	protected Map<Object, Object> getPropsMapForPut(String name) {
+	    ICtx ctx = this.findCtxFor(name);
+	    if (null == ctx) {
+		throw new RuntimeException("Failed to put properties: there is no variable mapping for "+name);
+	    }
+	    Map<Object, Object> props = ctx.getPropsMap().get(name);
+	    if (null == props) {
+		props = new HashMap<Object, Object>();
+		ctx.getPropsMap().put(name, props);
+	    }
+	    return props;
+	}
 
         @Override
         public void onMissingVar(String varname) {
