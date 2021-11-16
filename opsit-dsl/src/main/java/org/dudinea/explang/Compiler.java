@@ -175,6 +175,14 @@ public class Compiler {
         addBuiltIn("LET", LET.class);
 	addBuiltIn("DLET", DLET.class);
 	addBuiltIn("MAKUNBOUND", MAKUNBOUND.class);
+
+	// TODO: 
+	//addBuiltIn("WITH-CTX", WITH_CTX.class);
+	//addBuiltIn("GETPROPS", GETPROPS.class);
+	//addBuiltIn("SETPROPS", SETPROPS.class);
+	//addBuiltIn("GETPROP",  GETPROP.class);	
+	//addBuiltIn("SETPROP",  SETPROP.class);
+	
 	// execution control
         addBuiltIn("IF", IF.class);
 	addBuiltIn("COND", COND.class); 
@@ -1298,10 +1306,16 @@ public class Compiler {
 	
         public String  toString() {
             StringBuffer buf = new StringBuffer();
-            buf.append("Ctx<").append(this.hashCode())
-                .append("[").append(mappings).append("]");
+            buf.append("Ctx<").append(this.hashCode()).append("[");
+	    for (String var : mappings.keySet()) {
+		buf.append("\n").append(var).append(" -> ").append(mappings.get(var));
+		if (propsMap.containsKey(var)) {
+			buf.append(" (").append(propsMap.get(var));
+		}
+	    }
+	    buf.append(mappings).append("] \n");
             if (null!=prev) {
-                buf.append("->").append(prev.toString());
+                buf.append("\n -->").append(prev.toString());
             }
             return buf.toString();
         }
