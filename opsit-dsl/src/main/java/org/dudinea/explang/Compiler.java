@@ -262,6 +262,7 @@ public class Compiler {
 	addBuiltIn("AREF", AREF.class);
 	// help system
 	addBuiltIn("DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class);
+	addBuiltIn("DOCUMENTATION", Funcs.DOCUMENTATION.class);
     }
     
     public  ICompiled compile(ASTN ast) {

@@ -2369,21 +2369,29 @@ public class Funcs {
         }
     }
 
+    protected static Object findFuncObject(Object fobj, Eargs eargs) {
+	if ((fobj instanceof Symbol) || (fobj instanceof CharSequence)) {
+	    String fName = Utils.asString(fobj);
+	    if (null != fName) {
+		return eargs.getCompiler().functab.get(fName);
+	    }
+	} else {
+	    return fobj;
+	}
+	return null;
+    }
     
-    @Arguments(spec={"function-name"})
+    
+    @Arguments(spec={"function"})
     @Docstring(text="Return textual description of given function or "+
-	       "built-in form. function name is a symbol or function name")
+	       "built-in form. function is a symbol or function name or a lambda")
     public static class DESCRIBE_FUNCTION extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object fobj = Utils.asObject(eargs.get(0, backtrace));
-	    String fName = Utils.asString(fobj);
 	    StringBuilder buf = new StringBuilder(127);
-	    buf.append("Object " + fName);
-	    Object funcObj = null;
-	    if (null != fName) {
-		funcObj = eargs.getCompiler().functab.get(fName);
-	    }
+	    Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
+	    buf.append("Object " + Utils.asString(fobj));
 	    if (null != funcObj) {
 		if (funcObj instanceof ICode) {
 		    buf.append(" is a ");
@@ -2407,18 +2415,28 @@ public class Funcs {
 	    return buf.toString();
 	}
 
-	// protected String getDocstring(ICompiled instance) {
-	//     Docstring ann = instance.getClass().getAnnotation(Docstring.class);
-	//     return null == ann ? "Not available." : ann.text();
-	// }
-
-	// protected String getArgList(ICompiled instance) {
-	//     Arguments ann = instance.getClass().getAnnotation(Arguments.class);
-	//     return null == ann ? "args" : Utils.asString(ann.spec());
-	// }
     }
     
-    
+    @Arguments(spec = { "function-name" })
+    @Docstring(text = "Return documentation string of given function or "
+	       + "built-in form. function is a symbol or function name or a lambda")
+    public static class DOCUMENTATION extends FuncExp {
+	@Override
+	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+	    Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
+	    if (null != funcObj) {
+		if (funcObj instanceof ICode) {
+		    ICode codeObj = (ICode) funcObj;
+		    return codeObj.getDocstring();
+		} else {
+		    return "unknown object of type " + funcObj.getClass();
+		}
+	    } else {
+		return null;
+	    }
+	}
+    }
+
     public static class VarExp extends AbstractExpr  {
         private final String varname;
 
