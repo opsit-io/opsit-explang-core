@@ -573,7 +573,7 @@ public class Funcs {
 	@Override
 	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object val = eargs.get(0, backtrace);
-	    return (null == val) ? null : Utils.asNumberOrParse(val).intValue();
+	    return Utils.asNumberOrParse(val).intValue();
 	}
     }
 
@@ -597,7 +597,7 @@ public class Funcs {
 	@Override
 	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object val = eargs.get(0, backtrace);
-	    return (null == val) ? null : Utils.asNumberOrParse(val).longValue();
+	    return  Utils.asNumberOrParse(val).longValue();
 	}
     }
 
@@ -609,7 +609,7 @@ public class Funcs {
 	@Override
 	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object val = eargs.get(0, backtrace);
-	    return (null == val) ? null : Utils.asNumberOrParse(val).shortValue();
+	    return Utils.asNumberOrParse(val).shortValue();
 	}
     }
 
@@ -621,7 +621,7 @@ public class Funcs {
 	@Override
 	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object val = eargs.get(0, backtrace);
-	    return (null == val) ? null : Utils.asNumberOrParse(val).byteValue();
+	    return Utils.asNumberOrParse(val).byteValue();
 	}
     }
     @Arguments(spec={"value"})
@@ -632,7 +632,7 @@ public class Funcs {
 	@Override
 	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object val = eargs.get(0, backtrace);
-	    return (null == val) ? null : Utils.asNumberOrParse(val).doubleValue();
+	    return Utils.asNumberOrParse(val).doubleValue();
 	}
     }
     @Arguments(spec={"value"})
@@ -643,7 +643,7 @@ public class Funcs {
 	@Override
 	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
 	    final Object val = eargs.get(0, backtrace);
-	    return (null == val) ? null : Utils.asNumberOrParse(val).floatValue();
+	    return Utils.asNumberOrParse(val).floatValue();
 	}
     }
 

@@ -224,13 +224,21 @@ public class Utils {
 	}
     }
 
+    // FIXME: make configurable
+    // FIXME: strings
     public static Number asNumber(Object val) {
-        if (val instanceof Number) {
+	if (val == null) {
+	    return 0;
+	} else if (val instanceof Number) {
             return (Number)val;
         } else if (val instanceof Character) {
 	    return (short)((Character)val).charValue();
 	} else if (val instanceof Boolean) {
 	    return ((boolean)val) ? 1 : 0;
+	} else if (val instanceof Collection) {
+	    return ((Collection) val).size();
+	} else if (val.getClass().isArray()) {
+	    return java.lang.reflect.Array.getLength(val);
 	}
         return 0;
     }
@@ -302,6 +310,8 @@ public class Utils {
     public static Number asNumberOrParse(Object val) {
 	if (null == val) {
 	    return 0;
+	} else if (val instanceof Boolean) {
+	    return ((Boolean) val) ? 1 : 0;
 	} else if (val instanceof String) {
 	    final String str = ((String)val).trim();
 	    try {
@@ -314,6 +324,10 @@ public class Utils {
             return (Number)val;
         } else if (val instanceof Character) {
 	    return (short)((Character)val).charValue();
+	} else if (val instanceof Collection) {
+	    return ((Collection) val).size();
+	} else if (val.getClass().isArray()) {
+	    return java.lang.reflect.Array.getLength(val);
 	} else {
 	    throw new RuntimeException("Object "+val+" cannot be coerced to Number");
 	}
@@ -349,9 +363,13 @@ public class Utils {
         if (val instanceof Collection) {
             return !((Collection<?>)val).isEmpty();
         }
+	
 	if (val instanceof Character) {
 	    final char c = (char)val;
 	    return c!='\0';
+	}
+	if (val.getClass().isArray()) {
+	    return java.lang.reflect.Array.getLength(val) > 0;
 	}
         return true;
     }

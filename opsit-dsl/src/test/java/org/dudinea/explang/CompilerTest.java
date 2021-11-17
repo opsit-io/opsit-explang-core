@@ -461,11 +461,11 @@ public class CompilerTest {
 
 		{"(LET ((A (MAKE-ARRAY 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 0))",   new Object[] {1,2,3,4}  , true, null, null, p},
 		{"(LET ((A (MAKE-ARRAY 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 1))",   new Object[] {2,3,4}  , true, null, null, p},
-		{"(LET ((A (MAKE-ARRAY 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 4))",   new Object[] {}  , true, null, null, p},
+		{"(LET ((A (MAKE-ARRAY 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 4))",   new Object[] {}  , false, null, null, p},
 		
 		{"(LET ((A (MAKE-ARRAY 4 :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 0))",   new int[] {1,2,3,4}  , true, null, null, p},
 		{"(LET ((A (MAKE-ARRAY 4 :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 1))",   new int[] {2,3,4}  , true, null, null, p},
-		{"(LET ((A (MAKE-ARRAY 4  :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 4))",   new int[] {}  , true, null, null, p},
+		{"(LET ((A (MAKE-ARRAY 4  :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ A 4))",   new int[] {}  , false, null, null, p},
 
 		
 		// COERCION
@@ -483,6 +483,8 @@ public class CompilerTest {
 		{"(BOOL false)",  false, false, null, null, p},
 		{"(BOOL ())",  false, false, null, null, p},
 		{"(BOOL (LIST NIL))", true, true, null, null, p},
+		{"(BOOL (MAKE-ARRAY 0))", false, false, null, null, p},
+		{"(BOOL (MAKE-ARRAY 1))", true, true, null, null, p},
 		{"(INT 1)",  1, true, null, null, p},
 		{"(INT 1.0)",  1, true, null, null, p},
 		{"(INT 0)",  0, false, null, null, p},
@@ -492,6 +494,8 @@ public class CompilerTest {
 		{"(INT \"22\")", 22, true, null, null, p},
 		{"(INT \" 22 \")", 22, true, null, null, p},
 		{"(INT \" 22.1 \")", 22, true, null, null, p},
+		{"(INT (LIST))", 0, false, null, null, p},
+		{"(INT (LIST 1 2))", 2, true, null, null, p},
 		{"(INT \"\")", null, false,
 		 new ExecutionException(null,new RuntimeException("String '' cannot be coerced to Number",
 								  new NumberFormatException("Invalid numeric literal ''")))
