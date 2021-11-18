@@ -1088,6 +1088,36 @@ public class Funcs {
             }
         }
     }
+    /***** VARIABLE PROPERTIES HANDLING ******/
+    @Arguments(spec = {"symbol","property-key"})
+    @Docstring(text = "Returns value of a property from variable property map")
+    public static class GETPROP extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            final Object symbolObj = eargs.get(0, backtrace);
+            final Object propKey = eargs.get(1, backtrace);
+            if (null == symbolObj) {
+                return null;
+            }
+            return eargs.getProp(Utils.asString(symbolObj),propKey, backtrace);
+        }
+    }
+    @Arguments(spec = {"symbol","property-key","property-value"})
+    @Docstring(text = "Set property value in variable property map")
+    public static class SETPROP extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            final Object symbolObj = eargs.get(0, backtrace);
+            final Object propKey = eargs.get(1, backtrace);
+            final Object propVal = eargs.get(2, backtrace);
+            if (null == symbolObj) {
+                return null;
+            }
+            eargs.putProp(Utils.asString(symbolObj), propKey, propVal);
+            return null;
+        }
+    }
+    
     /***** CONTEXT HANDLING ******/
     @Arguments(spec = {})
     @Docstring(text = "Returns new empty dynamic context")

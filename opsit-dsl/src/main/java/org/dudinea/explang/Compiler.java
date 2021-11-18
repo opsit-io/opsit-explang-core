@@ -181,8 +181,8 @@ public class Compiler {
 	// TODO: 
 	//addBuiltIn("GETPROPS", GETPROPS.class);
 	//addBuiltIn("SETPROPS", SETPROPS.class);
-	//addBuiltIn("GETPROP",  GETPROP.class);	
-	//addBuiltIn("SETPROP",  SETPROP.class);
+	addBuiltIn("GETPROP",  GETPROP.class);	
+	addBuiltIn("SETPROP",  SETPROP.class);
 	
 	// execution control
         addBuiltIn("IF", IF.class);
