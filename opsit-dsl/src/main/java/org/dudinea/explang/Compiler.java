@@ -1148,11 +1148,11 @@ public class Compiler {
 	final Map<String, Map<Object,Object>> propsMap =
 	    new HashMap<String, Map<Object,Object>>();
 	ICtx prev;
-        IMissHandler missHandler = new ErrorMissHandler();
+        IMissHandler missHandler = new NilMissHandler();
 
-		public Map<String, Map<Object, Object>> getPropsMap() {
-			return propsMap;
-		}
+	public Map<String, Map<Object, Object>> getPropsMap() {
+	    return propsMap;
+	}
 
 	@Override
 	public Map<Object, Object> getProps(String name, Backtrace bt) {
@@ -1231,6 +1231,8 @@ public class Compiler {
 
 	public Ctx() {
 	    super();
+	    setMissHandler(Compiler.this.failOnMissingVariables ?
+                           new ErrorMissHandler() : new NilMissHandler());
 	}
 
 	public Ctx(ICtx prev) {
@@ -1411,9 +1413,7 @@ public class Compiler {
     
     public ICtx newCtx() {
         final Ctx ctx = new Ctx();
-        ctx.setMissHandler(this.failOnMissingVariables ?
-                           new ErrorMissHandler() : new NilMissHandler());
-        return ctx;
+	return ctx;
     }
 
     public ICtx newCtx(ICtx ctx) {
