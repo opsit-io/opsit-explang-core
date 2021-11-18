@@ -176,8 +176,9 @@ public class Compiler {
 	addBuiltIn("DLET", DLET.class);
 	addBuiltIn("MAKUNBOUND", MAKUNBOUND.class);
 
+	addBuiltIn("NEW-CTX", NEW_CTX.class);
+	addBuiltIn("WITH-CTX", WITH_CTX.class);
 	// TODO: 
-	//addBuiltIn("WITH-CTX", WITH_CTX.class);
 	//addBuiltIn("GETPROPS", GETPROPS.class);
 	//addBuiltIn("SETPROPS", SETPROPS.class);
 	//addBuiltIn("GETPROP",  GETPROP.class);	
@@ -963,6 +964,33 @@ public class Compiler {
                                              bindObj);
             }
             final ICtx localCtx = new Ctx(ctx, (Map)bindObj);
+            return evalBlocks(backtrace, blocks, localCtx);
+        }
+    }
+
+    public class WITH_CTX extends AbstractForm  {
+        protected List<ICompiled> blocks = null;
+        ICompiled bindExpr = null;
+
+        public void setRawParams(ASTNList params)
+            throws InvalidParametersException {
+            if (params.size() < 1) {
+                throw new InvalidParametersException(debugInfo,
+                                                     getName() + " expects at least 2 parameters");
+            }
+            this.bindExpr = compile(params.get(0));
+            this.blocks  = compileParams(params.subList(1, params.size()));
+        }
+
+        @Override
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
+            final Object bindObj = bindExpr.evaluate(backtrace, ctx);
+            if (! (bindObj instanceof ICtx)) {
+                throw new ExecutionException(backtrace, getName() +
+                                             " expects a ICtx instance as first parameter, but got " +
+                                             bindObj);
+            }
+            final ICtx localCtx = (ICtx)bindObj;
             return evalBlocks(backtrace, blocks, localCtx);
         }
     }

@@ -1088,7 +1088,15 @@ public class Funcs {
             }
         }
     }
-    
+    /***** CONTEXT HANDLING ******/
+    @Arguments(spec = {})
+    @Docstring(text = "Returns new empty dynamic context")
+    public static class NEW_CTX extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            return eargs.getCompiler().newCtx();
+        }
+    }
     /***** JAVA INTEROP *****/
     @Arguments(spec={"object",ARG_OPTIONAL,"prefix","suffix"})
     @Docstring(text="Returns a Map based on getters in the passed java object. " +
