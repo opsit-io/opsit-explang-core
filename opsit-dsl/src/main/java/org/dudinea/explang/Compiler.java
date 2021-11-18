@@ -178,9 +178,8 @@ public class Compiler {
 
 	addBuiltIn("NEW-CTX", NEW_CTX.class);
 	addBuiltIn("WITH-CTX", WITH_CTX.class);
-	// TODO: 
-	//addBuiltIn("GETPROPS", GETPROPS.class);
-	//addBuiltIn("SETPROPS", SETPROPS.class);
+	addBuiltIn("GETPROPS", GETPROPS.class);
+	addBuiltIn("SETPROPS", SETPROPS.class);
 	addBuiltIn("GETPROP",  GETPROP.class);	
 	addBuiltIn("SETPROP",  SETPROP.class);
 	

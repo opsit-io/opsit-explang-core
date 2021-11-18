@@ -1117,6 +1117,36 @@ public class Funcs {
             return null;
         }
     }
+
+    @Arguments(spec = {"symbol"})
+    @Docstring(text = "Get properties map for variable")
+    public static class GETPROPS extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            final Object symbolObj = eargs.get(0, backtrace);
+            if (null == symbolObj) {
+                return null;
+            }
+            return eargs.getProps(Utils.asString(symbolObj), backtrace);
+        }
+    }
+    @Arguments(spec = {"symbol","properties-map"})
+    @Docstring(text = "Set properties map for variable")
+    public static class SETPROPS extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            final Object symbolObj = eargs.get(0, backtrace);
+            final Object propsObj = eargs.get(1, backtrace);
+            if (null == symbolObj) {
+                return null;
+            }
+            if (null != propsObj && !(propsObj instanceof Map)) {
+                throw new RuntimeException("properties-map must be a java.util.Map");
+            }
+            eargs.putProps(Utils.asString(symbolObj), (Map)propsObj);
+            return null;
+        }
+    }
     
     /***** CONTEXT HANDLING ******/
     @Arguments(spec = {})
