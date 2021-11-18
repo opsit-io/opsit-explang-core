@@ -35,14 +35,14 @@ public class Funcs {
         protected ParseCtx debugInfo;
         protected String name = null;
 
-	public void run () {
-	    final Compiler.ICtx ctx =
-		Threads.contexts.remove(Thread.currentThread());
-	    final Object result =
-		this.evaluate(new Backtrace(), ctx);
-	    Threads.results.put(Thread.currentThread(),result);
-	}
-	
+        public void run () {
+            final Compiler.ICtx ctx =
+                Threads.contexts.remove(Thread.currentThread());
+            final Object result =
+                this.evaluate(new Backtrace(), ctx);
+            Threads.results.put(Thread.currentThread(),result);
+        }
+        
         abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
 
         public void setName(String name) {
@@ -53,29 +53,29 @@ public class Funcs {
             this.debugInfo = debugInfo;
         }
 
-	public ParseCtx getDebugInfo() {
-	    return debugInfo;
-	}
+        public ParseCtx getDebugInfo() {
+            return debugInfo;
+        }
 
-	protected String getTraceName() {
-	    return getName();
-	}
-	
+        protected String getTraceName() {
+            return getName();
+        }
+        
         protected String getName() {
-	    if (null == this.name) {
-		this.name = this.getClass().getSimpleName();
-	    }
+            if (null == this.name) {
+                this.name = this.getClass().getSimpleName();
+            }
             return this.name;
         }
     
         @Override
         final public Object evaluate(final Backtrace backtrace,
-				     final ICtx  ctx) {
+                                     final ICtx  ctx) {
             try {
                 backtrace.push(getTraceName(),
                                this.debugInfo,
                                ctx);
-                 return doEvaluate(backtrace, ctx);
+                return doEvaluate(backtrace, ctx);
             } catch (ExecutionException ex) {
                 throw ex;
             } catch (Throwable t) {
@@ -83,19 +83,19 @@ public class Funcs {
             } finally {
                 backtrace.pop();
             }
-	    
+            
         }
     }
 
     public static abstract class FuncExp extends AbstractExpr {
-	protected  ArgList argList;
-	@Override
-	protected String getTraceName() {
-	    //final StringBuilder b = new StringBuilder(16);
-	    //b.append("(").append(getName()).append(")");
-	    return getName();
-	}
-	
+        protected  ArgList argList;
+        @Override
+        protected String getTraceName() {
+            //final StringBuilder b = new StringBuilder(16);
+            //b.append("(").append(getName()).append(")");
+            return getName();
+        }
+        
         @Override
         public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             return evalWithArgs(backtrace, this.evaluateParameters(backtrace, ctx));
@@ -109,30 +109,30 @@ public class Funcs {
         }
 
 
-	public void checkParamsList(List <ICompiled> params)
-	    throws InvalidParametersException{
-	    if (null!=argList) {
-		throw new InvalidParametersException(this.getDebugInfo(),
-						     "internal exception: parameters already set");
-	    }
-	}
-	    
+        public void checkParamsList(List <ICompiled> params)
+            throws InvalidParametersException{
+            if (null!=argList) {
+                throw new InvalidParametersException(this.getDebugInfo(),
+                                                     "internal exception: parameters already set");
+            }
+        }
+            
 
         
         @Override
         public void setParams(List<ICompiled>  params)
             throws InvalidParametersException {
 
-	    Arguments args = this.getClass().getAnnotation(Arguments.class);
-	    if (null == args) {
-		throw new RuntimeException("argument list not specified for function "
-					   +this.getClass());
-	    }
-	    String specArray[]= args.spec();
-	    // FIXME: no compiler - no initForm!
-	    ArgSpec spec = new ArgSpec(specArray, null);
-	    this.checkParamsList(params);
-	    this.argList = new ArgList(spec, params);
+            Arguments args = this.getClass().getAnnotation(Arguments.class);
+            if (null == args) {
+                throw new RuntimeException("argument list not specified for function "
+                                           +this.getClass());
+            }
+            String specArray[]= args.spec();
+            // FIXME: no compiler - no initForm!
+            ArgSpec spec = new ArgSpec(specArray, null);
+            this.checkParamsList(params);
+            this.argList = new ArgList(spec, params);
         }
     }
 
@@ -151,7 +151,7 @@ public class Funcs {
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             Number result = getNeutral();
             Promotion p = new Promotion();
-	    List rest = (List) eargs.get(0, backtrace);
+            List rest = (List) eargs.get(0, backtrace);
             if (rest.size() == 0) {
                 p.promote(result);
             } else {
@@ -166,8 +166,8 @@ public class Funcs {
     }
 
     @Docstring(text="Returns the sum of numbers, " +
-	       "performing any necessary type conversions in the process. " +
-	       "If no numbers are supplied, 0 is returned.")
+               "performing any necessary type conversions in the process. " +
+               "If no numbers are supplied, 0 is returned.")
     public static class ADDOP extends ABSTRACT_ADD {
         @Override
         protected Number getNeutral() {
@@ -188,8 +188,8 @@ public class Funcs {
     }
 
     @Docstring(text="Returns the product of it's arguments , "+
-	       "performing any necessary type conversions in the process. "+
-	       "If no numbers are supplied, 1 is returned.")
+               "performing any necessary type conversions in the process. "+
+               "If no numbers are supplied, 1 is returned.")
     public static class MULOP extends ABSTRACT_ADD {
         @Override
         protected Number getNeutral() {
@@ -215,7 +215,7 @@ public class Funcs {
         protected abstract Number getNeutral();
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    List rest = (List) eargs.get(0, backtrace);
+            List rest = (List) eargs.get(0, backtrace);
             Number num = Utils.asNumber(rest.get(0));
             Promotion p = new Promotion();
             p.promote(num);
@@ -233,11 +233,11 @@ public class Funcs {
     }
     
     @Docstring(text="Performs arithmetic subtraction and negation. "+
-	       "If only one number is supplied, the negation of that "+
-	       "number is returned. If more than one argument is given, "+
-	       "it subtracts rest of the arguments from the first one "+
-	       "and returns the result. The function performs necessary "+
-	       "type conversions.")
+               "If only one number is supplied, the negation of that "+
+               "number is returned. If more than one argument is given, "+
+               "it subtracts rest of the arguments from the first one "+
+               "and returns the result. The function performs necessary "+
+               "type conversions.")
     public static class SUBOP extends ABSTRACT_SUB {
         @Override
         public Number doIntOp(Number arg1, Number arg2) {
@@ -261,13 +261,13 @@ public class Funcs {
     }
 
     @Docstring(text="The function / performs division or reciprocation. "+
-	       "If no denominators are supplied, the function / returns "+
-	       "the reciprocal of number. " +
-	       "If at least one denominator is supplied, the function / "+
-	       "divides the numerator by all of the denominators and returns"+
-	       " the resulting quotient. If each argument is either an integer"+
-	       " or a ratio, and the result is not an integer, then it is a ratio."+
-	       " The function / performs necessary type conversions. ")
+               "If no denominators are supplied, the function / returns "+
+               "the reciprocal of number. " +
+               "If at least one denominator is supplied, the function / "+
+               "divides the numerator by all of the denominators and returns"+
+               " the resulting quotient. If each argument is either an integer"+
+               " or a ratio, and the result is not an integer, then it is a ratio."+
+               " The function / performs necessary type conversions. ")
     public static class DIVOP extends ABSTRACT_SUB {
         @Override
         public Number doIntOp(Number arg1, Number arg2) {
@@ -294,9 +294,9 @@ public class Funcs {
 
     @Arguments(spec={"x","y"})
     @Docstring(text="Generalizations of the remainder function. When both operands are integer "+
-     	       "returns result of the remainder operation . If one of them is floating point "+
-	       "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "+
-	       "(same semantic as for the Java % operator.")
+               "returns result of the remainder operation . If one of them is floating point "+
+               "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "+
+               "(same semantic as for the Java % operator.")
     public  static class REMOP extends FuncExp implements  ABSTRACT_OP {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -326,8 +326,8 @@ public class Funcs {
 
     @Arguments(spec={"number","divisor"})
     @Docstring(text="Generalizations of the modulus function. When both operands are integer "+
-     	       "returns result of the modulus operation. If one of them is floating point "+
-	       "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
+               "returns result of the modulus operation. If one of them is floating point "+
+               "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
     public  static class MODOP extends FuncExp implements  ABSTRACT_OP {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -346,12 +346,12 @@ public class Funcs {
         
         @Override
         public  Double doDoubleOp(Number arg1, Number arg2) {
-	    return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
+            return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
         }
 
         @Override
         public Float doFloatOp(Number arg1, Number arg2) {
-	    return arg1.floatValue() - ((float)Math.floor(arg1.doubleValue() / arg2.doubleValue())) * arg2.floatValue();
+            return arg1.floatValue() - ((float)Math.floor(arg1.doubleValue() / arg2.doubleValue())) * arg2.floatValue();
         }
     }
 
@@ -360,10 +360,10 @@ public class Funcs {
     /**** BOOLEAN FUNCTIONS ****/
     @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
     @Docstring(text="Function AND lazily evaluates each form one at a time from left to right. " +
-	       "As soon as any form evaluates to NIL, AND returns NIL without evaluating the remaining forms. " +
-	       "If all forms but the last evaluate to true values, AND returns the results " +
-	       "produced by evaluating the last form. " +
-	       "If no forms are supplied, (AND) returns true.")
+               "As soon as any form evaluates to NIL, AND returns NIL without evaluating the remaining forms. " +
+               "If all forms but the last evaluate to true values, AND returns the results " +
+               "produced by evaluating the last form. " +
+               "If no forms are supplied, (AND) returns true.")
     public static class AND extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -380,9 +380,9 @@ public class Funcs {
 
     @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
     @Docstring(text="Function OR lazily evaluates each form, one at a time, from left to right. "+
-	       "The evaluation of all forms terminates when a form evaluates to true "+
-	       "(i.e., something other than nil) and OR immediately returns that value "+
-	       "without evaluating the remaining forms.")
+               "The evaluation of all forms terminates when a form evaluates to true "+
+               "(i.e., something other than nil) and OR immediately returns that value "+
+               "without evaluating the remaining forms.")
     public static class OR extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -426,7 +426,7 @@ public class Funcs {
             boolean result = true;
             Promotion p = new Promotion();
             Number prevVal = Utils.asNumber(eargs.get(0, backtrace));
-	    List rest = (List)eargs.get(1, backtrace);
+            List rest = (List)eargs.get(1, backtrace);
             p.promote(prevVal);
             for (int i=0; i< rest.size() ; i++) {
                 Number val = Utils.asNumber(rest.get(i));
@@ -437,16 +437,16 @@ public class Funcs {
             }
             return result;
         }
-	@Override
+        @Override
         public Number doIntOp(Number arg1, Number arg2) {
             return  arg1.longValue() - arg2.longValue();
         }
-	@Override
+        @Override
         public Number doDoubleOp(Number arg1, Number arg2) {
             final Double compRes = arg1.doubleValue() - arg2.doubleValue();
             return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
         }
-	@Override
+        @Override
         public Number doFloatOp(Number arg1, Number arg2) {
             final float compRes = arg1.floatValue() - arg2.floatValue();
             return compRes < 0.0f ? -1 : (compRes>0.0f ? 1 : 0);
@@ -502,85 +502,85 @@ public class Funcs {
 
     @Arguments(spec={"x"})
     @Docstring(text="Determines a numerical value that indicates whether number is negative, zero, or positive. "+
-	       "Returns one of -1, 0, or 1 according to whether number is negative, zero, or positive. The type of "+
-	       "the result is of the same numeric type as x")
+               "Returns one of -1, 0, or 1 according to whether number is negative, zero, or positive. The type of "+
+               "the result is of the same numeric type as x")
     public static class SIGNUM extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Number val = Utils.asNumber(eargs.get(0, backtrace));
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Number val = Utils.asNumber(eargs.get(0, backtrace));
 
-	    if (val instanceof Double) {
-		final double dv = val.doubleValue();
-		return  dv > 0.0 ? 1.0 : (dv < 0.0 ?  -1.0 : 0);
-	    } else if (val instanceof Float) {
-		final float fv = val.floatValue();
-		return  fv > (float)0.0
-		    ? (float) 1.0
-		    : (fv < (float)0.0 ?  (float)-1.0 : (float)0);
-	    } else {
-		final Promotion p = new Promotion();
-		p.promote(val);
-		final long lv = val.longValue();
-		return p.returnResult(lv > 0 ? (byte) 1
-				      : (lv < 0 ? (byte) -1 : (byte) 0));
-	    }
-	}
+            if (val instanceof Double) {
+                final double dv = val.doubleValue();
+                return  dv > 0.0 ? 1.0 : (dv < 0.0 ?  -1.0 : 0);
+            } else if (val instanceof Float) {
+                final float fv = val.floatValue();
+                return  fv > (float)0.0
+                    ? (float) 1.0
+                    : (fv < (float)0.0 ?  (float)-1.0 : (float)0);
+            } else {
+                final Promotion p = new Promotion();
+                p.promote(val);
+                final long lv = val.longValue();
+                return p.returnResult(lv > 0 ? (byte) 1
+                                      : (lv < 0 ? (byte) -1 : (byte) 0));
+            }
+        }
     }
 
     /**** COERCION *****/
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Boolean. Value may be a Character, a Number, a Boolean, a Byte, a String, any object or NIL:\n" +
-	       "* Boolean value will be returned as is\n"+
-	       "* NIL is false\n"+
-	       "* Character  \u0000 is false.\n"+
-	       "* any Number which is equal to zero is false\n"+
-	       "* an empty String is false\n"+
-	       "* An empty collection is false \n"+
-	       "* Any other object is true.\n")
+               "* Boolean value will be returned as is\n"+
+               "* NIL is false\n"+
+               "* Character  \u0000 is false.\n"+
+               "* any Number which is equal to zero is false\n"+
+               "* an empty String is false\n"+
+               "* An empty collection is false \n"+
+               "* Any other object is true.\n")
     public static class BOOL extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asBoolean(val);
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asBoolean(val);
+        }
     }
     
 
     
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Character. Value may be a Character, a Number, a Boolean, a Byte, a Stringor NIL:\n" +
-	       "* Character value will be returned as is.\n"+
-	       "* NIL will be converted to unicode value #\u0000.\n"+
-	       "* a Boolean True value will be returned as character 'T', False as '\0'.\n"+
-	       "* a Number (other than Byte) will be truncated to short (if needed) and the character at corresponding Unicode code unit will be returned.\n"+
-	       "* a Byte value will be treated as unsigned integer value and processed as described above.\n"+
-	       "* a String will be parsed as number using same rules as numeric literals and the resulting value will be used as described above. Conversion to number may fail.\n"+
-	       "* Any other object will cause conversion error.\n")
+               "* Character value will be returned as is.\n"+
+               "* NIL will be converted to unicode value #\u0000.\n"+
+               "* a Boolean True value will be returned as character 'T', False as '\0'.\n"+
+               "* a Number (other than Byte) will be truncated to short (if needed) and the character at corresponding Unicode code unit will be returned.\n"+
+               "* a Byte value will be treated as unsigned integer value and processed as described above.\n"+
+               "* a String will be parsed as number using same rules as numeric literals and the resulting value will be used as described above. Conversion to number may fail.\n"+
+               "* Any other object will cause conversion error.\n")
     public static class CHAR extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asChar(val);
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asChar(val);
+        }
     }
 
     
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Integer. Value may be a Number, String, any object or NIL." +
-	       "String will be parsed as number using same rules as numeric literals. "+
-	       "The floating point value will be truncated.")
+               "String will be parsed as number using same rules as numeric literals. "+
+               "The floating point value will be truncated.")
     public static class INT extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asNumberOrParse(val).intValue();
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asNumberOrParse(val).intValue();
+        }
     }
 
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to String. Value may be any object or NIL: "+
-	       "NIL is converted to String \"NIL\", any other object converted "+
-	       "using it's toString() method")
+               "NIL is converted to String \"NIL\", any other object converted "+
+               "using it's toString() method")
     public static class STRING extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -591,89 +591,89 @@ public class Funcs {
 
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Long. Value may be a Number, String, any object or NIL." +
-	       "String will be parsed as number using same rules as numeric literals. "+
-	       "The floating point values will be truncated.")
+               "String will be parsed as number using same rules as numeric literals. "+
+               "The floating point values will be truncated.")
     public static class LONG extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return  Utils.asNumberOrParse(val).longValue();
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return  Utils.asNumberOrParse(val).longValue();
+        }
     }
 
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Short. Value may be a Number, String, any object or NIL." +
-	       "String will be parsed as number using same rules as numeric literals. "+
-	       "The floating point values will be truncated.")
+               "String will be parsed as number using same rules as numeric literals. "+
+               "The floating point values will be truncated.")
     public static class SHORT extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asNumberOrParse(val).shortValue();
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asNumberOrParse(val).shortValue();
+        }
     }
 
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Byte. Value may be a Number, String, any object or NIL." +
-	       "String will be parsed as number using same rules as numeric literals. "+
-	       "The floating point values will be truncated.")
+               "String will be parsed as number using same rules as numeric literals. "+
+               "The floating point values will be truncated.")
     public static class BYTE extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asNumberOrParse(val).byteValue();
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asNumberOrParse(val).byteValue();
+        }
     }
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Double. Value may be a Number, String, any object or NIL." +
-	       "String will be parsed as number using same rules as numeric literals. "+
-	       "The floating point values will be truncated.")
+               "String will be parsed as number using same rules as numeric literals. "+
+               "The floating point values will be truncated.")
     public static class DOUBLE extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asNumberOrParse(val).doubleValue();
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asNumberOrParse(val).doubleValue();
+        }
     }
     @Arguments(spec={"value"})
     @Docstring(text="Coerce value to Float. Value may be a Number, String, any object or NIL." +
-	       "String will be parsed as number using same rules as numeric literals. "+
-	       "The floating point values will be truncated.")
+               "String will be parsed as number using same rules as numeric literals. "+
+               "The floating point values will be truncated.")
     public static class FLOAT extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    return Utils.asNumberOrParse(val).floatValue();
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object val = eargs.get(0, backtrace);
+            return Utils.asNumberOrParse(val).floatValue();
+        }
     }
 
     @Arguments(spec={"limit"})
     @Docstring(text="Returns a pseudo-random number that is a non-negative number less than limit and of the same numeric type as limit. Implemented uding Java Math.random()")
     public static class RANDOM extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object numberObj = eargs.get(0, backtrace);
-	    if (! (numberObj  instanceof Number)) {
-		throw new ExecutionException(backtrace, getName() + " argument must be a number");
-	    }
-	    final double val = java.lang.Math.random();
-	    final Number number = (Number) numberObj;
-	    if (number instanceof Integer) {
-		return  (int) (val * number.intValue());
-	    } else if (numberObj instanceof Long) {
-		return  (long) (val * number.longValue());
-	    } else if (numberObj instanceof Short) {
-		return  (short) (val * number.shortValue());
-	    } else if (numberObj instanceof Float) {
-		return  (float) (val * number.floatValue());
-	    } else if (numberObj instanceof Double) {
-		return  (double) (val * number.doubleValue());
-	    } else if (numberObj instanceof Byte) {
-		return  (byte) (val * number.byteValue());
-	    } else {
-		throw new ExecutionException(backtrace, "Unsupported argument numeric type: "+ numberObj.getClass());
-	    }
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object numberObj = eargs.get(0, backtrace);
+            if (! (numberObj  instanceof Number)) {
+                throw new ExecutionException(backtrace, getName() + " argument must be a number");
+            }
+            final double val = java.lang.Math.random();
+            final Number number = (Number) numberObj;
+            if (number instanceof Integer) {
+                return  (int) (val * number.intValue());
+            } else if (numberObj instanceof Long) {
+                return  (long) (val * number.longValue());
+            } else if (numberObj instanceof Short) {
+                return  (short) (val * number.shortValue());
+            } else if (numberObj instanceof Float) {
+                return  (float) (val * number.floatValue());
+            } else if (numberObj instanceof Double) {
+                return  (double) (val * number.doubleValue());
+            } else if (numberObj instanceof Byte) {
+                return  (byte) (val * number.byteValue());
+            } else {
+                throw new ExecutionException(backtrace, "Unsupported argument numeric type: "+ numberObj.getClass());
+            }
+        }
     }
 
     
@@ -711,23 +711,23 @@ public class Funcs {
     @Arguments(spec={ARG_REST,"symbols"})
     @Docstring(text="Check if symbols are bound. Returns True if all the arguments are bound symbols or names of bound symbols; otherwise, returns False.") 
     public static class BOUNDP extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    for (Object arg : (List)eargs.get(0, backtrace)) {
-		if ((null == arg) ||
-		    (! eargs.contains(Utils.asString(arg)))) {
-		    return false;
-		}
-	    }
-	    return true;
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            for (Object arg : (List)eargs.get(0, backtrace)) {
+                if ((null == arg) ||
+                    (! eargs.contains(Utils.asString(arg)))) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     @Arguments(spec={ArgSpec.ARG_REST,"pairs"})
     @Docstring(text="Returns new HashMap filled with given keys and values. "
-	       + "Throws InvalidParametersException if non-even number of arguments is given.")
+               + "Throws InvalidParametersException if non-even number of arguments is given.")
     public static class HASHMAP extends FuncExp {
-	@Override
+        @Override
         public void checkParamsList(List <ICompiled> params)
             throws InvalidParametersException {
             super.checkParamsList(params);
@@ -739,7 +739,7 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             Map map = new HashMap();
-	    List rest = (List)eargs.get(0, backtrace);
+            List rest = (List)eargs.get(0, backtrace);
             for (int i = 0; i < rest.size(); i+=2) {
                 map.put(rest.get(i), rest.get(i+1));
             }
@@ -753,8 +753,8 @@ public class Funcs {
     @Docstring(text="Apply arguments to function. Function must be a function object")
     public static class FUNCALL extends AbstractExpr {
         private List<ICompiled> params = null;
-	//private ICode  code = null;
-	//private ICompiled func = null;
+        //private ICode  code = null;
+        //private ICompiled func = null;
         
         @Override
         public void setParams(List<ICompiled> params)
@@ -763,10 +763,10 @@ public class Funcs {
                 throw new InvalidParametersException(debugInfo, this.getName() +
                                                      " requires at least one argument");
             }
-	    if (null != this.params) {
-		throw new InvalidParametersException(this.getDebugInfo(),
-						     "internal exception: parameters already set");
-	    }	    
+            if (null != this.params) {
+                throw new InvalidParametersException(this.getDebugInfo(),
+                                                     "internal exception: parameters already set");
+            }       
             this.params = params;
         }
 
@@ -777,21 +777,21 @@ public class Funcs {
         //         throw new RuntimeException("Expected ICode object, but got "+val);
         //     }
         //     ICode code = (ICode) Utils.asObject(val);
-	//     if (code != this.code) {
-	// 	IExpr instance = (IExpr)code.getInstance();
-	// 	try {
-	// 	    instance.setParams(params.subList(1, params.size()));
-	// 	} catch (InvalidParametersException e) {
-	// 	    throw new RuntimeException(String.format("%s: called function at %s: does not take parameter: %s",
-	// 						     this.getName(),
-	// 						     (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-	// 						     e.getMessage()));
-	// 	}
-	// 	synchronized (this) {
-	// 	    this.code = code;
-	// 	    this.func = instance;
-	// 	}
-	//     }
+        //     if (code != this.code) {
+        //      IExpr instance = (IExpr)code.getInstance();
+        //      try {
+        //          instance.setParams(params.subList(1, params.size()));
+        //      } catch (InvalidParametersException e) {
+        //          throw new RuntimeException(String.format("%s: called function at %s: does not take parameter: %s",
+        //                                                   this.getName(),
+        //                                                   (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+        //                                                   e.getMessage()));
+        //      }
+        //      synchronized (this) {
+        //          this.code = code;
+        //          this.func = instance;
+        //      }
+        //     }
         //     return this.func.evaluate(backtrace, eargs);
         // }
 
@@ -799,40 +799,40 @@ public class Funcs {
         //public Eargs evaluateParameters(Backtrace backtrace, ICtx ctx) {
         //    Object eargs[] = new Object[1];
         //    eargs[0]=params.get(0).evaluate(backtrace, ctx);
-	//    return ctx.getCompiler().newEargs(eargs, ctx);
+        //    return ctx.getCompiler().newEargs(eargs, ctx);
         //}
 
         @Override
         public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
             final Object functionObj  = params.get(0).evaluate(backtrace, ctx);
-	    // if (functionObj instanceof Symbol) {
-	    // 	functionObj = params.get(0)eargs.getCompiler().functab.get(fname);
-	    // } else if (functionObj instanceof String) {
-	    // }
-	    
+            // if (functionObj instanceof Symbol) {
+            //  functionObj = params.get(0)eargs.getCompiler().functab.get(fname);
+            // } else if (functionObj instanceof String) {
+            // }
+            
             if (!(functionObj  instanceof ICode)) {
                 throw new RuntimeException("Expected ICode object, but got " + functionObj);
             } 
             ICode function = (ICode) Utils.asObject(functionObj);
-	    //if (code != this.code) {
-	    IExpr instance = (IExpr)function.getInstance();
-	    try {
-		instance.setParams(params.subList(1, params.size()));
-	    } catch (InvalidParametersException e) {
-		throw new RuntimeException(String.format("%s: called function at %s: does not take parameter: %s",
-							 this.getName(),
-							 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-							 e.getMessage()));
-	    }
-	    // FIXME: put back  optimization!
-	    
-	    //synchronized (this) {
-	    //    this.code = code;
-	    //    this.func = instance;
-	    //}
-	    //}
-	    //return this.func.evaluate(backtrace, ctx);
-	    return instance.evaluate(backtrace, ctx);
+            //if (code != this.code) {
+            IExpr instance = (IExpr)function.getInstance();
+            try {
+                instance.setParams(params.subList(1, params.size()));
+            } catch (InvalidParametersException e) {
+                throw new RuntimeException(String.format("%s: called function at %s: does not take parameter: %s",
+                                                         this.getName(),
+                                                         (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+                                                         e.getMessage()));
+            }
+            // FIXME: put back  optimization!
+            
+            //synchronized (this) {
+            //    this.code = code;
+            //    this.func = instance;
+            //}
+            //}
+            //return this.func.evaluate(backtrace, ctx);
+            return instance.evaluate(backtrace, ctx);
             //return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx));
         }
 
@@ -850,29 +850,29 @@ public class Funcs {
             Object val = eargs.get(0, backtrace);
             ICode lambda = (ICode) Utils.asObject(val);
             IExpr instance = (IExpr)lambda.getInstance();
-	    List fArgs = (List) eargs.get(1, backtrace);
+            List fArgs = (List) eargs.get(1, backtrace);
 
-	    ICtx applyCtx = eargs.getCompiler().newCtx(eargs);
+            ICtx applyCtx = eargs.getCompiler().newCtx(eargs);
 
 
-	    List rest = null;
-	    int restSize;
-	    int headSize;  
+            List rest = null;
+            int restSize;
+            int headSize;  
             if ((fArgs.size()>0) && ((fArgs.get(fArgs.size()-1)) instanceof List)) {
-		rest = (List) fArgs.get(fArgs.size()-1);
-		restSize = rest.size();
-		headSize = fArgs.size() - 1;
-	    } else {
-		restSize = 0;
-		headSize = fArgs.size();
-	    }
-	    List<ICompiled> callParams = new ArrayList(restSize + headSize);
+                rest = (List) fArgs.get(fArgs.size()-1);
+                restSize = rest.size();
+                headSize = fArgs.size() - 1;
+            } else {
+                restSize = 0;
+                headSize = fArgs.size();
+            }
+            List<ICompiled> callParams = new ArrayList(restSize + headSize);
             for (int i=0; i < headSize; i++) {
                 callParams.add(new ObjectExp(fArgs.get(i)));
             }
-	    for (int i = 0; i < restSize ; i++) {
-		callParams.add(new ObjectExp(rest.get(i)));
-	    }
+            for (int i = 0; i < restSize ; i++) {
+                callParams.add(new ObjectExp(rest.get(i)));
+            }
             try {
                 instance.setParams(callParams);
             } catch (InvalidParametersException e) {
@@ -887,59 +887,59 @@ public class Funcs {
 
 
     protected static List<ICompiled>  setFuncPosParams(IExpr instance, int cnt) {
-	final List<ICompiled> callParams = Utils.newPosArgsList(cnt);
-	try {
-	    instance.setParams((List<ICompiled>) callParams);
-	} catch (InvalidParametersException e) {
-	    throw new RuntimeException(String.format("lambda at %s: does not take parameter: %s",
-						     (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-						     e.getMessage()));
-	}
-	return callParams;
+        final List<ICompiled> callParams = Utils.newPosArgsList(cnt);
+        try {
+            instance.setParams((List<ICompiled>) callParams);
+        } catch (InvalidParametersException e) {
+            throw new RuntimeException(String.format("lambda at %s: does not take parameter: %s",
+                                                     (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+                                                     e.getMessage()));
+        }
+        return callParams;
     }
     
     @Docstring(text="Reduce operation.\n func is a function of 2 arguments, "+
-	       "value - optional starting value, seq is input sequence.\n"+
-	       "When val is not given:  apply func to the first 2 items in the seq, "+
-	       "then to the result and 3rd, etc. "+
-	       "If seq contains no items, func must accept no arguments, return (func)."+
-	       "If seq has 1 item, return it without calling func;\n"+
-	       "If value is supplied, apply func on value and the first seq element, then "+ 
-	       "on the result and the second element, etc. If there is no elements - return val;")
+               "value - optional starting value, seq is input sequence.\n"+
+               "When val is not given:  apply func to the first 2 items in the seq, "+
+               "then to the result and 3rd, etc. "+
+               "If seq contains no items, func must accept no arguments, return (func)."+
+               "If seq has 1 item, return it without calling func;\n"+
+               "If value is supplied, apply func on value and the first seq element, then "+ 
+               "on the result and the second element, etc. If there is no elements - return val;")
     @Arguments(spec={"func",ArgSpec.ARG_OPTIONAL, "val",ArgSpec.ARG_MANDATORY, "seq"})
     public static  class REDUCE extends FuncExp {
-	@Override
+        @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             Object val = eargs.get(0, backtrace);
             ICode lambda = (ICode) Utils.asObject(val);
-	    IExpr instance = (IExpr)lambda.getInstance();
+            IExpr instance = (IExpr)lambda.getInstance();
 
-	    List list = (List)eargs.get(2, backtrace);
-	    Object startVal = eargs.get(1, backtrace);
-	    // FIXME
-	    boolean haveStartVal = null != startVal;
-	    
-	    if (null == list || 0 == list.size()) {
-		if (haveStartVal) {
-		    return startVal;
-		} else {
-		    setFuncPosParams(instance, 0);
-		    ICtx newCtx = eargs.getCompiler().newCtx(eargs);
-		    return instance.evaluate(backtrace, newCtx);
-		}
-	    }
-	    int i = 0;
-	    Object result;
-	    if (haveStartVal) {
-		result = startVal;
-	    } else {
-		result = list.get(i++);
-	    }
-	    List<ICompiled> vars = setFuncPosParams(instance, 2);
+            List list = (List)eargs.get(2, backtrace);
+            Object startVal = eargs.get(1, backtrace);
+            // FIXME
+            boolean haveStartVal = null != startVal;
+            
+            if (null == list || 0 == list.size()) {
+                if (haveStartVal) {
+                    return startVal;
+                } else {
+                    setFuncPosParams(instance, 0);
+                    ICtx newCtx = eargs.getCompiler().newCtx(eargs);
+                    return instance.evaluate(backtrace, newCtx);
+                }
+            }
+            int i = 0;
+            Object result;
+            if (haveStartVal) {
+                result = startVal;
+            } else {
+                result = list.get(i++);
+            }
+            List<ICompiled> vars = setFuncPosParams(instance, 2);
             for (; i < list.size(); i++) {
-		ICtx newCtx = eargs.getCompiler().newCtx(eargs);
+                ICtx newCtx = eargs.getCompiler().newCtx(eargs);
                 newCtx.getMappings().put("%1",  result);
-		newCtx.getMappings().put("%2",  list.get(i));
+                newCtx.getMappings().put("%2",  list.get(i));
                 result = instance.evaluate(backtrace, newCtx);
             }
             return result;
@@ -947,7 +947,7 @@ public class Funcs {
     }
 
     @Docstring(text="Filter operation. test is a function of one argument that returns boolean, seq is input sequence. "+
-	       "Return a sequence from which the elements that do not satisfy the test have been removed.")
+               "Return a sequence from which the elements that do not satisfy the test have been removed.")
     @Arguments(spec={"test", "sequence"})
     public static  class FILTER extends FuncExp {
         @Override
@@ -986,11 +986,11 @@ public class Funcs {
             ICode lambda = (ICode) Utils.asObject(val);
             IExpr instance = (IExpr)lambda.getInstance();
 
-	    List rest = (List) eargs.get(1, backtrace);
+            List rest = (List) eargs.get(1, backtrace);
             final int numLists = rest.size();
-	    if (numLists == 0) {
-		throw new RuntimeException("At least one sequence must be provided");
-	    }
+            if (numLists == 0) {
+                throw new RuntimeException("At least one sequence must be provided");
+            }
             final List<ICompiled> callParams = new ArrayList<ICompiled>(numLists);
             // evaluated lists that were given as parameters
             List<Object> lists[] = new List[numLists];
@@ -1037,11 +1037,11 @@ public class Funcs {
 
     @Arguments(spec={"f", ArgSpec.ARG_REST,"lists"})
     @Docstring(text="Returns a sequence consisting of the result of applying func to "+
-	       "the set of first items of each list, followed by applying func to the "+
-	       "set of second items in each list, until any one of the lists is "+
-	       "exhausted.  Any remaining items in other lists are ignored. Function "+
-	       "func should accept number arguments that is equal to number of lists.")
-	       public static class MAP extends ABSTRACTMAPOP {
+               "the set of first items of each list, followed by applying func to the "+
+               "set of second items in each list, until any one of the lists is "+
+               "exhausted.  Any remaining items in other lists are ignored. Function "+
+               "func should accept number arguments that is equal to number of lists.")
+    public static class MAP extends ABSTRACTMAPOP {
         protected void callfuncs(Backtrace backtrace, List results, List lists[], 
                                  IExpr instance, List<ICompiled> callParams, ICtx ctx) {
             int indices[] = new int[lists.length];
@@ -1060,8 +1060,8 @@ public class Funcs {
 
     @Arguments(spec={"f", ArgSpec.ARG_REST,"lists"})
     @Docstring(text="Returns a sequence consisting of the result of applying func to "+
-	       "the cartesian product of the lists. Function func should accept number "+
-	       "arguments that is equal to number of lists.")
+               "the cartesian product of the lists. Function func should accept number "+
+               "arguments that is equal to number of lists.")
     public static class MAPPROD extends ABSTRACTMAPOP {
         protected void callfuncs(Backtrace backtrace, List results, List lists[], 
                                  IExpr instance, List<ICompiled> callParams, ICtx ctx) {
@@ -1092,14 +1092,14 @@ public class Funcs {
     /***** JAVA INTEROP *****/
     @Arguments(spec={"object",ARG_OPTIONAL,"prefix","suffix"})
     @Docstring(text="Returns a Map based on getters in the passed java object. " +
-	       "Accepts optional prefix and suffics arguments that are used " +
-	       "to modify the generated keys.")
+               "Accepts optional prefix and suffics arguments that are used " +
+               "to modify the generated keys.")
     public static class BEAN extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
             final Object obj = eargs.get(0, backtrace);
-	    final String prefix = Utils.asStringOrEmpty((eargs.size() > 1) ? eargs.get(1, backtrace) : null);
-	    final String suffix = Utils.asStringOrEmpty((eargs.size() > 2) ? eargs.get(2, backtrace) : null);
+            final String prefix = Utils.asStringOrEmpty((eargs.size() > 1) ? eargs.get(1, backtrace) : null);
+            final String suffix = Utils.asStringOrEmpty((eargs.size() > 2) ? eargs.get(2, backtrace) : null);
             return new Map() {
                 protected Map<String,Method> getGettersMap() {
                     Map result = new HashMap();
@@ -1107,7 +1107,7 @@ public class Funcs {
                     for(int i = 0; i < methods.length; i++) {
                         Method m = methods[i];
                         //if (m.getParameterCount()>0) {
-			if (m.getParameterTypes().length > 0) {
+                        if (m.getParameterTypes().length > 0) {
                             continue;
                         }
                         final String methodName = m.getName();
@@ -1115,7 +1115,7 @@ public class Funcs {
                             continue;
                         }
                         StringBuilder kb =  new StringBuilder();
-			kb.append(prefix);
+                        kb.append(prefix);
                         if (methodName.startsWith("get") && (methodName.length()>=4)) {
                             kb.append(methodName.substring(3,4).toLowerCase()+methodName.substring(4));
                         } else if (methodName.startsWith("is") && (methodName.length()>=3)) {
@@ -1123,7 +1123,7 @@ public class Funcs {
                         } else {
                             continue;
                         }
-			kb.append(suffix);
+                        kb.append(suffix);
                         result.put(kb.toString(),m);
                     }
                     return result;
@@ -1232,7 +1232,7 @@ public class Funcs {
 
     @Arguments(spec={"class-spec"})
     @Docstring(text="Return class object according to it's fully qualified class name. " +
-	       " class-spec may be string, symbol or any object, which string representation will be used")
+               " class-spec may be string, symbol or any object, which string representation will be used")
     public static class CLASS extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
@@ -1243,33 +1243,33 @@ public class Funcs {
     
     @Arguments(spec={"class", ArgSpec.ARG_OPTIONAL, "arglist", "typeslist"})
     @Docstring(text="Return new class instance. Optional arglist and typeslist "+
-	       "parameters specify parameters to be passed to cosnstructor "+
-	       "and their types. When typelist not given it tries to find "+
-	       "most narrowly matching constructor on the basis of types of "+
-	       "the arguments in arglist. If typeslist is provided exactly "+
-	       "matching constructor will be used.")
+               "parameters specify parameters to be passed to cosnstructor "+
+               "and their types. When typelist not given it tries to find "+
+               "most narrowly matching constructor on the basis of types of "+
+               "the arguments in arglist. If typeslist is provided exactly "+
+               "matching constructor will be used.")
     public static class DOTN extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final Class cls = Utils.tspecToClass(eargs.get(0, backtrace));
             final List<Object> constrArgs = (eargs.size() > 1) ? (List) eargs.get(1, backtrace) : null;
-	    final List<Object> tspecs = (eargs.size() > 2) ? (List) eargs.get(2, backtrace) : null;
+            final List<Object> tspecs = (eargs.size() > 2) ? (List) eargs.get(2, backtrace) : null;
             final Class[] paramsClasses = Utils.getMethodParamsClasses(constrArgs, tspecs);
             Constructor constr;
             try {
-		if (null != tspecs) {
-		    constr = cls.getConstructor(paramsClasses);
-		} else {
-		    BetterMethodFinder finder = new BetterMethodFinder(cls);
-		    constr = finder.findConstructor(paramsClasses);
-		}
+                if (null != tspecs) {
+                    constr = cls.getConstructor(paramsClasses);
+                } else {
+                    BetterMethodFinder finder = new BetterMethodFinder(cls);
+                    constr = finder.findConstructor(paramsClasses);
+                }
             } catch (NoSuchMethodException ex) {
                 throw new RuntimeException(ex);
             }
             try {
                 Object obj = (null == constrArgs)
-		    ? constr.newInstance() 
-		    : constr.newInstance(constrArgs.toArray());
+                    ? constr.newInstance() 
+                    : constr.newInstance(constrArgs.toArray());
                 return obj;
             } catch (InstantiationException ex) {
                 throw new RuntimeException(ex);
@@ -1288,7 +1288,7 @@ public class Funcs {
                     String partname = Utils.asString(parts.get(i));
                     boolean isMethod = false;
                     List methodParams = null;
-		    List paramsTypesSpec = null;
+                    List paramsTypesSpec = null;
                     //List<?> methodParams = null;
                     if (partname.endsWith("()")) {
                         isMethod = true;
@@ -1299,11 +1299,11 @@ public class Funcs {
                         isMethod = true;
                         methodParams = (List<?>)parts.get(i+1);
                         i++;
-			if ((parts.size()>i+1) &&
-			    (parts.get(i+1) instanceof List)) {
-			    paramsTypesSpec = (List)parts.get(i+1);
-			    i++;
-			}
+                        if ((parts.size()>i+1) &&
+                            (parts.get(i+1) instanceof List)) {
+                            paramsTypesSpec = (List)parts.get(i+1);
+                            i++;
+                        }
                     }
                     Class cls;
                     if (object instanceof Class) {
@@ -1316,13 +1316,13 @@ public class Funcs {
                     if (isMethod) {
                         if (null != methodParams) {
                             final Class methodParamClasses[] = Utils.getMethodParamsClasses(methodParams, paramsTypesSpec);
-			    Method m;
-			    if (null != paramsTypesSpec) {
-				m = cls.getMethod(partname, methodParamClasses);
-			    } else {
-				BetterMethodFinder finder = new BetterMethodFinder(cls);
-				m = finder.findMethod(partname, methodParamClasses);
-			    }
+                            Method m;
+                            if (null != paramsTypesSpec) {
+                                m = cls.getMethod(partname, methodParamClasses);
+                            } else {
+                                BetterMethodFinder finder = new BetterMethodFinder(cls);
+                                m = finder.findMethod(partname, methodParamClasses);
+                            }
                             object = m.invoke(object, methodParams.toArray());
                         } else {
                             Method m = cls.getMethod(partname, null);
@@ -1389,7 +1389,7 @@ public class Funcs {
     public static class DOTS extends FFI {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final List rest = (List)eargs.get(1, backtrace);
+            final List rest = (List)eargs.get(1, backtrace);
             final Object tspec = eargs.get(0, backtrace);
             final Class cls = Utils.tspecToClass(tspec);
             final StringBuilder trail = new StringBuilder();
@@ -1418,18 +1418,18 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
             Object val = eargs.get(0, backtrace);
-	    ExecutionException ex;
-	    if (val instanceof ExecutionException) {
-		ex = (ExecutionException) val;
-		if (null == ex.getBacktrace()) {
-		    ex.setBacktrace(backtrace);
-		}
-	    } else if (val instanceof Throwable) {
-		ex = new ExecutionException(backtrace, (Throwable)val);
-	    } else {
-		ex = new ExecutionException(backtrace, Utils. asString(val));
+            ExecutionException ex;
+            if (val instanceof ExecutionException) {
+                ex = (ExecutionException) val;
+                if (null == ex.getBacktrace()) {
+                    ex.setBacktrace(backtrace);
+                }
+            } else if (val instanceof Throwable) {
+                ex = new ExecutionException(backtrace, (Throwable)val);
+            } else {
+                ex = new ExecutionException(backtrace, Utils. asString(val));
             }
-	    throw ex;
+            throw ex;
         }
     }
     
@@ -1440,43 +1440,43 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final String patternStr = Utils.asString(eargs.get(0, backtrace));
-	    final Pattern pattern = Pattern.compile(patternStr);
-	    return pattern;
+            final Pattern pattern = Pattern.compile(patternStr);
+            return pattern;
         }
     }
 
     public static Matcher getMatcher(Eargs eargs, Backtrace backtrace) {
-	final Object obj0 = eargs.get(0, backtrace);
-	final Object obj1 = eargs.get(1, backtrace);
-	if (null == obj1) {
-	    return (Matcher)obj0;
-	} else {
-	    return  ((Pattern)obj0).matcher((CharSequence)obj1);
-	}
+        final Object obj0 = eargs.get(0, backtrace);
+        final Object obj1 = eargs.get(1, backtrace);
+        if (null == obj1) {
+            return (Matcher)obj0;
+        } else {
+            return  ((Pattern)obj0).matcher((CharSequence)obj1);
+        }
     }
 
     public static Object returnGroups(Matcher m) {
-	if (m.groupCount()>0) {
-	    final List glist = new ArrayList(m.groupCount() + 1);
-	    glist.add (m.group());
-	    for (int i = 1; i <= m.groupCount(); i++) {
-		glist.add(m.group(i));
-	    }
-	    return glist;
-	} else {
-	    return m.group();
-	}
+        if (m.groupCount()>0) {
+            final List glist = new ArrayList(m.groupCount() + 1);
+            glist.add (m.group());
+            for (int i = 1; i <= m.groupCount(); i++) {
+                glist.add(m.group(i));
+            }
+            return glist;
+        } else {
+            return m.group();
+        }
     }
 
     @Arguments(spec={"matcher"})
     @Docstring(text="Returns the groups from the most recent match/find.\n"+
-	       "If there are no nested groups, returns a string of the entire\n"+
-	       "match. If there are nested groups, returns a list of the groups,\n"+
-	       "the first element being the entire match.")
+               "If there are no nested groups, returns a string of the entire\n"+
+               "match. If there are nested groups, returns a list of the groups,\n"+
+               "the first element being the entire match.")
     public static  class RE_GROUPS extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    return returnGroups((Matcher)eargs.get(0, backtrace));
+            return returnGroups((Matcher)eargs.get(0, backtrace));
         }
     }
 
@@ -1486,86 +1486,86 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final Pattern pattern = (Pattern)eargs.get(0, backtrace);
-	    final CharSequence charSeq = (CharSequence)eargs.get(1, backtrace);
-	    return pattern.matcher(charSeq);
+            final CharSequence charSeq = (CharSequence)eargs.get(1, backtrace);
+            return pattern.matcher(charSeq);
         }
     }
 
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
-	       "When called with one arguments it uses given Matcher. \n "+
-	       "Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n "+
-	       "if no groups were defined it returns the matched string.\n "+
-	       "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-	       "If there is no match NIL is returned")
+               "When called with one arguments it uses given Matcher. \n "+
+               "Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n "+
+               "if no groups were defined it returns the matched string.\n "+
+               "If groups were defined it returns a list consisting of the full match and matched groups\n "+
+               "If there is no match NIL is returned")
     public static  class RE_FIND extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Matcher m = getMatcher(eargs,  backtrace);
-	    if (m.find()) {
-		return returnGroups(m);
-	    } else {
-		return null;
-	    }
+            final Matcher m = getMatcher(eargs,  backtrace);
+            if (m.find()) {
+                return returnGroups(m);
+            } else {
+                return null;
+            }
         }
     }
 
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
-	       "When called with one arguments it uses given Matcher. \n "+
-	       "Returns the match, if any, of string to pattern, using Matcher.matches(). \n "+
-	       "if no groups were defined it returns the matched string.\n "+
-	       "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-	       "If there is no match NIL is returned")
+               "When called with one arguments it uses given Matcher. \n "+
+               "Returns the match, if any, of string to pattern, using Matcher.matches(). \n "+
+               "if no groups were defined it returns the matched string.\n "+
+               "If groups were defined it returns a list consisting of the full match and matched groups\n "+
+               "If there is no match NIL is returned")
     public static  class RE_MATCHES extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Matcher m = getMatcher(eargs,  backtrace);
-	    if (m.matches()) {
-		return returnGroups(m);
-	    } else {
-		return null;
-	    }
+            final Matcher m = getMatcher(eargs,  backtrace);
+            if (m.matches()) {
+                return returnGroups(m);
+            } else {
+                return null;
+            }
         }
     }
 
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
-	       "Returns lazy iterable sequence (instance of Iterable) of matches of string to pattern, using Matcher.find(). \n "+
-	       "When called with one arguments it uses given Matcher. \n "+
-	       "if no groups were defined the elements of the sequence are the matched string.\n "+
-	       "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-	       "If there is no match empty sequence is returned")
+               "Returns lazy iterable sequence (instance of Iterable) of matches of string to pattern, using Matcher.find(). \n "+
+               "When called with one arguments it uses given Matcher. \n "+
+               "if no groups were defined the elements of the sequence are the matched string.\n "+
+               "If groups were defined it returns a list consisting of the full match and matched groups\n "+
+               "If there is no match empty sequence is returned")
     public static class RE_SEQ extends FuncExp {
-	@Override
-	protected Iterable evalWithArgs(final Backtrace backtrace, final Eargs eargs) {
-	    return new Iterable() {
-		@Override
-		public Iterator iterator() {
+        @Override
+        protected Iterable evalWithArgs(final Backtrace backtrace, final Eargs eargs) {
+            return new Iterable() {
+                @Override
+                public Iterator iterator() {
 
-		    return new Iterator() {
-			final Matcher m = getMatcher(eargs,  backtrace);
-			boolean findResult = m.find();
+                    return new Iterator() {
+                        final Matcher m = getMatcher(eargs,  backtrace);
+                        boolean findResult = m.find();
 
-			@Override
-			public boolean hasNext() {
-			    synchronized (m) {
-				return findResult;
-			    }
-			}
-			@Override
-			public synchronized Object next() {
-			    synchronized (m) {
-				final Object result = returnGroups(m);
-				// FIXME: call only if requested
-				findResult = m.find();
-				return result;
-			    }
-			}
-		    };
-		}
-	    };
-	}
+                        @Override
+                        public boolean hasNext() {
+                            synchronized (m) {
+                                return findResult;
+                            }
+                        }
+                        @Override
+                        public synchronized Object next() {
+                            synchronized (m) {
+                                final Object result = returnGroups(m);
+                                // FIXME: call only if requested
+                                findResult = m.find();
+                                return result;
+                            }
+                        }
+                    };
+                }
+            };
+        }
     }
     
     @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
@@ -1611,215 +1611,215 @@ public class Funcs {
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
     @Docstring(text="Adds to the first given sequence (target sequence) all  the elements of all of the following sequences and return the target sequence.  If no sequences were given an empty list will be returned. Target sequence must be extendable, that means that objects like Arrays or String cannot be target of this operation")
     public static class NAPPEND extends APPEND {
-	public NAPPEND() {
-	    super();
-	    isDestructive = true;
-	}
+        public NAPPEND() {
+            super();
+            isDestructive = true;
+        }
     }
 
 
     private static Seq.Operation mkArraySetter(final Object arr,
-					      final int[] counter,
-					      Class componentType) {
-	    if (componentType.isPrimitive()) {
-		if (componentType.equals(Character.TYPE)) {
-		    return new Seq.Operation() {
-			@Override
-			public void perform(Object obj) {
-			    Utils.aset(arr,
-				      counter[0]++,
-				      Utils.asChar(obj));
-			}
-		    };
-		} else if (componentType.equals(Boolean.TYPE)) {
-		    return new Seq.Operation() {
-			@Override
-			public void perform(Object obj) {
-			    Utils.aset(arr,
-				      counter[0]++,
-				      Utils.asBoolean(obj));
-			}
-		    };
-		} else {
-		    // six numeric types
-		    return new Seq.Operation() {
-			@Override
-			public void perform(Object obj) {
-			    Utils.aset(arr,
-				      counter[0]++,
-				      Utils.asNumber(obj));
-			}
-		    };
-		}
-	    } else {
-		return new Seq.Operation() {
-		    @Override
-		    public void perform(Object obj) {
-			Utils.aset(arr, counter[0]++, obj);
-		    }
-		};
-	    }
-	}
+                                               final int[] counter,
+                                               Class componentType) {
+        if (componentType.isPrimitive()) {
+            if (componentType.equals(Character.TYPE)) {
+                return new Seq.Operation() {
+                    @Override
+                    public void perform(Object obj) {
+                        Utils.aset(arr,
+                                   counter[0]++,
+                                   Utils.asChar(obj));
+                    }
+                };
+            } else if (componentType.equals(Boolean.TYPE)) {
+                return new Seq.Operation() {
+                    @Override
+                    public void perform(Object obj) {
+                        Utils.aset(arr,
+                                   counter[0]++,
+                                   Utils.asBoolean(obj));
+                    }
+                };
+            } else {
+                // six numeric types
+                return new Seq.Operation() {
+                    @Override
+                    public void perform(Object obj) {
+                        Utils.aset(arr,
+                                   counter[0]++,
+                                   Utils.asNumber(obj));
+                    }
+                };
+            }
+        } else {
+            return new Seq.Operation() {
+                @Override
+                public void perform(Object obj) {
+                    Utils.aset(arr, counter[0]++, obj);
+                }
+            };
+        }
+    }
 
 
     @Arguments(spec={"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
     @Docstring(text="subseq creates a sequence that is a copy of the subsequence of sequence bounded by start and end. Start specifies an offset into the original sequence and marks the beginning position of the subsequence. end marks the position following the last element of the subsequence. subseq always allocates a new sequence for a result; it never shares storage with an old sequence. The result subsequence is always of the same type as sequence.")
 
     public static class SUBSEQ extends FuncExp {
-	@Override
-	@SuppressWarnings("unchecked")
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    Object result = null;
-	    final int size = eargs.size();
-	    if (3 != size) {
-		throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
-	    }
-	    final Object seqObj  =  eargs.get(0, backtrace);
-	    if (null == seqObj) {
-		throw new ExecutionException("sequence parameter cannot be NIL");
-	    }
-	    final int start = Utils.asNumber(eargs.get(1, backtrace)).intValue();
-	    final Object endObj  = eargs.get(2, backtrace);
-	    final Integer end = (null == endObj) ? null : Utils.asNumber(endObj).intValue();
-	    Class clz = null == seqObj ? Utils.defListClz() : seqObj.getClass();
-     	    if (clz.isArray()) {
-     		return arraySubseq(clz, backtrace, seqObj, start, end);
-     	    } else if (CharSequence.class.isAssignableFrom(clz)) {
-     		return charSeqSubseq(clz, backtrace, (CharSequence) seqObj, start, end);
-     	    } else if (List.class.isAssignableFrom(clz)) {
-     		return listSubseq(clz, backtrace, (List)seqObj, start, end);
-     	    } else {
-     		throw new ExecutionException(backtrace, "SUBSEQ: Unsupported sequence type: " + clz);
-     	    }
-     	}
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Object result = null;
+            final int size = eargs.size();
+            if (3 != size) {
+                throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
+            }
+            final Object seqObj  =  eargs.get(0, backtrace);
+            if (null == seqObj) {
+                throw new ExecutionException("sequence parameter cannot be NIL");
+            }
+            final int start = Utils.asNumber(eargs.get(1, backtrace)).intValue();
+            final Object endObj  = eargs.get(2, backtrace);
+            final Integer end = (null == endObj) ? null : Utils.asNumber(endObj).intValue();
+            Class clz = null == seqObj ? Utils.defListClz() : seqObj.getClass();
+            if (clz.isArray()) {
+                return arraySubseq(clz, backtrace, seqObj, start, end);
+            } else if (CharSequence.class.isAssignableFrom(clz)) {
+                return charSeqSubseq(clz, backtrace, (CharSequence) seqObj, start, end);
+            } else if (List.class.isAssignableFrom(clz)) {
+                return listSubseq(clz, backtrace, (List)seqObj, start, end);
+            } else {
+                throw new ExecutionException(backtrace, "SUBSEQ: Unsupported sequence type: " + clz);
+            }
+        }
 
-	private Object charSeqSubseq(Class clz, Backtrace bt,
-				     CharSequence seq,
-				     int start,
-				     Integer end) {
-	    return seq.subSequence(start, null == end ? seq.length() : end);
-	}
+        private Object charSeqSubseq(Class clz, Backtrace bt,
+                                     CharSequence seq,
+                                     int start,
+                                     Integer end) {
+            return seq.subSequence(start, null == end ? seq.length() : end);
+        }
 
-	private Object arraySubseq(Class clz, Backtrace bt, Object arrayObj, int start, Integer end) {
-	    final Class componentType = clz.getComponentType();
-	    final int endPos = null == end ? Array.getLength(arrayObj) : end;
-	    final Object result = Array.newInstance(componentType, endPos - start);
-	    final int[] counter = new int[1];
-	    final Operation setter = mkArraySetter(result, counter, componentType);
-	    for (int i = start; i < endPos ; i++) {
-		setter.perform(Array.get(arrayObj, i));
-	    }
-	    return result;
-	}
+        private Object arraySubseq(Class clz, Backtrace bt, Object arrayObj, int start, Integer end) {
+            final Class componentType = clz.getComponentType();
+            final int endPos = null == end ? Array.getLength(arrayObj) : end;
+            final Object result = Array.newInstance(componentType, endPos - start);
+            final int[] counter = new int[1];
+            final Operation setter = mkArraySetter(result, counter, componentType);
+            for (int i = start; i < endPos ; i++) {
+                setter.perform(Array.get(arrayObj, i));
+            }
+            return result;
+        }
 
- 	protected List  listSubseq(Class clz, Backtrace bt, List lst, int start, Integer end) {
-	    return lst.subList(start,  null == end ? lst.size() : end);
-	}
+        protected List  listSubseq(Class clz, Backtrace bt, List lst, int start, Integer end) {
+            return lst.subList(start,  null == end ? lst.size() : end);
+        }
     }
     
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
     @Docstring(text="append returns a new sequence that is the concatenation of the elements of the arguments. All the argument remain unchanged. The resulting sequence is of the same type as the first argument. In no arguments were given an empty list is returned. If target sequence is an array necessary coercions will be performed automatically.")
     public static class APPEND extends FuncExp {
-	protected boolean isDestructive;
-	public APPEND() {
-	    isDestructive = false;
-	}
+        protected boolean isDestructive;
+        public APPEND() {
+            isDestructive = false;
+        }
 
         @Override
         @SuppressWarnings("unchecked")
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             Object result = null;
-	    final int size = eargs.size();
-	    if (1 != size) {
-		throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
-	    }
-	    List seqs = (List)eargs.get(0, backtrace);
-	    if (seqs.size() == 0) {
-		return Utils.list();
-	    }
-	    Object firstSeq = seqs.get(0);
-	    Class clz = null == firstSeq ? Utils.defListClz() : firstSeq.getClass();
-	    if (clz.isArray()) {
-		return arrayAppend(clz, backtrace, seqs);
-	    } else if (CharSequence.class.isAssignableFrom(clz)) {
-		return charSeqAppend(clz, backtrace, seqs);
-	    } else if (Collection.class.isAssignableFrom(clz)) {
-		return colAppend(clz, backtrace, seqs);
-	    } else {
-		throw new ExecutionException(backtrace, "Unsupported sequence type: " + clz);
-	    }
-	}
+            final int size = eargs.size();
+            if (1 != size) {
+                throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
+            }
+            List seqs = (List)eargs.get(0, backtrace);
+            if (seqs.size() == 0) {
+                return Utils.list();
+            }
+            Object firstSeq = seqs.get(0);
+            Class clz = null == firstSeq ? Utils.defListClz() : firstSeq.getClass();
+            if (clz.isArray()) {
+                return arrayAppend(clz, backtrace, seqs);
+            } else if (CharSequence.class.isAssignableFrom(clz)) {
+                return charSeqAppend(clz, backtrace, seqs);
+            } else if (Collection.class.isAssignableFrom(clz)) {
+                return colAppend(clz, backtrace, seqs);
+            } else {
+                throw new ExecutionException(backtrace, "Unsupported sequence type: " + clz);
+            }
+        }
 
-	private Object charSeqAppend(Class clz, Backtrace bt, List seqs) {
-	    // FIXME: support other types but StringBuilder
-	    Object target = seqs.get(0);
-	    if (isDestructive && !(target instanceof StringBuilder)) {
-		throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of destructive operation");
-	    }
-	    final StringBuilder result = isDestructive ?
-		(StringBuilder)target: new StringBuilder();
-	    final int numArgs = seqs.size();
-	    for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
-		Object seq = seqs.get(i);
-		Seq.forEach(seq, new Seq.Operation() {
-			@Override
-			public void perform(Object obj) {
-			    result.append(Utils.asChar(obj));
-			}
-		    }, true);
-	    }
-	    final CharSequence cs =  StringBuilder.class.isAssignableFrom(clz) ? result :
-		(StringBuffer.class.isAssignableFrom(clz) ? new StringBuffer(result) :
-		 ((String.class == clz ) ? result.toString() : null));
-	    if (null == cs) {
-		throw new ExecutionException(bt,"Unsupported CharSequence type: "+clz+" only String, StringBuilder, StringBuffer are supported");
-	    }
-	    return cs;
-	}
+        private Object charSeqAppend(Class clz, Backtrace bt, List seqs) {
+            // FIXME: support other types but StringBuilder
+            Object target = seqs.get(0);
+            if (isDestructive && !(target instanceof StringBuilder)) {
+                throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of destructive operation");
+            }
+            final StringBuilder result = isDestructive ?
+                (StringBuilder)target: new StringBuilder();
+            final int numArgs = seqs.size();
+            for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
+                Object seq = seqs.get(i);
+                Seq.forEach(seq, new Seq.Operation() {
+                        @Override
+                        public void perform(Object obj) {
+                            result.append(Utils.asChar(obj));
+                        }
+                    }, true);
+            }
+            final CharSequence cs =  StringBuilder.class.isAssignableFrom(clz) ? result :
+                (StringBuffer.class.isAssignableFrom(clz) ? new StringBuffer(result) :
+                 ((String.class == clz ) ? result.toString() : null));
+            if (null == cs) {
+                throw new ExecutionException(bt,"Unsupported CharSequence type: "+clz+" only String, StringBuilder, StringBuffer are supported");
+            }
+            return cs;
+        }
 
-	private Object arrayAppend(Class clz, Backtrace bt, List seqs) {
-	    if (isDestructive) {
-		throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of sequence extension");
-	    }
-	    int totalLength = 0;
-	    final int numArgs = seqs.size();
-	    // FIXME: support for sequences that cannot return their size
-	    for (int i = 0; i < numArgs; i++) {
-		final Object seq = seqs.get(i);
-		totalLength += Seq.getLength(seq, bt, true);
-	    }
-	    final Class componentType = clz.getComponentType();
-	    Object result = Array.newInstance(componentType, totalLength);
-	    final int[] counter = new int[1];
+        private Object arrayAppend(Class clz, Backtrace bt, List seqs) {
+            if (isDestructive) {
+                throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of sequence extension");
+            }
+            int totalLength = 0;
+            final int numArgs = seqs.size();
+            // FIXME: support for sequences that cannot return their size
+            for (int i = 0; i < numArgs; i++) {
+                final Object seq = seqs.get(i);
+                totalLength += Seq.getLength(seq, bt, true);
+            }
+            final Class componentType = clz.getComponentType();
+            Object result = Array.newInstance(componentType, totalLength);
+            final int[] counter = new int[1];
 
-	    for (int i = 0; i < numArgs; i++) {
-		final Object seq = seqs.get(i);
-		Seq.forEach(seq, mkArraySetter(result, counter, componentType),
-			    true);
-	    }
-	    return result;
-	}
+            for (int i = 0; i < numArgs; i++) {
+                final Object seq = seqs.get(i);
+                Seq.forEach(seq, mkArraySetter(result, counter, componentType),
+                            true);
+            }
+            return result;
+        }
 
-	protected Collection colAppend(Class clz, Backtrace bt, List seqs) {
-	    Object result = null;
-	    try {
-		result = isDestructive ? seqs.get(0) : clz.newInstance();
-	    } catch (InstantiationException ex) {
-		throw new ExecutionException(bt, ex);
-	    } catch (IllegalAccessException ex) {
-		throw new ExecutionException(bt, ex);
-	    }
-	    final Collection resultCol = (Collection)result;
-	    final int numArgs = seqs.size();
-	    for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
-		Object seq = seqs.get(i);
-		Seq.forEach(seq, new Seq.Operation() {
-			@Override
-			public void perform(Object obj) {
-			    resultCol.add(obj);
-			}
-		    }, true);
-	    }
+        protected Collection colAppend(Class clz, Backtrace bt, List seqs) {
+            Object result = null;
+            try {
+                result = isDestructive ? seqs.get(0) : clz.newInstance();
+            } catch (InstantiationException ex) {
+                throw new ExecutionException(bt, ex);
+            } catch (IllegalAccessException ex) {
+                throw new ExecutionException(bt, ex);
+            }
+            final Collection resultCol = (Collection)result;
+            final int numArgs = seqs.size();
+            for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
+                Object seq = seqs.get(i);
+                Seq.forEach(seq, new Seq.Operation() {
+                        @Override
+                        public void perform(Object obj) {
+                            resultCol.add(obj);
+                        }
+                    }, true);
+            }
             return resultCol;
         }
     }
@@ -1848,13 +1848,13 @@ public class Funcs {
 
     @Arguments(spec={"sequence"})
     @Docstring(text="Returns the first element of the sequence. Returns NIL when " +
-	       "sequence is NIL or empty")
+               "sequence is NIL or empty")
     public static class FIRST extends  NTH {
         @Override
         @SuppressWarnings("unchecked")
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             Object seq = eargs.get(0, backtrace);
-	    return Seq.getElement(seq, 0);
+            return Seq.getElement(seq, 0);
         }
     }
 
@@ -1864,7 +1864,7 @@ public class Funcs {
         @Override
         @SuppressWarnings("unchecked")
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    return Seq.getLength(eargs.get(0, backtrace), backtrace, true);
+            return Seq.getLength(eargs.get(0, backtrace), backtrace, true);
         }
     }
 
@@ -1873,7 +1873,7 @@ public class Funcs {
     public static class LIST extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    List rest = (List)eargs.get(0, backtrace);
+            List rest = (List)eargs.get(0, backtrace);
             final List<Object> lst = new ArrayList<Object>(rest.size());
             for (Object val : rest) {
                 lst.add(val);
@@ -1889,15 +1889,15 @@ public class Funcs {
     public static class NTH extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object seq = Utils.asObject(eargs.get(1, backtrace));
+            final Object seq = Utils.asObject(eargs.get(1, backtrace));
             final int index = Utils.asNumber(eargs.get(0, backtrace)).intValue();
-	    if (index < 0) {
-		throw new RuntimeException(getName() +
-					   "expected non-negative index index, but got"
-					   + index);
-	    }
-	    return Seq.getElement(seq, index);
-	}
+            if (index < 0) {
+                throw new RuntimeException(getName() +
+                                           "expected non-negative index index, but got"
+                                           + index);
+            }
+            return Seq.getElement(seq, index);
+        }
     }
 
     @Arguments(spec={"sequence"})
@@ -1928,22 +1928,22 @@ public class Funcs {
         @SuppressWarnings("unchecked")
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             Object val = eargs.get(0, backtrace);
-	    if (null == val) return null;
-	    return reverseList((List<Object>) val);
-	}
+            if (null == val) return null;
+            return reverseList((List<Object>) val);
+        }
 
-	private Object reverseList(List<Object> list) {
-	    Collections.reverse(list);
-	    return list;
-	}
+        private Object reverseList(List<Object> list) {
+            Collections.reverse(list);
+            return list;
+        }
     }
     @Arguments(spec={"sequence"})
     public static  class REVERSE extends NREVERSE {
         @Override
         @SuppressWarnings("unchecked")
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object val = eargs.get(0, backtrace);
-	    if (null == val) return null;
+            final Object val = eargs.get(0, backtrace);
+            if (null == val) return null;
             return super.reverseList((List)Utils.copySeq((List<Object>)val));
         }
     }
@@ -1951,25 +1951,25 @@ public class Funcs {
 
     @Arguments(spec={"start",  "stop", ArgSpec.ARG_OPTIONAL,  "step"})
     public static class RANGE extends FuncExp {
-	
+        
         @Override
         public Object evalWithArgs(Backtrace bt, Eargs eargs) {
-	    //final Promotion prom = new Promotion();
+            //final Promotion prom = new Promotion();
 
-	    // 0 is default
-	    final Number start = Utils.asNumber(eargs.get(0, bt));
-	    //prom.promote(start);
+            // 0 is default
+            final Number start = Utils.asNumber(eargs.get(0, bt));
+            //prom.promote(start);
 
-	    final Number to =  Utils.asNumber((Number)eargs.get(1, bt));
+            final Number to =  Utils.asNumber((Number)eargs.get(1, bt));
 
-	    // 1 is default
-	    final Number step = (null == eargs.get(2, bt)) ?
-		1 : Utils.asNumber(eargs.get(2, bt)) ;
-	    //prom.promote(step);
+            // 1 is default
+            final Number step = (null == eargs.get(2, bt)) ?
+                1 : Utils.asNumber(eargs.get(2, bt)) ;
+            //prom.promote(step);
 
-	    
-	    final Collection resultSeq = new RangeList(start, to, step);
-	    return resultSeq;
+            
+            final Collection resultSeq = new RangeList(start, to, step);
+            return resultSeq;
         }
     }
     
@@ -1995,66 +1995,66 @@ public class Funcs {
 
     
     public static class SORT extends NSORT {
-	protected Object doSort(Object seq, ICode lambda, Backtrace bt, ICtx ctx) {
-	    return super.doSort(Utils.copySeq(seq), lambda, bt, ctx);
-	}
+        protected Object doSort(Object seq, ICode lambda, Backtrace bt, ICtx ctx) {
+            return super.doSort(Utils.copySeq(seq), lambda, bt, ctx);
+        }
     }
 
     @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_MANDATORY, "sequence"})
     public static class NSORT extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object seq =     (eargs.size() == 1 ? eargs.get(0, backtrace) : eargs.get(1, backtrace));
-	    final ICode lambda = (ICode) (eargs.size() == 1 ? null         : eargs.get(0, backtrace)) ;
-	    return doSort(seq, lambda, backtrace, eargs);
-	}
-	protected Object doSort(final Object seq,
-				final ICode lambda,
-				final Backtrace backtrace,
-				final ICtx ctx) {
-	    Comparator comparator = null;
-	    if (null != lambda) {
-		final ICtx localCtx = ctx.getCompiler().newCtx(ctx);
-		final IExpr compf = (IExpr)lambda.getInstance();
-		try {
-		    compf.setParams(Utils.newPosArgsList(2));
-		} catch (InvalidParametersException ex) {
-		    throw new RuntimeException(String.format("%s: lambda at %s: does not take parameter: %s",
-							     this.getName(),
-							     (null == ex.getParseCtx() ? "?" : ex.getParseCtx().toString()),
-							     ex.getMessage()));
-		}
-		comparator = new Comparator() {
-			@Override
-			public int compare(Object o1, Object o2) {
-			    localCtx.getMappings().put("%1", o1);
-			    localCtx.getMappings().put("%2", o2);
-			    return (Integer)compf.evaluate(backtrace, localCtx);
-			}
-		    };
-	    }
-	    if (seq instanceof List)  {
-		List col = (List) seq;
-		if (null==comparator) {
-		    Collections.sort(col);
-		} else {
-		    Collections.sort(col, comparator);
-		}
-		return col;
-	    } else if (seq.getClass().isArray()) {
-		Object[] ar = (Object[]) seq;
-		if (null == comparator) {
-		    Arrays.sort(ar);
-		} else {
-		    Arrays.sort(ar, comparator);
-		}
-		return ar;
-	    } else if (null == seq) {
-		return seq;
-	    } else {
-		throw new RuntimeException("No idea how to sort object of type "+seq.getClass());
-	    }
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object seq =     (eargs.size() == 1 ? eargs.get(0, backtrace) : eargs.get(1, backtrace));
+            final ICode lambda = (ICode) (eargs.size() == 1 ? null         : eargs.get(0, backtrace)) ;
+            return doSort(seq, lambda, backtrace, eargs);
+        }
+        protected Object doSort(final Object seq,
+                                final ICode lambda,
+                                final Backtrace backtrace,
+                                final ICtx ctx) {
+            Comparator comparator = null;
+            if (null != lambda) {
+                final ICtx localCtx = ctx.getCompiler().newCtx(ctx);
+                final IExpr compf = (IExpr)lambda.getInstance();
+                try {
+                    compf.setParams(Utils.newPosArgsList(2));
+                } catch (InvalidParametersException ex) {
+                    throw new RuntimeException(String.format("%s: lambda at %s: does not take parameter: %s",
+                                                             this.getName(),
+                                                             (null == ex.getParseCtx() ? "?" : ex.getParseCtx().toString()),
+                                                             ex.getMessage()));
+                }
+                comparator = new Comparator() {
+                        @Override
+                        public int compare(Object o1, Object o2) {
+                            localCtx.getMappings().put("%1", o1);
+                            localCtx.getMappings().put("%2", o2);
+                            return (Integer)compf.evaluate(backtrace, localCtx);
+                        }
+                    };
+            }
+            if (seq instanceof List)  {
+                List col = (List) seq;
+                if (null==comparator) {
+                    Collections.sort(col);
+                } else {
+                    Collections.sort(col, comparator);
+                }
+                return col;
+            } else if (seq.getClass().isArray()) {
+                Object[] ar = (Object[]) seq;
+                if (null == comparator) {
+                    Arrays.sort(ar);
+                } else {
+                    Arrays.sort(ar, comparator);
+                }
+                return ar;
+            } else if (null == seq) {
+                return seq;
+            } else {
+                throw new RuntimeException("No idea how to sort object of type "+seq.getClass());
+            }
+        }
     }
 
     
@@ -2062,36 +2062,36 @@ public class Funcs {
     @Arguments(spec={"fn", ARG_OPTIONAL,"name"})
     @Docstring(text="Create new Java thread and prepare it for execution of given function fn.  fn must not require parameters for it's execution. The created thread is not started." )
     public static class NEW_THREAD extends FuncExp {
-	@Override
-	protected Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final IExpr instance = (IExpr) ((ICode)eargs.get(0, backtrace)).getInstance();
-	    try {
-		instance.setParams(new ArrayList());
-	    } catch (InvalidParametersException iex) {
-		throw new RuntimeException(iex);
-	    }
-	    Runnable r = (Runnable) instance;
-	    final Thread t = null == eargs.get(1, backtrace) ?
-		new Thread(r) :
-		new Thread(r,Utils.asString(eargs.get(1, backtrace)));
-	    Threads.contexts.put(t,eargs);
-	    return t;
-	}
+        @Override
+        protected Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final IExpr instance = (IExpr) ((ICode)eargs.get(0, backtrace)).getInstance();
+            try {
+                instance.setParams(new ArrayList());
+            } catch (InvalidParametersException iex) {
+                throw new RuntimeException(iex);
+            }
+            Runnable r = (Runnable) instance;
+            final Thread t = null == eargs.get(1, backtrace) ?
+                new Thread(r) :
+                new Thread(r,Utils.asString(eargs.get(1, backtrace)));
+            Threads.contexts.put(t,eargs);
+            return t;
+        }
     }
 
     
     @Arguments(spec={"symbol"})
     @Docstring(text="Returns function bound to given symbol. If no function bound raises an error. The returned object may be a built-in function, compiled function or built-in special form.")
     public static class SYMBOL_FUNCTION extends FuncExp {
-	@Override
+        @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
-	    String fname = Utils.asString(eargs.get(0, backtrace));
+            String fname = Utils.asString(eargs.get(0, backtrace));
             Object funcObj = eargs.getCompiler().functab.get(fname);
             Object result = null;
             if  (null == funcObj) {
                 throw new RuntimeException("Symbol "+fname+" function value is NULL");
             } else if (funcObj instanceof ICode) {
-		return funcObj;
+                return funcObj;
             } else {
                 throw new RuntimeException("Symbol "+fname+" function value is of unsupported type: "+funcObj);
             }
@@ -2101,73 +2101,73 @@ public class Funcs {
     @Arguments(spec={"file-spec"})
     @Docstring(text="Sequentially executes each form it encounters in the input file/or stream named by resource-spec. Returns exception if input could not be read or there were exceptions while compiling or executing forms an exception will be raised. file-spec may be a java.io.File object, file path as String or opened InputStream.")
     public static class LOAD extends FuncExp {
-	protected InputStream openInput(Object loadObj, Backtrace bt) {
-	    File f = null;
-	    String srcName = null;
-	    if (loadObj instanceof String) {
-		f = new File((String) loadObj);
-		srcName = (String) loadObj;
-	    } else if (loadObj instanceof File) {
-		f = (File) loadObj;
-		srcName = f.getPath();
-	    } else if (loadObj instanceof InputStream) {
-		return (InputStream) loadObj;
-	    }
-	    try {
-		return new FileInputStream(f);
-	    } catch (IOException ex) {
-		throw new ExecutionException(bt, "I/O opening stream", ex);
-	    }
+        protected InputStream openInput(Object loadObj, Backtrace bt) {
+            File f = null;
+            String srcName = null;
+            if (loadObj instanceof String) {
+                f = new File((String) loadObj);
+                srcName = (String) loadObj;
+            } else if (loadObj instanceof File) {
+                f = (File) loadObj;
+                srcName = f.getPath();
+            } else if (loadObj instanceof InputStream) {
+                return (InputStream) loadObj;
+            }
+            try {
+                return new FileInputStream(f);
+            } catch (IOException ex) {
+                throw new ExecutionException(bt, "I/O opening stream", ex);
+            }
         }
 
-	protected Boolean load(Backtrace bt, ICtx ctx, Object loadObj) {
-	    if (loadObj == null) {
-		return false;
-	    }
-	    final String inputName = Utils.asString(loadObj);
-	    final ParseCtx pctx = new ParseCtx(inputName);
-	    InputStream is = null;
-	    try {
-		is = openInput(loadObj, bt);
-		ASTNList astns = new ParserWrapper(ctx.getCompiler().getParser()).parse(is);
-		for(ASTN astn : astns) {
-		    ICompiled expr = ctx.getCompiler().compile(astn);
-		    expr.evaluate(bt, ctx);
-		}
-		return true;
-	    } finally {
-		if (null != is) {
-		    try {
-			is.close();
-		    } catch (IOException ex) {
-			throw new ExecutionException(bt, "I/O exception at stream close", ex);
-		    }
-		}
-	    }
+        protected Boolean load(Backtrace bt, ICtx ctx, Object loadObj) {
+            if (loadObj == null) {
+                return false;
+            }
+            final String inputName = Utils.asString(loadObj);
+            final ParseCtx pctx = new ParseCtx(inputName);
+            InputStream is = null;
+            try {
+                is = openInput(loadObj, bt);
+                ASTNList astns = new ParserWrapper(ctx.getCompiler().getParser()).parse(is);
+                for(ASTN astn : astns) {
+                    ICompiled expr = ctx.getCompiler().compile(astn);
+                    expr.evaluate(bt, ctx);
+                }
+                return true;
+            } finally {
+                if (null != is) {
+                    try {
+                        is.close();
+                    } catch (IOException ex) {
+                        throw new ExecutionException(bt, "I/O exception at stream close", ex);
+                    }
+                }
+            }
         }
 
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
-	    return load(backtrace, eargs, eargs.get(0, backtrace));
-	}
+            return load(backtrace, eargs, eargs.get(0, backtrace));
+        }
     }
 
     @Arguments(spec={"resource-spec"})
     @Docstring(text="Sequentially executes each form it encounters in the java resource file named by resource-spec. Returns exception if file could not be read or there were exceptions while compiling or executing forms an exception will be raised.")
     public static class LOADR extends LOAD {
-	@Override
-	protected InputStream openInput(Object loadObj, Backtrace bt) {
-	    if (! (loadObj instanceof CharSequence)) {
-		throw new ExecutionException(bt,
-					      "Invalid resource path " + loadObj);
-	    }
-	    final String srcName = Utils.asString(loadObj);
-	    final InputStream is = this.getClass().getResourceAsStream(srcName);
-	    if (null == is) {
-		throw new ExecutionException(bt, "Failed to load '"+srcName+"' as resource");
-	    }
-	    return is;
-	}
+        @Override
+        protected InputStream openInput(Object loadObj, Backtrace bt) {
+            if (! (loadObj instanceof CharSequence)) {
+                throw new ExecutionException(bt,
+                                             "Invalid resource path " + loadObj);
+            }
+            final String srcName = Utils.asString(loadObj);
+            final InputStream is = this.getClass().getResourceAsStream(srcName);
+            if (null == is) {
+                throw new ExecutionException(bt, "Failed to load '"+srcName+"' as resource");
+            }
+            return is;
+        }
     }
 
     @Docstring(text="Return list of names of defined functions. If names are given use them as filter expressions:  only those which match at least one of filter expressions will be returned. Filters may be strings (substring match) or regular expressions (java.util.regex.Pattern objects).")
@@ -2175,50 +2175,50 @@ public class Funcs {
     public static class FUNCTIONS_NAMES extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
-	    List results = new ArrayList();
-	    List rest = (List)eargs.get(0, backtrace);
-	    for (String key : eargs.getCompiler().functab.keySet()) {
-		if (rest.size() > 0) {
-		    for (Object obj : rest) {
-			if (obj instanceof Pattern) {
-			    final Matcher m = ((Pattern)obj).matcher(key);
-			    if (m.matches()) {
-				results.add(key);
-			    }
-			} else {
-			    String str = Utils.asString(obj);
-			    if (null == str) {
-				continue;
-			    }
-			    if (key.contains(str)) {
-				results.add(key);
-			    }
-			}
-		    }
-		} else {
-		    results.add(key);
-		}
-	    }
-	    Collections.sort(results);
+            List results = new ArrayList();
+            List rest = (List)eargs.get(0, backtrace);
+            for (String key : eargs.getCompiler().functab.keySet()) {
+                if (rest.size() > 0) {
+                    for (Object obj : rest) {
+                        if (obj instanceof Pattern) {
+                            final Matcher m = ((Pattern)obj).matcher(key);
+                            if (m.matches()) {
+                                results.add(key);
+                            }
+                        } else {
+                            String str = Utils.asString(obj);
+                            if (null == str) {
+                                continue;
+                            }
+                            if (key.contains(str)) {
+                                results.add(key);
+                            }
+                        }
+                    }
+                } else {
+                    results.add(key);
+                }
+            }
+            Collections.sort(results);
             return results;
         }
     }
 
     @Arguments(spec={"object"})
     @Docstring(text="Returns true if object is a function (built-in or user defined); otherwise, returns false. "+
-	       "A function is an object that represents code to be executed when an appropriate number of arguments "+
-	       "is supplied. A function can be directly invoked by using it as the first argument to funcall, apply.")
+               "A function is an object that represents code to be executed when an appropriate number of arguments "+
+               "is supplied. A function can be directly invoked by using it as the first argument to funcall, apply.")
     public static class FUNCTIONP extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
-	    final Object obj  = eargs.get(0, backtrace);
-	    if (null!=obj
-		&& ICode.class.isAssignableFrom(obj.getClass())) {
-		final String codeType = ((ICode)obj).getCodeType();
-		return  "function".equals(codeType) || "compiled function".equals(codeType);
-	    }
-	    return false;
-	}
+            final Object obj  = eargs.get(0, backtrace);
+            if (null!=obj
+                && ICode.class.isAssignableFrom(obj.getClass())) {
+                final String codeType = ((ICode)obj).getCodeType();
+                return  "function".equals(codeType) || "compiled function".equals(codeType);
+            }
+            return false;
+        }
     }
 
     @Docstring(text="Evaluates form in the current dynamic context and return result of evaluation'")
@@ -2227,11 +2227,11 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
             final Object obj = eargs.get(0, backtrace);
-	    final ASTN astn = (obj instanceof ASTN) ?
-		(ASTN) obj : Utils.ASTNize(obj, new ParseCtx("<EVAL>"));
-	    final ICompiled expr = eargs.getCompiler().compile(astn);
-	    final Object result = expr.evaluate(backtrace, eargs);
-	    return result;
+            final ASTN astn = (obj instanceof ASTN) ?
+                (ASTN) obj : Utils.ASTNize(obj, new ParseCtx("<EVAL>"));
+            final ICompiled expr = eargs.getCompiler().compile(astn);
+            final Object result = expr.evaluate(backtrace, eargs);
+            return result;
         }
     }
 
@@ -2241,13 +2241,13 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace bt,Eargs eargs) {
             String str = (String)eargs.get(0, bt);
-    	    ParseCtx pctx = new ParseCtx("<READ_FROM_STRING>");
+            ParseCtx pctx = new ParseCtx("<READ_FROM_STRING>");
             ASTNList  astns = eargs.getCompiler().getParser()
-		.parse(pctx, str);
-	    if (null == astns || astns.size() ==0) {
-		return null;
-	    }
-	    return Utils.unASTN(astns.get(0));
+                .parse(pctx, str);
+            if (null == astns || astns.size() ==0) {
+                return null;
+            }
+            return Utils.unASTN(astns.get(0));
         }
     }
 
@@ -2267,19 +2267,19 @@ public class Funcs {
     public static class MAKUNBOUND extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Symbol sym = (Symbol) eargs.get(0, backtrace);
-	    final String name = sym.getName();
-	    eargs.remove(name);
-	    //ICtx ctx = eargs;
-	    // while (null != ctx) {
-	    // 	final Map mappings = ctx.getMappings();
-	    // 	if (mappings.containsKey(name)) {
-	    // 	    mappings.remove(name);
-	    // 	}
-	    // 	ctx = ctx.getPrev();
-	    // }
-	    
-	    return sym;
+            final Symbol sym = (Symbol) eargs.get(0, backtrace);
+            final String name = sym.getName();
+            eargs.remove(name);
+            //ICtx ctx = eargs;
+            // while (null != ctx) {
+            //  final Map mappings = ctx.getMappings();
+            //  if (mappings.containsKey(name)) {
+            //      mappings.remove(name);
+            //  }
+            //  ctx = ctx.getPrev();
+            // }
+            
+            return sym;
         }
     }
 
@@ -2290,40 +2290,40 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final Symbol sym = (Symbol) eargs.get(0, backtrace);
-	    final Object obj = eargs.get(1, backtrace);
-	    final Object uplevelObj =  eargs.get(2, backtrace);
-	    final Object  levelObj =  eargs.get(3, backtrace);
-	    if (null!=levelObj) {
-		// absolute level
-		if (null != uplevelObj) {
-		    throw new ExecutionException(backtrace, getName() + " only one of two must be set: level | uplevel");
-		}
-		final int level = Utils.asNumber(levelObj).intValue();
-		final List<ICtx> parents = eargs.getParentContexts();
-		final int lastIdx = parents.size()-1;
-		ICtx ctx = parents.get(lastIdx - level);
-		ctx.getMappings().put(sym.getName(), obj);
-	    } else if (null != uplevelObj && null == levelObj) {
-		if (null != levelObj) {
-		    throw new ExecutionException(backtrace,
-						 getName() + " only one of two must be set: level | uplevel");
-		}
-		final int uplevel = Utils.asNumber(uplevelObj).intValue();
-		ICtx ctx = eargs.getPrev();
-		for (int i = 0; i < uplevel && null!=ctx; i++) {
-		    ctx = ctx.getPrev();
-		}
-		if (null != ctx) {
-		    ctx.getMappings().put(sym.getName(), obj);
-		} else {
-		    throw new ExecutionException(backtrace,
-						 getName() + "uplevel value exceeds context depth");
-		}
-	    } else {
-		eargs.getPrev().greplace(sym.getName(), obj);
-	    }
-	    return obj;
-	}
+            final Object obj = eargs.get(1, backtrace);
+            final Object uplevelObj =  eargs.get(2, backtrace);
+            final Object  levelObj =  eargs.get(3, backtrace);
+            if (null!=levelObj) {
+                // absolute level
+                if (null != uplevelObj) {
+                    throw new ExecutionException(backtrace, getName() + " only one of two must be set: level | uplevel");
+                }
+                final int level = Utils.asNumber(levelObj).intValue();
+                final List<ICtx> parents = eargs.getParentContexts();
+                final int lastIdx = parents.size()-1;
+                ICtx ctx = parents.get(lastIdx - level);
+                ctx.getMappings().put(sym.getName(), obj);
+            } else if (null != uplevelObj && null == levelObj) {
+                if (null != levelObj) {
+                    throw new ExecutionException(backtrace,
+                                                 getName() + " only one of two must be set: level | uplevel");
+                }
+                final int uplevel = Utils.asNumber(uplevelObj).intValue();
+                ICtx ctx = eargs.getPrev();
+                for (int i = 0; i < uplevel && null!=ctx; i++) {
+                    ctx = ctx.getPrev();
+                }
+                if (null != ctx) {
+                    ctx.getMappings().put(sym.getName(), obj);
+                } else {
+                    throw new ExecutionException(backtrace,
+                                                 getName() + "uplevel value exceeds context depth");
+                }
+            } else {
+                eargs.getPrev().greplace(sym.getName(), obj);
+            }
+            return obj;
+        }
     }
 
     @Docstring(text="Set value of array element at index to object. If java array is typed (i.e. not array of java.lang.Objects) and object type does not match this function will attempt to perform necessary coercion operations. The coercions work in the same way as INT, FLOAT, STRING and rest of the built-in coercion functions.")
@@ -2331,11 +2331,11 @@ public class Funcs {
     public static class ASET extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object arrayObj =  Utils.asObject(eargs.get(0, backtrace));
+            final Object arrayObj =  Utils.asObject(eargs.get(0, backtrace));
             final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
-	    final Object obj = Utils.asObject(eargs.get(2, backtrace));
-	    Utils.aset(arrayObj, index, obj);
-	    return obj;
+            final Object obj = Utils.asObject(eargs.get(2, backtrace));
+            Utils.aset(arrayObj, index, obj);
+            return obj;
         }
     }
 
@@ -2347,9 +2347,9 @@ public class Funcs {
     public static class AREF  extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object arrayObj =  Utils.asObject(eargs.get(0, backtrace));
+            final Object arrayObj =  Utils.asObject(eargs.get(0, backtrace));
             final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
-	    return Array.get(arrayObj, index);
+            return Array.get(arrayObj, index);
         }
     }
 
@@ -2358,83 +2358,83 @@ public class Funcs {
     public static class MAKE_ARRAY extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final int size = Utils.asNumber(eargs.get(0, backtrace)).intValue();
-	    final Object et = eargs.get("element-type", backtrace);
-	    if (null != et) {
-		final Class tclass = Utils.tspecToClass(et);
-		return Array.newInstance(tclass, size);
-	    } else {
-		return  new Object[size];
-	    }
+            final int size = Utils.asNumber(eargs.get(0, backtrace)).intValue();
+            final Object et = eargs.get("element-type", backtrace);
+            if (null != et) {
+                final Class tclass = Utils.tspecToClass(et);
+                return Array.newInstance(tclass, size);
+            } else {
+                return  new Object[size];
+            }
         }
     }
 
     protected static Object findFuncObject(Object fobj, Eargs eargs) {
-	if ((fobj instanceof Symbol) || (fobj instanceof CharSequence)) {
-	    String fName = Utils.asString(fobj);
-	    if (null != fName) {
-		return eargs.getCompiler().functab.get(fName);
-	    }
-	} else {
-	    return fobj;
-	}
-	return null;
+        if ((fobj instanceof Symbol) || (fobj instanceof CharSequence)) {
+            String fName = Utils.asString(fobj);
+            if (null != fName) {
+                return eargs.getCompiler().functab.get(fName);
+            }
+        } else {
+            return fobj;
+        }
+        return null;
     }
     
     
     @Arguments(spec={"function"})
     @Docstring(text="Return textual description of given function or "+
-	       "built-in form. function is a symbol or function name or a lambda")
+               "built-in form. function is a symbol or function name or a lambda")
     public static class DESCRIBE_FUNCTION extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final Object fobj = Utils.asObject(eargs.get(0, backtrace));
-	    StringBuilder buf = new StringBuilder(127);
-	    Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
-	    buf.append("Object " + Utils.asString(fobj));
-	    if (null != funcObj) {
-		if (funcObj instanceof ICode) {
-		    buf.append(" is a ");
-		    ICode codeObj = (ICode) funcObj;
-		    if (codeObj.isBuiltIn()) {
-			buf.append("built-in ");
-		    } 
-		    buf.append(codeObj.getCodeType());
-		    buf.append(" defined at ");
-		    buf.append(codeObj.getDefLocation());
-		    buf.append("\n");
-		    buf.append("Arguments: \n    " + codeObj.getArgDescr()+"\n");
-		    buf.append("Documentation: \n    " + codeObj.getDocstring() +"\n");
-		} else {
-		    buf.append(" is an unknown object of type "+funcObj.getClass());
-		}
-	    } else {
-		buf.append(" is not defined");
-	    }
+            final Object fobj = Utils.asObject(eargs.get(0, backtrace));
+            StringBuilder buf = new StringBuilder(127);
+            Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
+            buf.append("Object " + Utils.asString(fobj));
+            if (null != funcObj) {
+                if (funcObj instanceof ICode) {
+                    buf.append(" is a ");
+                    ICode codeObj = (ICode) funcObj;
+                    if (codeObj.isBuiltIn()) {
+                        buf.append("built-in ");
+                    } 
+                    buf.append(codeObj.getCodeType());
+                    buf.append(" defined at ");
+                    buf.append(codeObj.getDefLocation());
+                    buf.append("\n");
+                    buf.append("Arguments: \n    " + codeObj.getArgDescr()+"\n");
+                    buf.append("Documentation: \n    " + codeObj.getDocstring() +"\n");
+                } else {
+                    buf.append(" is an unknown object of type "+funcObj.getClass());
+                }
+            } else {
+                buf.append(" is not defined");
+            }
 
-	    return buf.toString();
-	}
+            return buf.toString();
+        }
 
     }
     
     @Arguments(spec = { "function-name" })
     @Docstring(text = "Return documentation string of given function or "
-	       + "built-in form. function is a symbol or function name or a lambda")
+               + "built-in form. function is a symbol or function name or a lambda")
     public static class DOCUMENTATION extends FuncExp {
-	@Override
-	public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
-	    if (null != funcObj) {
-		if (funcObj instanceof ICode) {
-		    ICode codeObj = (ICode) funcObj;
-		    return codeObj.getDocstring();
-		} else {
-		    return "unknown object of type " + funcObj.getClass();
-		}
-	    } else {
-		return null;
-	    }
-	}
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
+            if (null != funcObj) {
+                if (funcObj instanceof ICode) {
+                    ICode codeObj = (ICode) funcObj;
+                    return codeObj.getDocstring();
+                } else {
+                    return "unknown object of type " + funcObj.getClass();
+                }
+            } else {
+                return null;
+            }
+        }
     }
 
     public static class VarExp extends AbstractExpr  {
@@ -2452,15 +2452,15 @@ public class Funcs {
         protected Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
             final Object obj = ctx.get(varname, backtrace);
             if (null == obj) {
-		if (ctx.contains(varname)) {
-		    return null;
-		}
-		ctx.onMissingVar(varname);
+                if (ctx.contains(varname)) {
+                    return null;
+                }
+                ctx.onMissingVar(varname);
                 //throw new RuntimeException("variable '"+varname+"' does not exist in this context");
             }
-	    //if (obj instanceof LazyEval) {
-	    //	return ((LazyEval)obj).getValue(backtrace);
-	    //}
+            //if (obj instanceof LazyEval) {
+            //  return ((LazyEval)obj).getValue(backtrace);
+            //}
             return obj;
         }
 
@@ -2481,16 +2481,16 @@ public class Funcs {
             this.value = value;
         }
 
-	@Override
-	public boolean equals(Object o) {
-	    if (o instanceof ValueExpr) {
-		final ValueExpr v = (ValueExpr) o;
-		return v.getClass().equals(v.getClass()) &&
-		    ((null == this.value && null == v.value) ||
-		     (null != this.value && this.value.equals(v.value)));
-	    } 
-	    return false;
-	}
+        @Override
+        public boolean equals(Object o) {
+            if (o instanceof ValueExpr) {
+                final ValueExpr v = (ValueExpr) o;
+                return v.getClass().equals(v.getClass()) &&
+                    ((null == this.value && null == v.value) ||
+                     (null != this.value && this.value.equals(v.value)));
+            } 
+            return false;
+        }
 
         @Override
         public void setParams(List<ICompiled> params)
@@ -2511,10 +2511,10 @@ public class Funcs {
             return value;
         }
 
-	// FIXME: do we really need this??
-	public Object getValue() {
-	    return value;
-	}
+        // FIXME: do we really need this??
+        public Object getValue() {
+            return value;
+        }
     }
 
 
@@ -2536,11 +2536,11 @@ public class Funcs {
             super(value);
         }
 
-	@Override
-	public boolean equals(Object o) {
-	    return super.equals(o);
-	}
-	
+        @Override
+        public boolean equals(Object o) {
+            return super.equals(o);
+        }
+        
     }
     
     public static class BooleanExp extends  ValueExpr{
