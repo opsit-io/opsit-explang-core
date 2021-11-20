@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.dudinea.explang.Compiler.ICtx;
 import org.dudinea.explang.reader.LispReader;
+import org.dudinea.explang.algparser.AlgReader;
+import org.dudinea.explang.SexpParser;
 import org.dudinea.explang.reader.ReaderException;
 
 public class REPL {
@@ -31,6 +33,14 @@ public class REPL {
 	    }
 	    if ("-l".equals(val)) {
 		lineMode = true;
+		continue;
+	    }
+	    if ("-a".equals(val)) {
+		compiler.setParser(new AlgReader());
+		continue;
+	    }
+	    if ("-s".equals(val)) {
+		compiler.setParser(new SexpParser());
 		continue;
 	    }
 	    file = true;
@@ -100,6 +110,8 @@ public class REPL {
         Compiler compiler = ctx.getCompiler();
 	IParser parser = compiler.getParser();
 	System.out.print("Welcome to the EXPLANG REPL!\n"+
+			 "Active parser is " +
+			 parser.getClass().getSimpleName() +"\n" +
 			 "Please type EXPLANG expressions followed by the NEWLINE\n");
 	int inputNo = 0;
 	Throwable err = null;
