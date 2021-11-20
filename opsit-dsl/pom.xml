@@ -30,6 +30,15 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
         <version>4.3</version>
+	<configuration>
+          <!--sourceDirectory>${antlr.dir}</sourceDirectory-->
+          <listener>false</listener>
+          <visitor>true</visitor>
+          <!--arguments>
+            <argument>-package</argument>
+            <argument>bla.la</argument>
+          </arguments-->
+        </configuration>
         <executions>
           <execution>
             <id>antlr</id>
@@ -39,6 +48,25 @@
           </execution>
         </executions>
       </plugin>
+       <!--plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.2.0</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>target/generated-sources/antlr4</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin-->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
