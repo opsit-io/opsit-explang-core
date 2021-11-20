@@ -24,7 +24,8 @@ public abstract class ASTN {
     protected Object object;
     protected boolean isComment = false;
     protected ASTNList parent;
-    protected Exception problem;
+    // FIXME: need accessor functions
+    public  Exception problem;
 
     public abstract boolean hasProblems();
 
