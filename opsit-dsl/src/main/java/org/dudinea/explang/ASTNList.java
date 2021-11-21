@@ -34,7 +34,7 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
     }
     
     //@Override
-    private List<ASTN> getList() {
+    public List<ASTN> getList() {
 	return (List<ASTN>)object;
     }
 
