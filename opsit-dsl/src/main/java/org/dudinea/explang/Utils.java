@@ -51,6 +51,10 @@ public class Utils {
 	return set;
     }
 
+    public static Symbol symbol(String name) {
+	return null == name ? null : new Symbol(name);
+    }
+    
     public static Reader str2reader(String str) {
 	final ByteArrayInputStream is = new ByteArrayInputStream(str.getBytes());
 	final Reader r = new InputStreamReader(is);
