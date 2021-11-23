@@ -12,7 +12,6 @@ import java.util.List;
 import org.dudinea.explang.Compiler.ICtx;
 import org.dudinea.explang.reader.LispReader;
 import org.dudinea.explang.algparser.AlgReader;
-import org.dudinea.explang.SexpParser;
 import org.dudinea.explang.reader.ReaderException;
 
 public class REPL {
@@ -37,6 +36,8 @@ public class REPL {
 	    }
 	    if ("-a".equals(val)) {
 		compiler.setParser(new AlgReader());
+		// FIXME: make ANTLR work interactively
+		lineMode = true;
 		continue;
 	    }
 	    if ("-s".equals(val)) {
@@ -112,7 +113,8 @@ public class REPL {
 	System.out.print("Welcome to the EXPLANG REPL!\n"+
 			 "Active parser is " +
 			 parser.getClass().getSimpleName() +"\n" +
-			 "Please type EXPLANG expressions followed by the NEWLINE\n");
+			 "Please type an EXPLANG expression "+
+			 (lineMode ? "followed by an extra NEWLINE" : "") + "\n");
 	int inputNo = 0;
 	Throwable err = null;
 	Object result = null;
@@ -134,11 +136,18 @@ public class REPL {
 		ParseCtx pctx = new ParseCtx("INPUT"+(inputNo++));
 		ASTNList exprs ;
 		if (lineMode) {
-		    String line = ((BufferedReader)reader).readLine();
-		    if (null == line) {
-			break;
+		    StringBuilder buf = new StringBuilder();
+		    String line = null;
+		    while (null != (line = ((BufferedReader) reader).readLine())) {
+			if (line.length() == 0) {
+			    break;
+			}
+			buf.append(line).append("\n");
 		    }
-		    exprs = parser.parse( pctx, line, 1);
+		    if (verbose) {
+			System.out.println("\nINPUT:" + buf.toString()+"\n");
+		    }
+		    exprs = parser.parse( pctx, buf.toString(), 1);
 		} else {
 		    exprs = parser.parse( pctx, reader, 1);
 		}
@@ -162,7 +171,8 @@ public class REPL {
 		    if (verbose) {
 			System.out.println("evaluation result:\n");
 		    }
-		    System.out.println(Utils.asString(result));
+		    System.out.print("\n=> ");
+		    System.out.print(Utils.asString(result));
 		    System.out.println();
 		}
 		/*} catch (ReaderException ex) {
