@@ -41,7 +41,7 @@ public class Compiler {
 	    new BuiltinForm(cls) : new BuiltinFunc(cls);
 	functab.put(name,builtin);
 	// FIXME: kluge!, breaks FUNCTIONS_NAMES
-	String name2 = name.replaceAll("-", "_").replaceAll("!", "_N");
+	String name2 = name.replaceAll("-", "_");
 	if (!name2.equals(name)) {
 	    functab.put(name2,builtin);
 	}
