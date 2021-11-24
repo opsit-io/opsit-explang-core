@@ -134,7 +134,7 @@ public class REPL {
 		err = null;
 
 		ParseCtx pctx = new ParseCtx("INPUT"+(inputNo++));
-		ASTNList exprs ;
+		ASTNList exprs = null;
 		if (lineMode) {
 		    StringBuilder buf = new StringBuilder();
 		    String line = null;
@@ -143,16 +143,38 @@ public class REPL {
 			    break;
 			}
 			buf.append(line).append("\n");
+			exprs = parser.parse( pctx, buf.toString(), 1);
+			if (verbose) {
+			    System.out.println("\nPARSER RETURN: " +exprs);
+			}
+			if (null!=exprs && exprs.size() > 0 &&
+			    // we can parse the last expression =>
+			    // we accept list of all expressions.
+			    // FIXME: there should be a way to distinguish
+			    //        expressions that are incomplete
+			    //        and those that had errors but are
+			    //        known to be complete
+			    !exprs.get(exprs.size()-1).hasProblems()) {
+			    if (verbose) {
+				System.out.println("\nLINE READER: read complete " +exprs.size()+ "expressions\n");
+			    }
+			    break;
+			}
+		    }
+		    if (null == line) {
+			if (verbose) {
+			    System.out.println("\nEOF in line mode\n");
+			}
+			break;
 		    }
 		    if (verbose) {
 			System.out.println("\nINPUT:" + buf.toString()+"\n");
 		    }
-		    exprs = parser.parse( pctx, buf.toString(), 1);
 		} else {
 		    exprs = parser.parse( pctx, reader, 1);
 		}
-		if (exprs.size() == 0) {
-		    break;
+		if (null == exprs) {
+		    continue;
 		}
 		for (ASTN exprASTN : exprs) {
 		    if (verbose) {
@@ -182,7 +204,7 @@ public class REPL {
 		//System.err.println(ex.getMessage());
 		//err = ex;*/
 	    } catch (CompilationException ex) {
-		System.err.println(ex.getMessage());
+		System.err.println("COMPILEATION ERROR: "+ ex.getMessage());
 		err = ex;
 	    } catch (ExecutionException ex) {
 		System.err.print("EXECUTION ERROR: " + ex.getMessage());
@@ -219,4 +241,19 @@ public class REPL {
 	exprASTN.dispatchWalker(errCollector);
 	return buf.toString();
     }
+
+    // // returns parse errors for each parsed expression
+    // private static List<String> getParseErrors(ASTN exprASTN) {
+    // 	final StringBuilder buf = new StringBuilder();
+    // 	ASTN.Walker errCollector = new ASTN.Walker (){
+    // 		public void walk(ASTN node) {
+    // 		    final Exception ex =  node.getProblem();
+    // 		    if (null != ex) {
+    // 			buf.append(ex.getMessage()).append("\n");
+    // 		    }
+    // 		}
+    // 	    };
+    // 	exprASTN.dispatchWalker(errCollector);
+    // 	return buf.toString();
+    // }
 }
