@@ -37,9 +37,14 @@ public class Compiler {
     }
 
     public void addBuiltIn(String name, Class cls) {
-	functab.put(name,
-		    IForm.class.isAssignableFrom(cls) ?
-		    new BuiltinForm(cls) : new BuiltinFunc(cls));
+	final Builtin builtin = IForm.class.isAssignableFrom(cls) ?
+	    new BuiltinForm(cls) : new BuiltinFunc(cls);
+	functab.put(name,builtin);
+	// FIXME: kluge!, breaks FUNCTIONS_NAMES
+	String name2 = name.replaceAll("-", "_").replaceAll("!", "_N");
+	if (!name2.equals(name)) {
+	    functab.put(name2,builtin);
+	}
     }
 
     public abstract class Builtin implements ICode {
@@ -129,7 +134,6 @@ public class Compiler {
 	}
 	
     }
-
     
     public  final Map <String, ICode>functab = new ConcurrentHashMap <String,ICode>();
     {
