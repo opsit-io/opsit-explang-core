@@ -23,6 +23,21 @@ public class Compiler {
     protected IParser parser = new SexpParser();
     //protected IParser parser = new LispReader();
     protected boolean failOnMissingVariables = true;
+    protected IStringConverter funcNameConverter;
+
+    public Compiler() {
+	this(new NOPConverter());
+    }
+    
+    public Compiler(IStringConverter fnameConverter) {
+	super();
+	setFnameConverter(fnameConverter);
+	initBuiltins();
+    }
+
+    public void setFnameConverter(IStringConverter converter) {
+	this.funcNameConverter = converter;
+    }
 
     public void setFailOnMissingVariables(boolean val) {
         this.failOnMissingVariables = val;
@@ -39,12 +54,12 @@ public class Compiler {
     public void addBuiltIn(String name, Class cls) {
 	final Builtin builtin = IForm.class.isAssignableFrom(cls) ?
 	    new BuiltinForm(cls) : new BuiltinFunc(cls);
-	functab.put(name,builtin);
+	functab.put(this.funcNameConverter.convert(name),builtin);
 	// FIXME: kluge!, breaks FUNCTIONS_NAMES
-	String name2 = name.replaceAll("-", "_");
-	if (!name2.equals(name)) {
-	    functab.put(name2,builtin);
-	}
+	//String name2 = name.replaceAll("-", "_");
+	//if (!name2.equals(name)) {
+	//    functab.put(name2,builtin);
+	//}
     }
 
     public abstract class Builtin implements ICode {
@@ -136,7 +151,7 @@ public class Compiler {
     }
 
     public ICode getFun(String name) {
-	return functab.get(name);
+	return functab.get(funcNameConverter.convert(name));
     }
 
     public Set<String> getFunKeys() {
@@ -144,7 +159,8 @@ public class Compiler {
     }
     
     private  final Map <String, ICode>functab = new ConcurrentHashMap <String,ICode>();
-    {
+    
+    private void initBuiltins()  {
         // arithmetics
         addBuiltIn("+", ADDOP.class); 
         addBuiltIn("-", SUBOP.class); 
@@ -1579,6 +1595,16 @@ public class Compiler {
     public Eargs newEargs(Object[] result, boolean[] needEval, ArgList argList, ICtx ctx) {
 	return new Eargs(result, needEval, argList, ctx);
     }
-    
+
+    public static interface IStringConverter {
+	String convert(String in);
+    }
+
+    public static class NOPConverter implements IStringConverter{
+	public String convert(String in) {
+	    return in;
+	}
+    }
+
 }
  
