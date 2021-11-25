@@ -12,6 +12,7 @@ import java.util.List;
 import org.dudinea.explang.Compiler.ICtx;
 import org.dudinea.explang.reader.LispReader;
 import org.dudinea.explang.algparser.AlgReader;
+import org.dudinea.explang.algparser.UCStringConverter;
 import org.dudinea.explang.reader.ReaderException;
 
 public class REPL {
@@ -21,7 +22,7 @@ public class REPL {
 	boolean lineMode = false;
 	boolean file = false;
 	int rc = 0;
-	final Compiler compiler = new Compiler();
+	Compiler compiler = new Compiler();
 	compiler.setParser(new LispReader());
 	ICtx ctx = compiler.newCtx();
 	for (int i = 0; i < argv.length; i++) {
@@ -35,7 +36,9 @@ public class REPL {
 		continue;
 	    }
 	    if ("-a".equals(val)) {
+		compiler = new Compiler((new UCStringConverter()));
 		compiler.setParser(new AlgReader());
+		ctx = compiler.newCtx();
 		// FIXME: make ANTLR work interactively
 		lineMode = true;
 		continue;

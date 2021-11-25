@@ -327,7 +327,7 @@ public class Compiler {
             } else if (firstASTN.getObject() instanceof Symbol) {
                 Object first   = firstASTN.getObject();
                 final String fName = ((Symbol)first).toString();
-                ICode codeObj = functab.get(fName);
+                ICode codeObj = getFun(fName);
 		if (null != codeObj && codeObj.isBuiltIn()) {
 		    try {
 			ICompiled compiled = codeObj.getInstance();
@@ -473,7 +473,7 @@ public class Compiler {
 
         @Override
         public ICode doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            ICode code  = functab.get(fsym.toString());
+            ICode code  = getFun(fsym.toString());
             if  (null == code) {
                 throw new RuntimeException("Symbol "+fsym+" function value is NULL");
 	    }
@@ -789,7 +789,7 @@ public class Compiler {
 	    // FIXME!
             //obj.setName(name);
             //obj.setDebugInfo(this.debugInfo);
-            functab.put(name, obj);
+            functab.put(Compiler.this.funcNameConverter.convert(name), obj);
             return obj;
         }
     
