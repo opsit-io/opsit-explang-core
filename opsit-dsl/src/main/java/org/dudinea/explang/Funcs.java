@@ -2154,7 +2154,7 @@ public class Funcs {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
             String fname = Utils.asString(eargs.get(0, backtrace));
-            Object funcObj = eargs.getCompiler().functab.get(fname);
+            Object funcObj = eargs.getCompiler().getFun(fname);
             Object result = null;
             if  (null == funcObj) {
                 throw new RuntimeException("Symbol "+fname+" function value is NULL");
@@ -2245,7 +2245,7 @@ public class Funcs {
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
             List results = new ArrayList();
             List rest = (List)eargs.get(0, backtrace);
-            for (String key : eargs.getCompiler().functab.keySet()) {
+            for (String key : eargs.getCompiler().getFunKeys()) {
                 if (rest.size() > 0) {
                     for (Object obj : rest) {
                         if (obj instanceof Pattern) {
@@ -2441,7 +2441,7 @@ public class Funcs {
         if ((fobj instanceof Symbol) || (fobj instanceof CharSequence)) {
             String fName = Utils.asString(fobj);
             if (null != fName) {
-                return eargs.getCompiler().functab.get(fName);
+                return eargs.getCompiler().getFun(fName);
             }
         } else {
             return fobj;

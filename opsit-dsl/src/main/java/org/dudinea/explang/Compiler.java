@@ -134,8 +134,16 @@ public class Compiler {
 	}
 	
     }
+
+    public ICode getFun(String name) {
+	return functab.get(name);
+    }
+
+    public Set<String> getFunKeys() {
+	return functab.keySet();
+    }
     
-    public  final Map <String, ICode>functab = new ConcurrentHashMap <String,ICode>();
+    private  final Map <String, ICode>functab = new ConcurrentHashMap <String,ICode>();
     {
         // arithmetics
         addBuiltIn("+", ADDOP.class); 

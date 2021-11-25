@@ -275,7 +275,7 @@ public class ExplangScriptEngine
 	@Override
 	public Object invokeFunction(String name, Object... args) throws ScriptException, NoSuchMethodException {
 	    // FIXME: move to utils?
-	    ICode code = comp.functab.get(name);
+	    ICode code = comp.getFun(name);
 	    ICompiled compiled = code.getInstance();
 	    if (!(compiled  instanceof IExpr)) {
 		throw new ScriptException("Not a function: "+compiled.getClass());
