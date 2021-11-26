@@ -82,7 +82,9 @@ public abstract class ASTN {
 	walker.walk(this);
 	if (this.isList()) {
 	    for(ASTN node : ((ASTNList)this)) {
-		node.dispatchWalker(walker);
+		if (node != null) {
+		    node.dispatchWalker(walker);
+		}
 	    }
 	}
     }
