@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Locale;
 
 import org.dudinea.explang.atom.*;
-import org.dudinea.explang.ParserException;
 
 @SuppressWarnings({"unchecked","rawtypes","serial"})
 public class SexpParser implements IParser {
