@@ -112,10 +112,10 @@ public class ReadTable {
     }
 
     public final IDispatchMacroFunc getDispatchMacroCharacter(char dispChar, char subChar)
-     throws ReaderException {
+     throws ParserException {
 	DispatchTable dispatchTable = dispatchTables.get(dispChar);
 	if (dispatchTable == null) {
-	    throw new ReaderException(dispChar + " is not a dispatch character.");
+	    throw new ParserException(dispChar + " is not a dispatch character.");
 	}
 	final IDispatchMacroFunc function = dispatchTable.functions.get(subChar);
 	//return (function != null) ? function : NIL;
@@ -153,14 +153,14 @@ public class ReadTable {
 	return readtableCase;
     }
 
-    public final void checkInvalid(char c)  throws ReaderException {
+    public final void checkInvalid(char c)  throws ParserException {
 	// "... no mechanism is provided for changing the constituent trait of a
 	// character." (2.1.4.2)
 	if (isInvalid(c)) {
 	    StringBuilder sb = new StringBuilder("Invalid character");
 	    sb.append(" \\");
 	    sb.append(c);
-	    throw new ReaderException(sb.toString());
+	    throw new ParserException(sb.toString());
 	}
     }
 

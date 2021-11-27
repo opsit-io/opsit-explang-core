@@ -72,7 +72,7 @@ public class Characters {
     }
 
 
-    public static char nameToChar(String s) throws ReaderException {
+    public static char nameToChar(String s) throws ParserException {
 	String upper = s.toUpperCase();
 	Character c = Characters.nameToChar.get(upper);
 	if (c!=null) return c;
@@ -91,6 +91,6 @@ public class Characters {
 	if (cp>=0) {
 	    return (char)cp;
 	}
-	throw new ReaderException("Unrecognized character name: \"" + s + '"');
+	throw new ParserException("Unrecognized character name: \"" + s + '"');
     }
 }

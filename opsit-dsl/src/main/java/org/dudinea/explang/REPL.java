@@ -13,7 +13,7 @@ import org.dudinea.explang.Compiler.ICtx;
 import org.dudinea.explang.reader.LispReader;
 import org.dudinea.explang.algparser.AlgReader;
 import org.dudinea.explang.algparser.UCStringConverter;
-import org.dudinea.explang.reader.ReaderException;
+import org.dudinea.explang.reader.ParserException;
 
 public class REPL {
     public static void main(String argv[])
@@ -80,7 +80,7 @@ public class REPL {
 		    System.err.println("RESULT(" + file.getName() + "):\n" + asts +"\n------\n");
 		}
 	    }
-	} catch (ReaderException ex) {
+	} catch (ParserException ex) {
 	    System.err.println(ex.getMessage());
 	    err = ex;
 	    rc = 2;

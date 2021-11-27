@@ -113,15 +113,15 @@ public class ReaderTest {
 		{ "#\"^ABC$\"", Pattern.compile("^ABC$"),null, false},
 		{ "#\"d\\\"s\"", Pattern.compile("d\\\"s"),null, false},		
 		//**** ERRORS 
-		{ ")", new ReaderException(new ParseCtx("test",0,0,0,0),"Too many right parentheses"),null, true},
+		{ ")", new ParserException(new ParseCtx("test",0,0,0,0),"Too many right parentheses"),null, true},
 
 		
 		/*
 		//{ "aaaa bbbb", null, "Too many expressions", false},
 		{ "aaaa bbbb", sym("aaaa"), null, false},*/
 		{ "(aaa \"bbb)", Utils.list(sym("aaa"),
-					    new ReaderEOFException(new ParseCtx("test",0,9,9,0),"unclosed '\"'"),
-					    new ReaderEOFException("Unexpected EOF")), null, true}
+					    new ParserEOFException(new ParseCtx("test",0,9,9,0),"unclosed '\"'"),
+					    new ParserEOFException("Unexpected EOF")), null, true}
 		
 		
             });
@@ -191,9 +191,9 @@ public class ReaderTest {
 		}
 	    }
 	    return true;
-	} else if (a instanceof ReaderException) {
-	    ReaderException ea = (ReaderException)a;
-	    ReaderException eb = (ReaderException)b;
+	} else if (a instanceof ParserException) {
+	    ParserException ea = (ParserException)a;
+	    ParserException eb = (ParserException)b;
 	    return ea.getMessage().equals(eb.getMessage());
 	} else if ((a instanceof Pattern) &&
 		    (b instanceof Pattern)) {

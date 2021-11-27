@@ -26,7 +26,7 @@ public class MacroFuncs  {
 			    PushbackReader is,
 			    ReadTable  rt,
 			    ParseCtx pctx) {
-	    return new ASTNLeaf(terminator, pctx, new ReaderException(pctx, "Too many right parentheses"));
+	    return new ASTNLeaf(terminator, pctx, new ParserException(pctx, "Too many right parentheses"));
 	}
     }
 
@@ -45,7 +45,7 @@ public class MacroFuncs  {
 		char c;
 		try {
 		    c = flushWhitespace(pctx, is, rt);
-		} catch (ReaderException ex) {
+		} catch (ParserException ex) {
 		    lst.add(new ASTNLeaf(null, pctx, ex));
 		    break;
 		}
@@ -55,7 +55,7 @@ public class MacroFuncs  {
 		ASTN node = processChar(pctx, c, is, rt);
 		if (null == node) {
 		    // EOF
-		    lst.add(new ASTNLeaf(null, pctx, new ReaderEOFException(pctx, UNEXPECTED_EOF_EXCEPTION)));
+		    lst.add(new ASTNLeaf(null, pctx, new ParserEOFException(pctx, UNEXPECTED_EOF_EXCEPTION)));
 		    break;
 		}
 		if (!node.isComment()) {
@@ -104,7 +104,7 @@ public class MacroFuncs  {
 		while (true) {
 		    int n = _readChar(is, pctx);
 		    if (n < 0) {
-			return new ASTNLeaf(null, pctx, new ReaderEOFException(pctx,  UNEXPECTED_EOF_EXCEPTION));
+			return new ASTNLeaf(null, pctx, new ParserEOFException(pctx,  UNEXPECTED_EOF_EXCEPTION));
 		    }
 		    c = (char) n; 
 		    if (c < '0' || c > '9') {
@@ -116,13 +116,13 @@ public class MacroFuncs  {
 		    numArg = numArg * 10 + c - '0';
 		}
 	    } catch (IOException e) {
-		return new ASTNLeaf(null, pctx, new ReaderException(pctx,  UNEXPECTED_IO_EXCEPTION, e));
+		return new ASTNLeaf(null, pctx, new ParserException(pctx,  UNEXPECTED_IO_EXCEPTION, e));
 	    }
 	    IDispatchMacroFunc fun;
 	    try {
 		fun = rt.getDispatchMacroCharacter(dispChar, c);
-	    } catch (ReaderException ex) {
-		return new ASTNLeaf(null, pctx, new ReaderException(pctx,  UNEXPECTED_IO_EXCEPTION, ex));
+	    } catch (ParserException ex) {
+		return new ASTNLeaf(null, pctx, new ParserException(pctx,  UNEXPECTED_IO_EXCEPTION, ex));
 	    }
 
 	    if (null != fun) {
@@ -146,7 +146,7 @@ public class MacroFuncs  {
 	    try {
 		c = flushWhitespace(pctx, is, rt);
 		node = processChar(pctx.clone(), c, is, rt);
-	    } catch (ReaderException ex) {
+	    } catch (ParserException ex) {
 		node = new ASTNLeaf(null, pctx, ex);
 	    }
 	    return new ASTNList(Utils.list(q,node), startPCtx);
@@ -167,7 +167,7 @@ public class MacroFuncs  {
 		}
 	    } catch (IOException ioex) {
 		return 	new ASTNLeaf(buf.toString(), pctx,
-				     new ReaderException(pctx, UNEXPECTED_IO_EXCEPTION, ioex));
+				     new ParserException(pctx, UNEXPECTED_IO_EXCEPTION, ioex));
 	    }
 	}
     }
@@ -185,14 +185,14 @@ public class MacroFuncs  {
 			int n = _readChar(is,pctx);
 	     		if (n < 0) {
 	     		    //return error(new EndOfFile(this));
-			    return new ASTNLeaf(sb.toString(), pctx, new ReaderEOFException(pctx,   "unclosed '\"'"));
+			    return new ASTNLeaf(sb.toString(), pctx, new ParserEOFException(pctx,   "unclosed '\"'"));
 			}
 	     		char c = (char) n; 
 	     		if (rt.getSyntaxType(c) == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
 			    // 		    // Single escape.
 	     		    n = _readChar(is, pctx);
 	     		    if (n < 0) {
-				return new ASTNLeaf(sb.toString(), pctx, new ReaderEOFException(pctx,   "unclosed '\"'"));
+				return new ASTNLeaf(sb.toString(), pctx, new ParserEOFException(pctx,   "unclosed '\"'"));
 			    }
 			    //support JAVA escape characters
 			    switch (n) {
@@ -224,7 +224,7 @@ public class MacroFuncs  {
 	     	    }
 	     	}
 	    catch (java.io.IOException e) {
-		return new ASTNLeaf(sb.toString(), pctx, new ReaderException(pctx, UNEXPECTED_IO_EXCEPTION,e));
+		return new ASTNLeaf(sb.toString(), pctx, new ParserException(pctx, UNEXPECTED_IO_EXCEPTION,e));
 	    }
 	    return new ASTNLeaf(sb.toString(),pctx);
 	}
@@ -233,12 +233,12 @@ public class MacroFuncs  {
     private static char flushWhitespace(ParseCtx pctx,
 					PushbackReader is,
 					ReadTable rt)
-    	throws ReaderException {
+    	throws ParserException {
         try {
             while (true) {
                 int n = _readChar(is, pctx);
                 if (n < 0) {
-		    throw new ReaderEOFException(UNEXPECTED_EOF_EXCEPTION);
+		    throw new ParserEOFException(UNEXPECTED_EOF_EXCEPTION);
 		}
 
                 char c = (char) n; // ### BUG: Codepoint conversion
@@ -246,7 +246,7 @@ public class MacroFuncs  {
                     return c;
             }
         } catch (IOException e) {
-	    throw new ReaderException(pctx, "I/O exception", e);
+	    throw new ParserException(pctx, "I/O exception", e);
         }
     }
 
@@ -260,7 +260,7 @@ public class MacroFuncs  {
 	    try {
 		int n = _readChar(is, pctx);
 		if (n < 0) {
-		    return new ASTNLeaf(null, pctx, new ReaderEOFException(UNEXPECTED_EOF_EXCEPTION));
+		    return new ASTNLeaf(null, pctx, new ParserEOFException(UNEXPECTED_EOF_EXCEPTION));
 		}
 		char c = (char) n; 
 		StringBuilder sb = new StringBuilder(String.valueOf(c));
@@ -287,11 +287,11 @@ public class MacroFuncs  {
 		try {
 		    final char chr = Characters.nameToChar(token);
 		    return new ASTNLeaf(chr, pctx.clone());
-		} catch (ReaderException ex) {
+		} catch (ParserException ex) {
 		    return new ASTNLeaf(null, pctx, ex);
 		}
 	    } catch (IOException e) {
-		return new ASTNLeaf(null, pctx, new ReaderException(pctx,UNEXPECTED_IO_EXCEPTION, e));
+		return new ASTNLeaf(null, pctx, new ParserException(pctx,UNEXPECTED_IO_EXCEPTION, e));
 	    }
 	}
     };
@@ -308,7 +308,7 @@ public class MacroFuncs  {
 	    char c;
 	    try {
 		c = flushWhitespace(pctx, is, rt);
-	    } catch (ReaderException ex) {
+	    } catch (ParserException ex) {
 		return new  ASTNLeaf(null, pctx, ex);
 	    }
 	    ASTN node = processChar(pctx.clone(), c, is, rt);
@@ -330,7 +330,7 @@ public class MacroFuncs  {
 		while (true) {
 		    n = _readChar(is, pctx);
 		    if (n < 0) {
-			return new ASTNLeaf(null, pctx, new ReaderEOFException(UNEXPECTED_EOF_EXCEPTION));
+			return new ASTNLeaf(null, pctx, new ParserEOFException(UNEXPECTED_EOF_EXCEPTION));
 		    }
 		    char c = (char) n;
 		    if (c == '\\' && !esc) {
@@ -350,7 +350,7 @@ public class MacroFuncs  {
 		//if (Symbol.READ_SUPPRESS.symbolValue(thread) != NIL)
 		//    return NIL;
 	    } catch (IOException ioex) {
-		return new ASTNLeaf(null, pctx, new ReaderException(pctx,UNEXPECTED_EOF_EXCEPTION,ioex));
+		return new ASTNLeaf(null, pctx, new ParserException(pctx,UNEXPECTED_EOF_EXCEPTION,ioex));
 	    }
 	    //ASTN strASTN = ((IReaderMacroFunc)LispReader.READ_STRING).execute('"',is,rt,pctx);
 	    //final Pattern p = Pattern.compile((String)strASTN.getObject());

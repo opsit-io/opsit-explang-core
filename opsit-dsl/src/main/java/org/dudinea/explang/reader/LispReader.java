@@ -171,7 +171,7 @@ public class LispReader implements IParser  {
 	BitSet flags = null;
 	try {
 	    flags = _readToken(pctx, r, sb, rt);
-	} catch (ReaderException ex) {
+	} catch (ParserException ex) {
 	    return new ASTNLeaf(null, pctx, ex);
 	}
 	return parseToken(sb.toString(), flags, pctx,
@@ -194,7 +194,7 @@ public class LispReader implements IParser  {
 		return new ASTNLeaf(string, pctx, ex);
 	    }
      	}
-	return new ASTNLeaf(string, pctx, new ReaderException(String.format("Failed to parse atom '%s'", string)));
+	return new ASTNLeaf(string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
     // 	throw new SexpParserException(pctx,
     // 				      String.format("Failed to parse atom '%s'", string));
     }
@@ -226,7 +226,7 @@ public class LispReader implements IParser  {
 	 * @return
 	 */
     private static  BitSet _readToken(ParseCtx pctx, PushbackReader r, StringBuilder sb, ReadTable rt)
-	throws ReaderException 
+	throws ParserException 
     {
         BitSet flags = null;
         final Keyword readtableCase = rt.getReadtableCase();
@@ -240,7 +240,7 @@ public class LispReader implements IParser  {
                     n = _readChar(r, pctx);
                 } catch (IOException e) {
                     //error(new StreamError(this, e));
-		    throw new ReaderException(pctx, e.getMessage(), e);
+		    throw new ParserException(pctx, e.getMessage(), e);
 		    //return flags;
                 }
                 if (n < 0) {
@@ -306,7 +306,7 @@ public class LispReader implements IParser  {
                 sb.append(c);
             }
         } catch (IOException e) {
-	    throw new ReaderException(pctx, e.getMessage(), e);
+	    throw new ParserException(pctx, e.getMessage(), e);
             //error(new StreamError(this, e));
             //return flags;
         }
@@ -349,14 +349,14 @@ public class LispReader implements IParser  {
 
 
     private static String readMultipleEscape(ParseCtx pctx, PushbackReader r, ReadTable rt)
-    throws ReaderException  {
+    throws ParserException  {
         StringBuilder sb = new StringBuilder();
         try {
             while (true) {
                 int n = _readChar(r, pctx);
                 if (n < 0) {
                     //return serror(new EndOfFile(this));
-		    throw new ReaderEOFException("Unexpected EOF");
+		    throw new ParserEOFException("Unexpected EOF");
 		}
 
                 char c = (char) n; // ### BUG: Codepoint conversion
@@ -364,7 +364,7 @@ public class LispReader implements IParser  {
                 if (syntaxType == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
                     n = _readChar(r, pctx);
                     if (n < 0) {
-			throw new ReaderEOFException("Unexpected EOF");
+			throw new ParserEOFException("Unexpected EOF");
                         //return serror(new EndOfFile(this));
 		    }
                     sb.append((char)n); // ### BUG: Codepoint conversion
@@ -376,7 +376,7 @@ public class LispReader implements IParser  {
             }
         } catch (IOException e) {
             //return serror(new StreamError(this, e));
-	    throw new ReaderException("IO Error: " + e.getMessage());
+	    throw new ParserException("IO Error: " + e.getMessage());
         }
         return sb.toString();
     }

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.dudinea.explang.atom.*;
-import org.dudinea.explang.reader.ReaderException;
+import org.dudinea.explang.reader.ParserException;
 
 @SuppressWarnings({"unchecked","rawtypes","serial"})
 public class SexpParser implements IParser {
@@ -75,7 +75,7 @@ public class SexpParser implements IParser {
 		    } else if ((!inStr) && chr==')') {
 			depth--;
 			if (depth<0) {
-			    sexp.add(new ASTNLeaf(null, pctx, new ReaderException(pctx, "Too many right parentheses")));
+			    sexp.add(new ASTNLeaf(null, pctx, new ParserException(pctx, "Too many right parentheses")));
 			}
 			if (buf.length()>0) {
 			    ((ASTNList)sexp.get(sexp.size() - 1))
@@ -108,13 +108,13 @@ public class SexpParser implements IParser {
 	    }
 
 	} catch (IOException ex) {
-	    problem = new ReaderException(pctx.clone(), "I/O exception", ex);
+	    problem = new ParserException(pctx.clone(), "I/O exception", ex);
 	}
 	if (inStr) {
-	    problem = new ReaderException(pctx.clone(), "unclosed '\"'");
+	    problem = new ParserException(pctx.clone(), "unclosed '\"'");
 	}
 	if (depth > 0) {
-	    problem = new ReaderException(pctx.clone(), "unbalanced '('");
+	    problem = new ParserException(pctx.clone(), "unbalanced '('");
 	}
 	
 	if (buf.length() > 0) {
@@ -142,7 +142,7 @@ public class SexpParser implements IParser {
 		//			  ex);
 	    }
 	}
-	return new ASTNLeaf(string, pctx, new ReaderException(String.format("Failed to parse atom '%s'", string)));
+	return new ASTNLeaf(string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
 	//throw new SexpParserException(pctx,
 	//			      String.format("Failed to parse atom '%s'", string));
     }
