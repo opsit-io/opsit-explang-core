@@ -136,14 +136,9 @@ public class SexpParser implements IParser {
 		}
 	    } catch(AtomParseException ex) {
 		return new ASTNLeaf(string, pctx, ex);
-		//throw new ReaderException(pctx,
-		//			  String.format("Failed to parse atom '%s'", string),
-		//			  ex);
 	    }
 	}
 	return new ASTNLeaf(string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
-	//throw new SexpParserException(pctx,
-	//			      String.format("Failed to parse atom '%s'", string));
     }
 
 
@@ -151,37 +146,10 @@ public class SexpParser implements IParser {
 	new NullParser(),
 	new BooleanParser(),
 	new NumberParser(),
-	new StringParser(),
+	new EscStringParser(),
 	new KeywordParser(),
 	new SymbolParser()
     };
-    
-    
-
-
-  
-
-    
-    // public ASTN parseExpr(String str) {
-    // 	return parseExpr(str, "<EXPRINPUT>");
-    // }
-    
-    // public ASTN parseExpr(String str, String inputName) {
-    // 	ParseCtx pctx = new ParseCtx(inputName, 0, 0);
-    // 	ASTN exprs = parse(pctx, str);
-    // 	List <ASTN> list = exprs.getList();
-    // 	if (list.size() != 1) {
-    // 	    throw new SexpParserException(new ParseCtx(inputName, 0, 0),
-    // 					  String.format("parseExpr: Too many expressions parsed: 1 is expected, by got %d: ",
-    // 							list.size()));
-    // 	}
-    // 	return list.get(0);
-    // }
-
-    
-
-    
-
     
     public String sexpToString(Object obj) {
 	if (null == obj) {
@@ -203,8 +171,6 @@ public class SexpParser implements IParser {
 	    return obj.toString();
 	}
     }
-
-
 
     protected void clearBuf(StringBuffer buf) {
 	buf.delete(0, buf.length());
