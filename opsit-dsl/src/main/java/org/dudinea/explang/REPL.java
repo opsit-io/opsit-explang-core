@@ -1,19 +1,15 @@
 package org.dudinea.explang;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.io.BufferedReader;
-import java.io.File;
-
 import java.util.List;
-
-
 import org.dudinea.explang.Compiler.ICtx;
-import org.dudinea.explang.reader.LispReader;
 import org.dudinea.explang.algparser.AlgReader;
 import org.dudinea.explang.algparser.UCStringConverter;
-import org.dudinea.explang.ParserException;
+import org.dudinea.explang.reader.LispReader;
 
 public class REPL {
     public static void main(String argv[])
@@ -146,7 +142,7 @@ public class REPL {
 			    break;
 			}
 			buf.append(line).append("\n");
-			exprs = parser.parse( pctx, buf.toString(), 1);
+			exprs = parser.parse( pctx, buf.toString(), Integer.MAX_VALUE);
 			if (verbose) {
 			    System.out.println("\nPARSER RETURN: " +exprs);
 			}
@@ -200,12 +196,6 @@ public class REPL {
 		    System.out.print(Utils.asString(result));
 		    System.out.println();
 		}
-		/*} catch (ReaderException ex) {
-		System.err.println(ex.getMessage());
-		err = ex;
-		//} catch (ReaderException ex) {
-		//System.err.println(ex.getMessage());
-		//err = ex;*/
 	    } catch (CompilationException ex) {
 		System.err.println("COMPILEATION ERROR: "+ ex.getMessage());
 		err = ex;
@@ -245,18 +235,4 @@ public class REPL {
 	return buf.toString();
     }
 
-    // // returns parse errors for each parsed expression
-    // private static List<String> getParseErrors(ASTN exprASTN) {
-    // 	final StringBuilder buf = new StringBuilder();
-    // 	ASTN.Walker errCollector = new ASTN.Walker (){
-    // 		public void walk(ASTN node) {
-    // 		    final Exception ex =  node.getProblem();
-    // 		    if (null != ex) {
-    // 			buf.append(ex.getMessage()).append("\n");
-    // 		    }
-    // 		}
-    // 	    };
-    // 	exprASTN.dispatchWalker(errCollector);
-    // 	return buf.toString();
-    // }
 }
