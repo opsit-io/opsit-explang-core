@@ -15,6 +15,8 @@ import static org.dudinea.explang.reader.LispReader.processChar;
 import org.dudinea.explang.ASTN;
 import org.dudinea.explang.ASTNList;
 import org.dudinea.explang.ASTNLeaf;
+import org.dudinea.explang.ParserException;
+import org.dudinea.explang.ParserEOFException;
 
 public class MacroFuncs  {
     private static String UNEXPECTED_IO_EXCEPTION = "Unexpected I/O Exception";

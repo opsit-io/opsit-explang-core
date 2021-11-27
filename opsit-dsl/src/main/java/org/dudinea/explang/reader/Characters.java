@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.dudinea.explang.Utils;
+import org.dudinea.explang.ParserException;
+
+
 
 public class Characters {
     final public static Map<String,Character> nameToChar =

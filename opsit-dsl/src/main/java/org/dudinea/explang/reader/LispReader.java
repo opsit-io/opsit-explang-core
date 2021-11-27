@@ -19,7 +19,8 @@ import org.dudinea.explang.Utils;
 import org.dudinea.explang.reader.MacroFuncs.ReadComment;
 import org.dudinea.explang.Keyword;
 import org.dudinea.explang.atom.*;
-
+import org.dudinea.explang.ParserException;
+import org.dudinea.explang.ParserEOFException;
 
 public class LispReader implements IParser  {
 

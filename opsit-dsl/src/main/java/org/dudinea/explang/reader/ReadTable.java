@@ -7,6 +7,7 @@ import java.io.Reader;
 import org.dudinea.explang.ICompiled;
 import org.dudinea.explang.Keyword;
 import org.dudinea.explang.Utils;
+import org.dudinea.explang.ParserException;
 
 public class ReadTable {
 

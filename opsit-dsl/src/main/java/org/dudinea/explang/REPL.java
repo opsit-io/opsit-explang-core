@@ -13,7 +13,7 @@ import org.dudinea.explang.Compiler.ICtx;
 import org.dudinea.explang.reader.LispReader;
 import org.dudinea.explang.algparser.AlgReader;
 import org.dudinea.explang.algparser.UCStringConverter;
-import org.dudinea.explang.reader.ParserException;
+import org.dudinea.explang.ParserException;
 
 public class REPL {
     public static void main(String argv[])

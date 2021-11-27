@@ -1,4 +1,4 @@
-package org.dudinea.explang.reader;
+package org.dudinea.explang;
 import org.dudinea.explang.ParseCtx;
 
 public class ParserException

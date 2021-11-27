@@ -20,7 +20,8 @@ import org.dudinea.explang.ParseCtx;
 import org.dudinea.explang.ASTN;
 import org.dudinea.explang.ASTNList;
 import org.dudinea.explang.Utils;
-
+import org.dudinea.explang.ParserEOFException;
+import org.dudinea.explang.ParserException;
 
 @RunWith(Parameterized.class)
 public class ReaderTest {
