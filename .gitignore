@@ -22,6 +22,9 @@ package-lock.json
 node_modules/
 # Mac
 .DS_Store
+.angular/
+.angular
+opsit-frontend/.angular
 
 # Maven
 log/
