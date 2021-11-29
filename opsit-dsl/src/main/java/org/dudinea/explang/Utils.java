@@ -43,9 +43,9 @@ public class Utils {
     }
 
     
-    public  static Set<Object> set(Object ... objs) {
-	Set set = new HashSet(objs.length);
-	for (Object obj: objs) {
+    public  static <T> Set<T> set(T ... objs) {
+	Set <T>set = new HashSet<T>(objs.length);
+	for (T obj: objs) {
 	    set.add(obj);
 	}
 	return set;
