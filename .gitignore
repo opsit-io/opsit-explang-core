@@ -125,3 +125,8 @@ opsit-load-testing/opsit-load-testing.iml
 /node_modules/
 /opsit-website/resources/_gen/
 /opsit-website/resources/_gen/
+/opsit-frontend/.angular/
+/opsit-frontend/.angular/cache
+opsit-frontend/.angular/cache
+opsit-frontend/.angular/cache/babel-webpack
+opsit-frontend/.angular/cache/angular-webpack
