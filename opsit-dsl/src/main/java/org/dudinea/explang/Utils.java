@@ -478,5 +478,26 @@ public class Utils {
 	    }
  	} 
     }
-    
+
+    public static boolean isEmpty(String str) {
+	return null == str || str.length() == 0;
+    }
+
+    public static String coalesce(String... strings) {
+        for (String s : strings) {
+            if (!isEmpty(s)) {
+                return s;
+            }
+        }
+        return null;
+    }
+
+    public static Object nvl(Object... objects) {
+        for (Object object : objects) {
+            if (null != object) {
+                return object;
+            }
+        }
+        return null;
+    }
 }
