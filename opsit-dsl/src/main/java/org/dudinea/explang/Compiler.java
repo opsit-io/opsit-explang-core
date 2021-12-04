@@ -405,7 +405,7 @@ public class Compiler {
     public abstract class AbstractForm implements IForm, Runnable {
         protected ParseCtx debugInfo;
         protected String name;
-    
+
         public void setName(String name) {
             this.name = name;
         }
@@ -414,10 +414,10 @@ public class Compiler {
             return null == name ? this.getClass().getSimpleName() : name;
         }
 
-    
-        public void setDebugInfo(ParseCtx debugInfo) {
-            this.debugInfo = debugInfo;
-        }
+
+	public void setDebugInfo(ParseCtx debugInfo) {
+	    this.debugInfo = debugInfo;
+	}
 
 	public ParseCtx getDebugInfo() {
 	    return debugInfo;
@@ -430,27 +430,27 @@ public class Compiler {
 		this.evaluate(new Backtrace(), ctx);
 	    Threads.results.put(Thread.currentThread(),result);
 	}
-	
-        protected abstract Object doEvaluate(Backtrace backtrace,ICtx  ctx);
-        @Override
-        final public Object evaluate(Backtrace backtrace,ICtx  ctx) {
-            try {
-		final StringBuilder b = new StringBuilder(16);
-		b.append("(").append(getName()).append(")");
-                backtrace.push(b.toString(),
-                               this.debugInfo,
-                               ctx);
-                return doEvaluate(backtrace, ctx);
-            } catch (ExecutionException ex) {
-                throw ex;
-            } catch (Throwable t) {
-                throw new ExecutionException(backtrace,t);
-            } finally {
-                backtrace.pop();
-            } 
+
+        protected abstract Object doEvaluate(Backtrace backtrace, ICtx ctx);
+
+                @Override
+                final public Object evaluate(Backtrace backtrace, ICtx ctx) {
+                        try {
+                                final StringBuilder b = new StringBuilder(16);
+                                b.append("(").append(getName()).append(")");
+                                backtrace.push(b.toString(), this.debugInfo, ctx);
+                                return doEvaluate(backtrace, ctx);
+                        } catch (ExecutionException ex) {
+                                throw ex;
+                        } catch (Throwable t) {
+                                throw new ExecutionException(backtrace, t);
+                        } finally {
+                                backtrace.pop();
+                        }
+                }
         }
-    }
-    
+
+    @Docstring(text = "Get Function Given it's symbol.")
     public class FUNCTION extends AbstractForm {
         // FIXME: checks
         protected Symbol fsym;
@@ -481,7 +481,8 @@ public class Compiler {
             return code;
         }
     }
-    
+
+    @Docstring(text = "Evaluate sequence of expressions.")
     public  class PROGN extends AbstractForm {
         private List<ICompiled> blocks = null;
         public void setRawParams(ASTNList params) {
@@ -495,7 +496,7 @@ public class Compiler {
     }
 
 
-
+    @Docstring(text = "Try-Catch-Final construction.")
     public  class TRY extends AbstractForm {
 	private List<ICompiled> blocks = null;
         private List<CatchEntry> catches = null;
@@ -618,6 +619,7 @@ public class Compiler {
         }
     }
 
+    @Docstring(text = "While loop construction. Execute sequnce of expressions while the consition is true")
     public  class WHILE extends AbstractForm {
         private List<ICompiled> blocks = null;
         private ICompiled condition = null;
@@ -641,7 +643,7 @@ public class Compiler {
     }
 
     @Arguments(spec={"(", "VAR", "SEQUENCE", ArgSpec.ARG_OPTIONAL,"RESULT",")" ,ArgSpec.ARG_REST,"body"})
-    @Docstring(text="Loop over a sequence.\n" +
+    @Docstring(text="Foreach Loop over a sequence. \n" +
 	       "Evaluate body with VAR bound to each element from SEQUENCE, in turn.\n" +
 	       "Then evaluate RESULT to get return value, default NIL.")
     public  class FOREACH extends AbstractForm {
@@ -689,7 +691,8 @@ public class Compiler {
         }
     }
 
-    @Docstring(text="COND allows the execution of forms to be dependent on test-form.\n"+
+    @Docstring(text="Conditional switch construct. "+
+	       "COND allows the execution of forms to be dependent on test-form.\n"+
 	       "Test-forms are evaluated one at a time in the order in\n"+
 	       "which they are given in the argument list until a\n"+
 	       "test-form is found that evaluates to true.  If there\n"+
@@ -740,7 +743,8 @@ public class Compiler {
 	    return null;
         }
     }
-    
+
+    @Docstring(text = "If-else conditional construct.")
     public class IF extends AbstractForm {
         private List<ICompiled> elseBlocks = null;
         private ICompiled condition = null;
@@ -780,6 +784,7 @@ public class Compiler {
     /**
      * (DEFUN FOO (arg1 arg2...) block block...)
      */
+    @Docstring(text = "Define named function")
     public class DEFUN extends LAMBDA {
 	// FIXME: this field is needed/ WHY?
         private String name;
@@ -815,7 +820,7 @@ public class Compiler {
     }
 
 
-    
+    @Docstring(text = "Define anonymous function")
     public  class LAMBDA extends AbstractForm  {
 	protected ArgSpec argSpec;
         protected List<ICompiled> blocks;
@@ -898,6 +903,7 @@ public class Compiler {
         }
     }
 
+    @Docstring(text = "Destructuring LET construct.")
     public  class DLET extends AbstractForm {
         protected List<ICompiled> blocks = null;
         protected ICompiled listExpr = null;
@@ -950,7 +956,8 @@ public class Compiler {
     
 
     }
-    
+
+    @Docstring(text = "Return its argument without evaluation.")
     public class QUOTE extends AbstractForm {
         Object value = null;
         @Override
@@ -968,6 +975,7 @@ public class Compiler {
         }
     }
 
+    @Docstring(text = "Evaluate code with bindings from a Java Map.")
     public class WITH_BINDINGS extends AbstractForm  {
         protected List<ICompiled> blocks = null;
         ICompiled bindExpr = null;
@@ -995,6 +1003,7 @@ public class Compiler {
         }
     }
 
+    @Docstring(text = "Evaluate code in given context.")
     public class WITH_CTX extends AbstractForm  {
         protected List<ICompiled> blocks = null;
         ICompiled bindExpr = null;
@@ -1064,6 +1073,11 @@ public class Compiler {
 	protected abstract void  setvar(String name, Object val, ICtx ctx);
     }
 
+    @Arguments(text="{var form}*")
+    @Docstring(text="Varianle assignmentm, global if not exists. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"+
+	       "var - a symbol naming a variable.\n"+
+	       "form - an expression, which evaluation result will be assigned to var\n"+
+	       "Returns: value of the last form, or nil if no pairs were supplied.") 
     public  class SETV extends ABSTRACT_SET_OP {
         @Override
 	protected  void  setvar(String name, Object val, ICtx ctx) {
@@ -1073,7 +1087,7 @@ public class Compiler {
 
 
     @Arguments(text="{var form}*")
-    @Docstring(text="Assigns values to variables. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"+
+    @Docstring(text="Varianle assignmentm, local if not exists. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"+
 	       "var - a symbol naming a variable.\n"+
 	       "form - an expression, which evaluation result will be assigned to var\n"+
 	       "Returns: value of the last form, or nil if no pairs were supplied.") 
@@ -1084,6 +1098,7 @@ public class Compiler {
         }
     }
 
+    @Docstring(text="Evaluate code with given var. bindings.")
     public  class LET extends AbstractForm  {
         protected List<ICompiled> blocks = null;
         protected List<ICompiled> varExprs = new ArrayList<ICompiled>();

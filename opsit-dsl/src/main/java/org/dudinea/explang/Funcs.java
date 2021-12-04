@@ -165,7 +165,8 @@ public class Funcs {
         }
     }
 
-    @Docstring(text="Returns the sum of numbers, " +
+    @Docstring(text="Compute Sum. "+
+	       "Returns the sum of numeric values of it's arguments, " +
                "performing any necessary type conversions in the process. " +
                "If no numbers are supplied, 0 is returned.")
     public static class ADDOP extends ABSTRACT_ADD {
@@ -187,7 +188,8 @@ public class Funcs {
         }
     }
 
-    @Docstring(text="Returns the product of it's arguments , "+
+    @Docstring(text="Compute Product. "+
+	       "Returns the product of it's arguments , "+
                "performing any necessary type conversions in the process. "+
                "If no numbers are supplied, 1 is returned.")
     public static class MULOP extends ABSTRACT_ADD {
@@ -232,7 +234,7 @@ public class Funcs {
         }
     }
     
-    @Docstring(text="Performs arithmetic subtraction and negation. "+
+    @Docstring(text="Performs subtraction or negation. "+
                "If only one number is supplied, the negation of that "+
                "number is returned. If more than one argument is given, "+
                "it subtracts rest of the arguments from the first one "+
@@ -260,7 +262,7 @@ public class Funcs {
         }
     }
 
-    @Docstring(text="The function / performs division or reciprocation. "+
+    @Docstring(text="Performs Division or Reciprocation. "+
                "If no denominators are supplied, the function / returns "+
                "the reciprocal of number. " +
                "If at least one denominator is supplied, the function / "+
@@ -293,7 +295,8 @@ public class Funcs {
 
 
     @Arguments(spec={"x","y"})
-    @Docstring(text="Generalizations of the remainder function. When both operands are integer "+
+    @Docstring(text="Compute Remainder. "+
+	       "Generalizations of the remainder function. When both operands are integer "+
                "returns result of the remainder operation . If one of them is floating point "+
                "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "+
                "(same semantic as for the Java % operator.")
@@ -325,7 +328,8 @@ public class Funcs {
     }
 
     @Arguments(spec={"number","divisor"})
-    @Docstring(text="Generalizations of the modulus function. When both operands are integer "+
+    @Docstring(text="Compute Modulus. "+
+	       "Generalizations of the modulus function. When both operands are integer "+
                "returns result of the modulus operation. If one of them is floating point "+
                "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
     public  static class MODOP extends FuncExp implements  ABSTRACT_OP {
@@ -359,9 +363,13 @@ public class Funcs {
     
     /**** BOOLEAN FUNCTIONS ****/
     @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
-    @Docstring(text="Function AND lazily evaluates each form one at a time from left to right. " +
-               "As soon as any form evaluates to NIL, AND returns NIL without evaluating the remaining forms. " +
-               "If all forms but the last evaluate to true values, AND returns the results " +
+    @Docstring(text="Logical AND. "+
+	       "Function AND lazily evaluates each argument form, "+
+	       "one at a time from left to right. " +
+               "As soon as any form evaluates to NIL, "+
+	       "AND returns NIL without evaluating the remaining forms. " +
+               "If all forms but the last evaluate to true values, "+
+	       "AND returns the results " +
                "produced by evaluating the last form. " +
                "If no forms are supplied, (AND) returns true.")
     public static class AND extends FuncExp {
@@ -379,9 +387,12 @@ public class Funcs {
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
-    @Docstring(text="Function OR lazily evaluates each form, one at a time, from left to right. "+
-               "The evaluation of all forms terminates when a form evaluates to true "+
-               "(i.e., something other than nil) and OR immediately returns that value "+
+    @Docstring(text ="Logical OR. "+
+	       "Function OR lazily evaluates each form, "+
+	       "one at a time, from left to right. "+
+	       "The evaluation of all forms terminates when a form evaluates to true "+
+               "(i.e., something other than nil) "+
+	       "and OR immediately returns that value "+
                "without evaluating the remaining forms.")
     public static class OR extends FuncExp {
         @Override
@@ -398,7 +409,11 @@ public class Funcs {
     }
 
     @Arguments(spec={"x"})
-    @Docstring(text="Returns True if x has false logical value; otherwise, returns False. Parameter x can be any object. Only NIL, empty list (), empty String \"\", 0  and False have false logical value. All other objects have true logical value")
+    @Docstring(text="Logical Negation. "+
+	       "Returns True if x has false logical value; otherwise, returns False."+
+	       "Parameter x can be any object. Only NIL, the empty list (), "+
+	       "the empty String \"\", 0  and FALSE have false logical value. "+
+	       "All other objects have true logical value")
     public static class NOT extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -409,7 +424,9 @@ public class Funcs {
 
     /**** COMPARISON ****/
     @Arguments(spec={"x","y"})
-    @Docstring(text="Object comparison. Returns true if x equal to y according call to Java method x.equals(y) or if both objects are NIL.")
+    @Docstring(text="Check Object Equality. "+
+	       "Returns true if x equal to y according to call to Java method "+
+	       "x.equals(y) or if both objects are NIL.")
     public static class EQUAL extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -465,7 +482,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"x",ARG_REST,"args"})
-    @Docstring(text="Returns True if all arguments are monotonically decreasing order.  Returns True if only one argument is given")
+    @Docstring(text="Greater Than - Numeric comparison. Returns True if all arguments are monotonically decreasing order.  Returns True if only one argument is given")
     public static class NUMGT extends NUMCOMP {
         @Override
         protected boolean compareResult(int res) {
@@ -474,7 +491,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"x",ARG_REST,"args"})
-    @Docstring(text="Returns True if all arguments are monotonically non-increasing order.  Returns True if only one argument is given")
+    @Docstring(text="Greater or Equal - Numeric comparison. Returns True if all arguments are monotonically non-increasing order.  Returns True if only one argument is given")
     public static class NUMGE extends NUMCOMP {
         @Override
         protected boolean compareResult(int res) {
@@ -483,7 +500,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"x",ARG_REST,"args"})
-    @Docstring(text="Returns True if all arguments are monotonically increasing order.  Returns True if only one argument is given")
+    @Docstring(text="Less Than - Numeric Comparison. Returns True if all arguments are monotonically increasing order.  Returns True if only one argument is given")
     public static  class NUMLT extends NUMCOMP {
         @Override
         protected boolean compareResult(int res) {
@@ -492,7 +509,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"x",ARG_REST,"args"})
-    @Docstring(text="Returns True if all arguments are monotonically non-decreasing order.  Returns True if only one argument is given")
+    @Docstring(text="Less or Equal - Numeric comparison. Returns True if all arguments are monotonically non-decreasing order.  Returns True if only one argument is given")
     public static  class NUMLE extends NUMCOMP {
         @Override
         protected boolean compareResult(int res) {
@@ -501,7 +518,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"x"})
-    @Docstring(text="Determines a numerical value that indicates whether number is negative, zero, or positive. "+
+    @Docstring(text="Return Number Sign. Determines a numerical value that indicates whether number is negative, zero, or positive. "+
                "Returns one of -1, 0, or 1 according to whether number is negative, zero, or positive. The type of "+
                "the result is of the same numeric type as x")
     public static class SIGNUM extends FuncExp {
@@ -529,7 +546,7 @@ public class Funcs {
 
     /**** COERCION *****/
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Boolean. Value may be a Character, a Number, a Boolean, a Byte, a String, any object or NIL:\n" +
+    @Docstring(text="Coerce Value to Boolean. Value may be a Character, a Number, a Boolean, a Byte, a String, any object or NIL:\n" +
                "* Boolean value will be returned as is\n"+
                "* NIL is false\n"+
                "* Character  \u0000 is false.\n"+
@@ -548,7 +565,7 @@ public class Funcs {
 
     
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Character. Value may be a Character, a Number, a Boolean, a Byte, a Stringor NIL:\n" +
+    @Docstring(text="Coerce Value to Character. Value may be a Character, a Number, a Boolean, a Byte, a Stringor NIL:\n" +
                "* Character value will be returned as is.\n"+
                "* NIL will be converted to unicode value #\u0000.\n"+
                "* a Boolean True value will be returned as character 'T', False as '\0'.\n"+
@@ -578,7 +595,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to String. Value may be any object or NIL: "+
+    @Docstring(text="Coerce Value to String. Value may be any object or NIL: "+
                "NIL is converted to String \"NIL\", any other object converted "+
                "using it's toString() method")
     public static class STRING extends FuncExp {
@@ -590,7 +607,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Long. Value may be a Number, String, any object or NIL." +
+    @Docstring(text="Coerce Value to Long. Value may be a Number, String, any object or NIL." +
                "String will be parsed as number using same rules as numeric literals. "+
                "The floating point values will be truncated.")
     public static class LONG extends FuncExp {
@@ -602,7 +619,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Short. Value may be a Number, String, any object or NIL." +
+    @Docstring(text="Coerce Value to Short. Value may be a Number, String, any object or NIL." +
                "String will be parsed as number using same rules as numeric literals. "+
                "The floating point values will be truncated.")
     public static class SHORT extends FuncExp {
@@ -614,7 +631,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Byte. Value may be a Number, String, any object or NIL." +
+    @Docstring(text="Coerce Value to Byte. Value may be a Number, String, any object or NIL." +
                "String will be parsed as number using same rules as numeric literals. "+
                "The floating point values will be truncated.")
     public static class BYTE extends FuncExp {
@@ -625,7 +642,7 @@ public class Funcs {
         }
     }
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Double. Value may be a Number, String, any object or NIL." +
+    @Docstring(text="Coerce Value to Double. Value may be a Number, String, any object or NIL." +
                "String will be parsed as number using same rules as numeric literals. "+
                "The floating point values will be truncated.")
     public static class DOUBLE extends FuncExp {
@@ -636,7 +653,7 @@ public class Funcs {
         }
     }
     @Arguments(spec={"value"})
-    @Docstring(text="Coerce value to Float. Value may be a Number, String, any object or NIL." +
+    @Docstring(text="Coerce Value to Float. Value may be a Number, String, any object or NIL." +
                "String will be parsed as number using same rules as numeric literals. "+
                "The floating point values will be truncated.")
     public static class FLOAT extends FuncExp {
@@ -648,7 +665,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"limit"})
-    @Docstring(text="Returns a pseudo-random number that is a non-negative number less than limit and of the same numeric type as limit. Implemented uding Java Math.random()")
+    @Docstring(text="Produce Pseudo-Random Number. Returns a pseudo-random number that is a non-negative number less than limit and of the same numeric type as limit. Implemented uding Java Math.random()")
     public static class RANDOM extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -680,7 +697,7 @@ public class Funcs {
     /**** VARIABLES, DATATYPES AND FUNCTIONS ****/
     // FIXME: are array types supported?
     @Arguments(spec={"object","type-specifier"})
-    @Docstring(text="Returns True if object is of the specified type. Type specifier may be a Class object or string or symbol which is a valid type-specifier.")
+    @Docstring(text="Check if Object is of Specified Type. Returns True if object is of the specified type. Type specifier may be a Class object or string or symbol which is a valid type-specifier.")
     public static class TYPEP extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
@@ -695,7 +712,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"object"})
-    @Docstring(text="Returns type (as class) of the given object. For NIL argument return NIL.")
+    @Docstring(text="Return Object Type. Returns type (as class) of the given object. For NIL argument return NIL.")
     public static class TYPE_OF extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
@@ -709,7 +726,7 @@ public class Funcs {
     }
     
     @Arguments(spec={ARG_REST,"symbols"})
-    @Docstring(text="Check if symbols are bound. Returns True if all the arguments are bound symbols or names of bound symbols; otherwise, returns False.") 
+    @Docstring(text="Check if Symbols are Bound. Returns True if all the arguments are bound symbols or names of bound symbols; otherwise, returns False.") 
     public static class BOUNDP extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -724,7 +741,7 @@ public class Funcs {
     }
 
     @Arguments(spec={ArgSpec.ARG_REST,"pairs"})
-    @Docstring(text="Returns new HashMap filled with given keys and values. "
+    @Docstring(text="Create a HashMap. Returns new HashMap filled with given keys and values. "
                + "Throws InvalidParametersException if non-even number of arguments is given.")
     public static class HASHMAP extends FuncExp {
         @Override
@@ -750,7 +767,7 @@ public class Funcs {
 
     // FIXME: allow function be symbol (or function name?)
     @Arguments(spec={"function", ArgSpec.ARG_REST,"arguments"})
-    @Docstring(text="Apply arguments to function. Function must be a function object")
+    @Docstring(text="Apply Arguments to a Function. Function must be a function object")
     public static class FUNCALL extends AbstractExpr {
         private List<ICompiled> params = null;
         //private ICode  code = null;
@@ -1035,8 +1052,9 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"f", ArgSpec.ARG_REST,"lists"})
-    @Docstring(text="Returns a sequence consisting of the result of applying func to "+
+    @Arguments(spec={"func", ArgSpec.ARG_REST,"lists"})
+    @Docstring(text="Apply function on elements of collections. "+
+	       "Returns a sequence consisting of the result of applying func to "+
                "the set of first items of each list, followed by applying func to the "+
                "set of second items in each list, until any one of the lists is "+
                "exhausted.  Any remaining items in other lists are ignored. Function "+
@@ -1059,7 +1077,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"f", ArgSpec.ARG_REST,"lists"})
-    @Docstring(text="Returns a sequence consisting of the result of applying func to "+
+    @Docstring(text="Apply function on cartesioan product of lists. Returns a sequence consisting of the result of applying func to "+
                "the cartesian product of the lists. Function func should accept number "+
                "arguments that is equal to number of lists.")
     public static class MAPPROD extends ABSTRACTMAPOP {
@@ -1090,7 +1108,7 @@ public class Funcs {
     }
     /***** VARIABLE PROPERTIES HANDLING ******/
     @Arguments(spec = {"symbol","property-key"})
-    @Docstring(text = "Returns value of a property from variable property map")
+    @Docstring(text = "Get Variable Property. Returns value of a property from variable property map")
     public static class GETPROP extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1103,7 +1121,7 @@ public class Funcs {
         }
     }
     @Arguments(spec = {"symbol","property-key","property-value"})
-    @Docstring(text = "Set property value in variable property map")
+    @Docstring(text = "Set variable property. Sets property value in variable property map")
     public static class SETPROP extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1119,7 +1137,7 @@ public class Funcs {
     }
 
     @Arguments(spec = {"symbol"})
-    @Docstring(text = "Get properties map for variable")
+    @Docstring(text = "Get Properties Map for a Variable.")
     public static class GETPROPS extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1131,7 +1149,7 @@ public class Funcs {
         }
     }
     @Arguments(spec = {"symbol","properties-map"})
-    @Docstring(text = "Set properties map for variable")
+    @Docstring(text = "Set Properties Map for a Variable")
     public static class SETPROPS extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1150,7 +1168,7 @@ public class Funcs {
     
     /***** CONTEXT HANDLING ******/
     @Arguments(spec = {})
-    @Docstring(text = "Returns new empty dynamic context")
+    @Docstring(text = "Create New Empty Context")
     public static class NEW_CTX extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1159,7 +1177,8 @@ public class Funcs {
     }
     /***** JAVA INTEROP *****/
     @Arguments(spec={"object",ARG_OPTIONAL,"prefix","suffix"})
-    @Docstring(text="Returns a Map based on getters in the passed java object. " +
+    @Docstring(text="Convert Java Bean to a Map. "+
+	       "Returns a Map based on getters in the passed java object. " +
                "Accepts optional prefix and suffics arguments that are used " +
                "to modify the generated keys.")
     public static class BEAN extends FuncExp {
@@ -1299,8 +1318,10 @@ public class Funcs {
     }
 
     @Arguments(spec={"class-spec"})
-    @Docstring(text="Return class object according to it's fully qualified class name. " +
-               " class-spec may be string, symbol or any object, which string representation will be used")
+    @Docstring(text="Return Class by Class Name."+
+	       "Return class object according to it's fully qualified class name. " +
+               "class-spec may be string, symbol or any object,"+
+	       "which string representation will be used")
     public static class CLASS extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
@@ -1310,7 +1331,7 @@ public class Funcs {
     }
     
     @Arguments(spec={"class", ArgSpec.ARG_OPTIONAL, "arglist", "typeslist"})
-    @Docstring(text="Return new class instance. Optional arglist and typeslist "+
+    @Docstring(text="Return New Class Instance. Optional arglist and typeslist "+
                "parameters specify parameters to be passed to cosnstructor "+
                "and their types. When typelist not given it tries to find "+
                "most narrowly matching constructor on the basis of types of "+
@@ -1442,7 +1463,8 @@ public class Funcs {
     //  */
     // FIXME: proper docstring
     @Arguments(spec={"object", ArgSpec.ARG_REST, "call-args"})
-    @Docstring(text="Call method of java object or read contend of object field. ")
+    @Docstring(text="Call Java Object Method/Read Field"+
+	       "Call method of java object or read contend of object field. ")
     public static class DOT extends FFI {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1453,7 +1475,9 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"class", ArgSpec.ARG_REST, "call-args"})    
+    @Arguments(spec={"class", ArgSpec.ARG_REST, "call-args"})
+    @Docstring(text="Call Static Java Method/Read Static Field"+
+	       "Call method of java object or read contend of object field. ")
     public static class DOTS extends FFI {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1470,7 +1494,8 @@ public class Funcs {
 
     /***** EXCEPTION HANDLING AND DEBUGGING *****/
     @Arguments(spec={})
-    @Docstring(text="Returns string representation of current stack frame.")
+    @Docstring(text="Return callstack backtrace. "+
+	       "Returns string representation of current stack frame.")
     public static class BACKTRACE extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1481,7 +1506,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"exception"})
-    @Docstring(text="Throw java exception. exception may be a java Throwable object or String. In the latter case a new ExecutionException with given message will be created and thrown.")
+    @Docstring(text="Throw Java Exception. The exception may be a java Throwable object or String. In the latter case a new ExecutionException with given message will be created and thrown.")
     public static class THROW extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
@@ -1503,7 +1528,7 @@ public class Funcs {
     
     /**** STRING HANDLING ****/
     @Arguments(spec={"pattern"})
-    @Docstring(text="Compiles regexp pattern. On success returns a java.util.regex.Pattern objec. On error raises exception.")
+    @Docstring(text="Compile A Regexp Pattern. On success returns a java.util.regex.Pattern objec. On error raises exception.")
     public static  class RE_PATTERN extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1537,7 +1562,8 @@ public class Funcs {
     }
 
     @Arguments(spec={"matcher"})
-    @Docstring(text="Returns the groups from the most recent match/find.\n"+
+    @Docstring(text="Return Groups for a Regexp Match. "+
+	       "Returns the groups from the most recent match/find.\n"+
                "If there are no nested groups, returns a string of the entire\n"+
                "match. If there are nested groups, returns a list of the groups,\n"+
                "the first element being the entire match.")
@@ -1549,7 +1575,9 @@ public class Funcs {
     }
 
     @Arguments(spec={"pattern","char-seq"})
-    @Docstring(text="Returns an instance of java.util.regex.Matcher, for use, e.g. in RE-FIND.")
+    @Docstring(text="Return Regexp Matcher. "+
+	       "Returns an instance of java.util.regex.Matcher, "+
+	       "for use, e.g. in RE-FIND.")
     public static  class RE_MATCHER extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1560,26 +1588,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
-    @Docstring(text="When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
-               "When called with one arguments it uses given Matcher. \n "+
-               "Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n "+
-               "if no groups were defined it returns the matched string.\n "+
-               "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-               "If there is no match NIL is returned")
-    public static  class RE_FIND extends FuncExp {
-        @Override
-        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-            final Matcher m = getMatcher(eargs,  backtrace);
-            if (m.find()) {
-                return returnGroups(m);
-            } else {
-                return null;
-            }
-        }
-    }
-
-    @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
-    @Docstring(text="When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
+    @Docstring(text="Perform regexp match. When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
                "When called with one arguments it uses given Matcher. \n "+
                "Returns the match, if any, of string to pattern, using Matcher.matches(). \n "+
                "if no groups were defined it returns the matched string.\n "+
@@ -1597,8 +1606,31 @@ public class Funcs {
         }
     }
 
+    
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
-    @Docstring(text="When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
+    @Docstring(text="Perform Regexp Find. "+
+	       "When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
+               "When called with one arguments it uses given Matcher. \n "+
+               "Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n "+
+               "if no groups were defined it returns the matched string.\n "+
+               "If groups were defined it returns a list consisting of the full match and matched groups\n "+
+               "If there is no match NIL is returned")
+    public static  class RE_FIND extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Matcher m = getMatcher(eargs,  backtrace);
+            if (m.find()) {
+                return returnGroups(m);
+            } else {
+                return null;
+            }
+        }
+    }
+
+    
+    @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
+    @Docstring(text="Return Results of Regexp Find as a Lazy Sequence. "+
+	       "When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
                "Returns lazy iterable sequence (instance of Iterable) of matches of string to pattern, using Matcher.find(). \n "+
                "When called with one arguments it uses given Matcher. \n "+
                "if no groups were defined the elements of the sequence are the matched string.\n "+
@@ -1637,7 +1669,15 @@ public class Funcs {
     }
     
     @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
-    @Docstring(text="Returns a formatted string using the specified format string (in the format of java.util.Formatter) and arguments. Arguments referenced by the format specifiers in the format string. If there are more arguments than format specifiers, the extra arguments are ignored. Throws IllegalFormatException - If a format string contains an illegal syntax, a format specifier that is incompatible with the given arguments, insufficient arguments given the format string, or other illegal conditions.")
+    @Docstring(text="Format String. "+
+	       "Returns a formatted string using the specified format string (in the "+
+	       "format of java.util.Formatter) and arguments. Arguments referenced by " +
+	       "the format specifiers in the format string. If there are more " +
+	       "arguments than format specifiers, the extra arguments are " +
+	       "ignored. Throws IllegalFormatException - If a format string contains " +
+	       "an illegal syntax, a format specifier that is incompatible with the " +
+	       "given arguments, insufficient arguments given the format string, or "+
+	       "other illegal conditions.")
     public static  class FORMAT extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1646,8 +1686,8 @@ public class Funcs {
         }
     }
 
-
     @Arguments(spec={ArgSpec.ARG_REST, "args"})
+    @Docstring(text="Print Arguments on standard output.")
     public static class PRINT extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1659,11 +1699,10 @@ public class Funcs {
             return buf.toString();
         }
     }
-
-
-
     
     @Arguments(spec={ArgSpec.ARG_REST,"values"})
+    @Docstring(text="Concatenate Strings. Returns concatenation "+
+	       "of string representationx of the function arguments")
     public static class STR extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1677,15 +1716,19 @@ public class Funcs {
 
     /****** SEQUENCES ******/
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
-    @Docstring(text="Adds to the first given sequence (target sequence) all  the elements of all of the following sequences and return the target sequence.  If no sequences were given an empty list will be returned. Target sequence must be extendable, that means that objects like Arrays or String cannot be target of this operation")
+    @Docstring(text="Concatenate sequences (destructive). "+
+	       "Adds to the first given sequence (target sequence) all the elements of" +
+	       "all of the following sequences and return the target sequence.  If no " +
+	       "sequences were given an empty list will be returned. Target sequence " +
+	       "must be extendable, that means that objects like Arrays or String " +
+	       "cannot be target of this operation")
     public static class NAPPEND extends APPEND {
         public NAPPEND() {
             super();
             isDestructive = true;
         }
     }
-
-
+    
     private static Seq.Operation mkArraySetter(final Object arr,
                                                final int[] counter,
                                                Class componentType) {
@@ -1731,8 +1774,14 @@ public class Funcs {
 
 
     @Arguments(spec={"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
-    @Docstring(text="subseq creates a sequence that is a copy of the subsequence of sequence bounded by start and end. Start specifies an offset into the original sequence and marks the beginning position of the subsequence. end marks the position following the last element of the subsequence. subseq always allocates a new sequence for a result; it never shares storage with an old sequence. The result subsequence is always of the same type as sequence.")
-
+    @Docstring(text="Return subsequnce of a sequence. "+
+	       "subseq creates a sequence that is a copy of the subsequence of " +
+	       "sequence bounded by start and end. Start specifies an offset into the " +
+	       "original sequence and marks the beginning position of the " +
+	       "subsequence. end marks the position following the last element of the " +
+	       "subsequence. subseq always allocates a new sequence for a result; it " +
+	       "never shares storage with an old sequence. The result subsequence is " +
+	       "always of the same type as sequence.")
     public static class SUBSEQ extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -1786,7 +1835,12 @@ public class Funcs {
     }
     
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
-    @Docstring(text="append returns a new sequence that is the concatenation of the elements of the arguments. All the argument remain unchanged. The resulting sequence is of the same type as the first argument. In no arguments were given an empty list is returned. If target sequence is an array necessary coercions will be performed automatically.")
+    @Docstring(text="Concatenate sequences (non-destructive). " +
+	       "append returns a new sequence that is the concatenation of the " +
+	       "elements of the arguments. All the argument remain unchanged. The " +
+	       "resulting sequence is of the same type as the first argument. In no " +
+	       "arguments were given an empty list is returned. If target sequence is " +
+	       "an array necessary coercions will be performed automatically.")
     public static class APPEND extends FuncExp {
         protected boolean isDestructive;
         public APPEND() {
@@ -1893,6 +1947,7 @@ public class Funcs {
     }
     
     @Arguments(spec={"object-1", "object-2"})
+    @Docstring(text="Prepend element to a sequence.")
     public static class CONS extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -1927,7 +1982,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"sequence"})
-    @Docstring(text="Return length (number of elements) in sequence. Parameter may be any supported sequence (collection, array, character sequence) or NIL (0 will be returned).")
+    @Docstring(text="Return length of a sequence. Parameter may be any supported sequence (collection, array, character sequence) or NIL (0 will be returned).")
     public static class LENGTH extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -1937,7 +1992,7 @@ public class Funcs {
     }
 
     @Arguments(spec={ArgSpec.ARG_REST,"args"})
-    @Docstring(text="Returns a list containing the supplied objects. ")
+    @Docstring(text="Create a list. Returns a list containing the supplied objects. ")
     public static class LIST extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1953,7 +2008,7 @@ public class Funcs {
 
     
     @Arguments(spec={"n","sequence"})
-    @Docstring(text="Locates the nth element of the sequence. n may be any non-negative number. Returns NIL when sequence is NIL or n is out of bounds")
+    @Docstring(text="Locates the nth element of a sequence. n may be any non-negative number. Returns NIL when sequence is NIL or n is out of bounds")
     public static class NTH extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1969,6 +2024,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"sequence"})
+    @Docstring(text="Return 2nd and further elements of sqeuence.")
     public static  class REST extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -1980,6 +2036,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"object"})
+    @Docstring(text="Check if an object is a sequence.")
     public static  class SEQUENCEP extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -1991,6 +2048,7 @@ public class Funcs {
 
 
     @Arguments(spec={"sequence"})
+    @Docstring(text="Reverse a sequence (destructive).")
     public static  class NREVERSE extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -2006,6 +2064,7 @@ public class Funcs {
         }
     }
     @Arguments(spec={"sequence"})
+    @Docstring(text="Reverse a sequence (non-destructive).")
     public static  class REVERSE extends NREVERSE {
         @Override
         @SuppressWarnings("unchecked")
@@ -2018,8 +2077,8 @@ public class Funcs {
 
 
     @Arguments(spec={"start",  "stop", ArgSpec.ARG_OPTIONAL,  "step"})
+    @Docstring(text="Reverse a sequence (destructive).")
     public static class RANGE extends FuncExp {
-        
         @Override
         public Object evalWithArgs(Backtrace bt, Eargs eargs) {
             //final Promotion prom = new Promotion();
@@ -2042,6 +2101,7 @@ public class Funcs {
     }
     
     @Arguments(spec={"object"})
+    @Docstring(text="Coerce object into a sequence.")
     public static class SEQ extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2069,6 +2129,7 @@ public class Funcs {
     }
 
     @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_MANDATORY, "sequence"})
+    @Docstring(text="Sort a sequence (destructively).")
     public static class NSORT extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2128,7 +2189,9 @@ public class Funcs {
     
     /***** LANGUAGE ****/
     @Arguments(spec={"fn", ARG_OPTIONAL,"name"})
-    @Docstring(text="Create new Java thread and prepare it for execution of given function fn.  fn must not require parameters for it's execution. The created thread is not started." )
+    @Docstring(text="Create new Java thread. "+
+	       "Creates new Java thread and prepare it for execution of given function fn."+
+	       "fn must not require parameters for it's execution. The created thread is not started." )
     public static class NEW_THREAD extends FuncExp {
         @Override
         protected Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2167,7 +2230,8 @@ public class Funcs {
     }
 
     @Arguments(spec={"file-spec"})
-    @Docstring(text="Sequentially executes each form it encounters in the input file/or stream named by resource-spec. Returns exception if input could not be read or there were exceptions while compiling or executing forms an exception will be raised. file-spec may be a java.io.File object, file path as String or opened InputStream.")
+    @Docstring(text="Execute program from a file/stream. "+
+	       "Sequentially executes each form it encounters in the input file/or stream named by resource-spec. Returns exception if input could not be read or there were exceptions while compiling or executing forms an exception will be raised. file-spec may be a java.io.File object, file path as String or opened InputStream.")
     public static class LOAD extends FuncExp {
         protected InputStream openInput(Object loadObj, Backtrace bt) {
             File f = null;
@@ -2221,7 +2285,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"resource-spec"})
-    @Docstring(text="Sequentially executes each form it encounters in the java resource file named by resource-spec. Returns exception if file could not be read or there were exceptions while compiling or executing forms an exception will be raised.")
+    @Docstring(text="Execute program from Java resource. Sequentially executes each form it encounters in the java resource file named by resource-spec. Returns exception if file could not be read or there were exceptions while compiling or executing forms an exception will be raised.")
     public static class LOADR extends LOAD {
         @Override
         protected InputStream openInput(Object loadObj, Backtrace bt) {
@@ -2238,7 +2302,7 @@ public class Funcs {
         }
     }
 
-    @Docstring(text="Return list of names of defined functions. If names are given use them as filter expressions:  only those which match at least one of filter expressions will be returned. Filters may be strings (substring match) or regular expressions (java.util.regex.Pattern objects).")
+    @Docstring(text="Get list of names of defined functions. If names are given use them as filter expressions:  only those which match at least one of filter expressions will be returned. Filters may be strings (substring match) or regular expressions (java.util.regex.Pattern objects).")
     @Arguments(spec={ARG_REST,"names"})
     public static class FUNCTIONS_NAMES extends FuncExp {
         @Override
@@ -2273,7 +2337,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"object"})
-    @Docstring(text="Returns true if object is a function (built-in or user defined); otherwise, returns false. "+
+    @Docstring(text="Check if object is a function. Returns true if object is a function (built-in or user defined); otherwise, returns false. "+
                "A function is an object that represents code to be executed when an appropriate number of arguments "+
                "is supplied. A function can be directly invoked by using it as the first argument to funcall, apply.")
     public static class FUNCTIONP extends FuncExp {
@@ -2289,7 +2353,7 @@ public class Funcs {
         }
     }
 
-    @Docstring(text="Evaluates form in the current dynamic context and return result of evaluation'")
+    @Docstring(text="Evaluate a Parsed Expression. Evaluates parsed form in the current dynamic context and return result of evaluation'")
     @Arguments(spec={"form"})
     public static class EVAL extends FuncExp {
         @Override
@@ -2304,7 +2368,8 @@ public class Funcs {
     }
 
     @Arguments(spec={"string"})
-    @Docstring(text="Reads expression from string using default parser. Returns expression or NIL if no expression has been read")
+    @Docstring(text="Parse expression from string. "+
+	       "Reads expression from string using default parser. Returns expression or NIL if no expression has been read")
     public static class READ_FROM_STRING extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace bt,Eargs eargs) {
@@ -2320,7 +2385,7 @@ public class Funcs {
     }
 
     
-    @Docstring(text="Makes new Symbol witch given string as name")
+    @Docstring(text="Makes new Symbol for a string")
     @Arguments(spec={"symbol-name"})
     public static class SYMBOL extends FuncExp {
         @Override
@@ -2330,7 +2395,7 @@ public class Funcs {
     }
 
     // TODO: support level and uplevel
-    @Docstring(text="Unbind bound variable given by symbol. Always returns symbol.")
+    @Docstring(text="Unbind variable given by symbol. Always returns symbol.")
     @Arguments(spec={"symbol"})
     public static class MAKUNBOUND extends FuncExp {
         @Override
@@ -2352,7 +2417,8 @@ public class Funcs {
     }
 
     
-    @Docstring(text="set changes the contents of variable symbol in the dynamic context to the given value. If uplevel is set the value will be set in the uplevel-ths previous context. If level is set the value will be changed in the level-th context from the level0 ")
+    @Docstring(text="Change variable value in specified context. "+
+	       "Set changes the contents of variable symbol in the dynamic context to the given value. If uplevel is set the value will be set in the uplevel-ths previous context. If level is set the value will be changed in the level-th context from the level0 ")
     @Arguments(spec={"symbol","value",ArgSpec.ARG_KEY,"uplevel", "level"}, text="symbol value { level | uplevel }?")
     public static class SET extends FuncExp {
         @Override
@@ -2394,7 +2460,7 @@ public class Funcs {
         }
     }
 
-    @Docstring(text="Set value of array element at index to object. If java array is typed (i.e. not array of java.lang.Objects) and object type does not match this function will attempt to perform necessary coercion operations. The coercions work in the same way as INT, FLOAT, STRING and rest of the built-in coercion functions.")
+    @Docstring(text="Sat array element value. Set value of array element at index to object. If java array is typed (i.e. not array of java.lang.Objects) and object type does not match this function will attempt to perform necessary coercion operations. The coercions work in the same way as INT, FLOAT, STRING and rest of the built-in coercion functions.")
     @Arguments(spec={"array","index","object"})
     public static class ASET extends FuncExp {
         @Override
@@ -2411,7 +2477,7 @@ public class Funcs {
     
     
     @Arguments(spec={"array","index"})
-    @Docstring(text="Return array element at specified index. Throws ArrayOutOfBoundsException if index is invalid")
+    @Docstring(text="Get Array element value. Return array element at specified index. Throws ArrayOutOfBoundsException if index is invalid")
     public static class AREF  extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2422,7 +2488,8 @@ public class Funcs {
     }
 
     @Arguments(spec={"size", ArgSpec.ARG_KEY, "element-type"})
-    @Docstring(text="Creates array of objects of specified size. Optional :element-type argument specifies type of array elements. The default is java.lang.Object")
+    @Docstring(text="Ceate an Array. "+
+	       "Creates array of objects of specified size. Optional :element-type argument specifies type of array elements. The default is java.lang.Object")
     public static class MAKE_ARRAY extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2451,7 +2518,8 @@ public class Funcs {
     
     
     @Arguments(spec={"function"})
-    @Docstring(text="Return textual description of given function or "+
+    @Docstring(text="Describe function. "+
+	       "Return textual description of given function or "+
                "built-in form. function is a symbol or function name or a lambda")
     public static class DESCRIBE_FUNCTION extends FuncExp {
         @Override
@@ -2486,7 +2554,8 @@ public class Funcs {
     }
     
     @Arguments(spec = { "function-name" })
-    @Docstring(text = "Return documentation string of given function or "
+    @Docstring(text = "Get Function Docstring. "+
+	       "Return documentation string of given function or "
                + "built-in form. function is a symbol or function name or a lambda")
     public static class DOCUMENTATION extends FuncExp {
         @Override
