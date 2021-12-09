@@ -4,12 +4,22 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ASTNList extends ASTN implements Iterable<ASTN> {
+    protected boolean isMultiExpr = false;
     public ASTNList(List object, ParseCtx pctx) {
 	super(object, pctx);
     }
     public ASTNList(List object, ParseCtx pctx, boolean isComment) {
 	super(object, pctx, isComment);
     }
+
+    public boolean isMultiExpr() {
+	return isMultiExpr;
+    }
+
+    public void setMultiExpr(boolean multiExpr) {
+		this.isMultiExpr = multiExpr;
+    }
+    
     @Override
     public boolean isList() {
 	return true;
