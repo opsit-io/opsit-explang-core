@@ -197,7 +197,7 @@ public class REPL {
 		    System.out.println();
 		}
 	    } catch (CompilationException ex) {
-		System.err.println("COMPILEATION ERROR: "+ ex.getMessage());
+		System.err.println("COMPILATION ERROR: "+ ex.getMessage());
 		err = ex;
 	    } catch (ExecutionException ex) {
 		System.err.print("EXECUTION ERROR: " + ex.getMessage());
