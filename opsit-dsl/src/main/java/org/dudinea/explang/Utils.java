@@ -492,8 +492,8 @@ public class Utils {
         return null;
     }
 
-    public static Object nvl(Object... objects) {
-        for (Object object : objects) {
+    public static <T> T  nvl(T... objects) {
+        for (T object : objects) {
             if (null != object) {
                 return object;
             }
