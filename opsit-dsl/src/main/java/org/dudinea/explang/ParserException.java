@@ -1,9 +1,18 @@
 package org.dudinea.explang;
+
 import org.dudinea.explang.ParseCtx;
+import static org.dudinea.explang.Utils.list;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ParserException
     extends Exception {
     protected ParseCtx pctx;
+
+    public List<String> getMessages() {
+	return list(this.getMessage());
+    }
+    
     public  ParserException (String msg) {
 	super(String.format("Parser: %s",msg));
     }
