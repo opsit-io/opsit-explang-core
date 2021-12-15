@@ -1667,6 +1667,36 @@ public class Funcs {
             };
         }
     }
+
+    @Arguments(spec={"elt", "sequence"})
+	@Docstring(text = "Check if an element is contained in a sequence. " +
+		   "bla bla.")
+    public static  class IN extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+	    if (2 != eargs.size()) {
+                throw new ExecutionException(backtrace,
+					     "Unexpected number of arguments: expected 2 but got "
+					     +eargs.size());
+            }
+            Object elt = eargs.get(0, backtrace);
+	    Object seq = eargs.get(1, backtrace);
+	    final boolean[] holder = new boolean[1];
+	    Seq.forEach(seq, new Operation() {
+		    public boolean perform(Object obj) {
+			if (null != obj && obj.equals(elt)) {
+			    return (holder[0]=true);
+			} else if (null == obj && null == elt) {
+			    return (holder[0]=true);
+			}
+			return false;
+		    }
+		}, false);
+	    return holder[0];
+        }
+    }
+
+
     
     @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
     @Docstring(text="Format String. "+
@@ -1736,37 +1766,41 @@ public class Funcs {
             if (componentType.equals(Character.TYPE)) {
                 return new Seq.Operation() {
                     @Override
-                    public void perform(Object obj) {
+                    public boolean perform(Object obj) {
                         Utils.aset(arr,
                                    counter[0]++,
                                    Utils.asChar(obj));
+			return false;
                     }
                 };
             } else if (componentType.equals(Boolean.TYPE)) {
                 return new Seq.Operation() {
                     @Override
-                    public void perform(Object obj) {
+                    public boolean perform(Object obj) {
                         Utils.aset(arr,
                                    counter[0]++,
                                    Utils.asBoolean(obj));
+			return false;
                     }
                 };
             } else {
                 // six numeric types
                 return new Seq.Operation() {
                     @Override
-                    public void perform(Object obj) {
+                    public boolean perform(Object obj) {
                         Utils.aset(arr,
                                    counter[0]++,
                                    Utils.asNumber(obj));
+			return false;
                     }
                 };
             }
         } else {
             return new Seq.Operation() {
                 @Override
-                public void perform(Object obj) {
+                public boolean perform(Object obj) {
                     Utils.aset(arr, counter[0]++, obj);
+		    return false;
                 }
             };
         }
@@ -1885,8 +1919,9 @@ public class Funcs {
                 Object seq = seqs.get(i);
                 Seq.forEach(seq, new Seq.Operation() {
                         @Override
-                        public void perform(Object obj) {
+                        public boolean perform(Object obj) {
                             result.append(Utils.asChar(obj));
+			    return false;
                         }
                     }, true);
             }
@@ -1937,8 +1972,9 @@ public class Funcs {
                 Object seq = seqs.get(i);
                 Seq.forEach(seq, new Seq.Operation() {
                         @Override
-                        public void perform(Object obj) {
+                        public boolean perform(Object obj) {
                             resultCol.add(obj);
+			    return false;
                         }
                     }, true);
             }
