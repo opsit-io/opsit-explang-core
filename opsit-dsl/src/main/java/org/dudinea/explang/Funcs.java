@@ -1669,8 +1669,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"elt", "sequence"})
-	@Docstring(text = "Check if an element is contained in a sequence. " +
-		   "bla bla.")
+    @Docstring(text = "Check if an element is contained in a sequence. ")
     public static  class IN extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
