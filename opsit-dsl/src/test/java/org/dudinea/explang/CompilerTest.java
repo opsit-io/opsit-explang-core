@@ -17,15 +17,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import static org.dudinea.explang.Utils.list;
 
 @RunWith(Parameterized.class)
 public class CompilerTest {
     static int testNum = 0;
     
-    public static List<Object> list(Object ... objs) {
-	return Arrays.asList(objs);
-    }
-
     Object result;
     boolean logResult;
     IParser parser;
@@ -774,6 +771,14 @@ public class CompilerTest {
 		{"(RE-MATCHES (RE-PATTERN \"^(F)([0-9])$\") \"BLA\")", null, false, null,null,p},
 		{"(RE-FIND (RE-PATTERN \"(F)([0-9])\") \"BLA\")", null, false, null,null,p},
 		{"(RE-FIND (RE-PATTERN \"(F)([0-9])\") \"F1\")", list("F1","F","1"), true, null,null,p},
+
+		{"(DWIM-MATCHES \"a1231b\" (RE-PATTERN \"[0-9]\"))", list("1","2","3","1"), true, null,null,p},
+		{"(DWIM-MATCHES \"a1231b\" \"1\")", list("1"), true, null,null,p},
+		{"(DWIM-MATCHES NIL NIL)", list((Object)null), true, null,null,p},
+		{"(DWIM-MATCHES 1 1)", list(1), true, null,null,p},
+		{"(DWIM-MATCHES 1 1.0)", list(1), true, null,null,p},
+		{"(DWIM-MATCHES 1.0 1)", list(1.0), true, null,null,p},
+		
 		{"(LET ((M (RE-MATCHER (RE-PATTERN \"(F)([0-9])\") \"F1\"))) (LIST (RE-FIND M) (RE-FIND M)))", list(list("F1","F","1"), null), true, null,null,p},
 		{"(LET ((M (RE-MATCHER (RE-PATTERN \"(F)([0-9])\") \"F1\"))) (LIST (RE-FIND M) (RE-GROUPS M) (RE-GROUPS M)))", list(list("F1","F","1"),list("F1","F","1"),list("F1","F","1")), true, null,null,p},
 		{"(LET ((S (RE-SEQ (RE-PATTERN \"F[0-9]\") \"F1F2F3\"))) (APPEND () S S))" ,list("F1","F2","F3","F1","F2","F3"), true, null,null,p},

@@ -34,6 +34,7 @@ public class Funcs {
     public static abstract class AbstractExpr implements IExpr, Runnable {
         protected ParseCtx debugInfo;
         protected String name = null;
+	
 
         public void run () {
             final Compiler.ICtx ctx =
@@ -43,7 +44,7 @@ public class Funcs {
             Threads.results.put(Thread.currentThread(),result);
         }
         
-        abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
+         abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
 
         public void setName(String name) {
             this.name = name;
@@ -1696,6 +1697,28 @@ public class Funcs {
     }
 
 
+
+    @Arguments(spec={"item", "sequence"})
+    @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
+    public static  class SEARCH extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+	    if (2 != eargs.size()) {
+                throw new ExecutionException(backtrace,
+					     "Unexpected number of arguments: expected 2 but got "
+					     +eargs.size());
+            }
+            Object elt = eargs.get(0, backtrace);
+	    Object seq = eargs.get(1, backtrace);
+	    final boolean[] holder = new boolean[1];
+	    Operation op = null;
+	    Seq.forEach(seq, op, false);
+	    return holder[0];
+        }
+    }
+
+
+    
     
     @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
     @Docstring(text="Format String. "+
