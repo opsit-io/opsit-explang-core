@@ -18,8 +18,7 @@ public class DWIM {
                "When pattern is a String it tries to find its occurences in the String Representation of object.\n "+
 	       "When pattern is a Number then numeric equality check is performed. \n "+
                "When pattern is any other object the equality test is performed. \n "+
-	       "If Regex groups were defined it returns a list consisting of the full match and matched groups\n "+
-               "if no groups were defined or no regex matching is performed it returns the list with matched object.\n "+
+	       "If there were matches the function returns list of matches. \n"+
                "If there is no match an empty list is returned.")
     public static class DWIM_MATCHES extends NUMEQ {
         @Override
