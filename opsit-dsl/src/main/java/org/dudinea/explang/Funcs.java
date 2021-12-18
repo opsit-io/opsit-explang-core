@@ -44,7 +44,7 @@ public class Funcs {
             Threads.results.put(Thread.currentThread(),result);
         }
         
-         abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
+	abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
 
         public void setName(String name) {
             this.name = name;
@@ -1693,6 +1693,117 @@ public class Funcs {
 		    }
 		}, false);
 	    return holder[0];
+        }
+    }
+
+
+    // FIXME: produce specific retriever before starting the iterations
+    // no need to check object type ons each level
+    // FIXME: allow use other sequences, including lazy ones
+    protected static Object getKeyByIndex(Object ksObj, int ksIdx) {
+	if (ksObj instanceof List) {
+	    if (ksIdx < 0 || ksIdx >= ((List)ksObj).size()) {
+		return null;
+	    }
+	    return ((List) ksObj).get(ksIdx);
+	}
+	if (null == ksObj) {
+		return null;
+	}
+	if (ksObj.getClass().isArray()) {
+	    if (ksIdx < 0 || ksIdx >= Array.getLength(ksObj)) {
+		return null;
+	    }
+	    return Array.get(ksObj,ksIdx);
+	}
+	throw new ExecutionException("Cannot use the provided "+
+				     ksObj.getClass()+
+				     " value as list of indexes");
+    }
+
+    protected static int getIntIdx(Object key) {
+	try {
+	    return Utils.asNumberOrParse(key).intValue();
+	} catch (Exception ex) {
+	    return -1;
+	}
+    }
+
+
+    @SuppressWarnings("unchecked")
+    protected static Object doGetIn(final Object obj,
+				    final Object ksObj,
+				    final int ksIdx,
+				    final Object notDefined,
+				    final Backtrace bt) {
+	Object result = obj;
+	final Object key = getKeyByIndex(ksObj, ksIdx);
+	if (null == key) {
+	    return result;
+	}
+	if (obj instanceof Map) {
+	    final Map<Object,Object> map = (Map<Object,Object>) obj;
+	    result = map.get(key);
+	    if (null == result) {
+		if (!map.containsKey(key)) {
+		    return notDefined;
+		}
+	    }
+	} else if (obj instanceof List) {
+	    final List<Object> lst = (List<Object>) obj;
+	    try {
+		result = lst.get(getIntIdx(key));
+	    } catch (IndexOutOfBoundsException ex) {
+		return notDefined;
+	    }
+	} else if (obj instanceof Set) {
+	    final Set<Object> s = (Set<Object>) obj;
+	    if (! s.contains(key) ) {
+		return notDefined;
+	    }
+	    result = key;
+	} else if (obj == null) {
+	    return notDefined;
+	} else if (obj instanceof CharSequence) {
+	    final CharSequence s = (CharSequence) obj;
+	    try {
+		result = s.charAt(getIntIdx(key));
+	    } catch (IndexOutOfBoundsException ex) {
+		return notDefined;
+	    }
+	} else if (obj.getClass().isArray()) {
+	    try {
+		result = Array.get(obj, getIntIdx(key));
+	    } catch (ArrayIndexOutOfBoundsException ex) {
+		return notDefined;
+	    }
+	} else {
+	    // FIXME: java beans
+	    // FIXME: context object
+	    return null;
+	}
+	return doGetIn(result, ksObj, ksIdx + 1, notDefined, bt);
+    }
+
+    @Arguments(spec={"structure", "ks", "&OPTIONAL", "not-found"})
+    @Docstring(text = "Returns the value from an associative structure. \n" +
+	       "Return value from an associative structure struct, \n" + 
+	       "where ks is a sequence of keys. Returns NIL if the key\n " +
+	       "is not present, or the not-found value if supplied.")
+    public static  class GET_IN extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+	    final int argsnum = eargs.size();
+	    if (argsnum != 2 && argsnum != 3) {
+                throw new ExecutionException(backtrace,
+					     "Unexpected number of arguments: expected 2 or 3, but got "
+					     +eargs.size());
+            }
+            final Object obj = eargs.get(0, backtrace);
+	    final Object ksObj = eargs.get(1, backtrace);
+	    final Object notDefined = argsnum == 2 ? null : eargs.get(2, backtrace);
+	    final Object result = doGetIn(obj, ksObj, 0, notDefined, backtrace);
+	    return result;
         }
     }
 
