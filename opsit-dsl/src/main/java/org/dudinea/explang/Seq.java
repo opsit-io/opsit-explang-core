@@ -15,7 +15,7 @@ import java.lang.reflect.Array;
 public class Seq {
 
     public static interface Operation {
-	public void perform(Object obj);
+	public boolean perform(Object obj);
     }
 
     public static boolean isSequence(Object obj) {
@@ -39,24 +39,33 @@ public class Seq {
 	    }
 	} else if (seq instanceof Iterable) {
 	    final Iterator iter = ((Iterable)seq).iterator();
+	    boolean brk = false;;
 	    while (iter.hasNext()) {
-		op.perform(iter.next());
+		if (op.perform(iter.next())) {
+		    break;
+		}
 	    }
 	} else if (seq instanceof CharSequence) {
 	    final CharSequence cs = ((CharSequence)seq);
 	    final int numChars = cs.length();
 	    for (int j = 0; j < numChars; j++) {
-		op.perform(cs.charAt(j));
+		if (op.perform(cs.charAt(j))) {
+		    break;
+		}
 	    }
 	} else if (seq.getClass().isArray()) {
 	    final int len = Array.getLength(seq);
 	    for (int j = 0; j < len; j++) {
-		op.perform(Array.get(seq, j));
+		if (op.perform(Array.get(seq, j))) {
+		    break;
+		}
 	    }
 	} else if (seq instanceof Enumeration) {
 	    final Enumeration en = (Enumeration) seq;
 	    while (en.hasMoreElements()) {
-		op.perform(en.nextElement());
+		if (op.perform(en.nextElement())) {
+		    break;
+		}
 	    }
        	} else {
 	    if (allowNonSeq) {
