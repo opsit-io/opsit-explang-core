@@ -3,9 +3,7 @@ package org.dudinea.explang;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -14,9 +12,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.dudinea.explang.Funcs.ObjectExp;
 import org.dudinea.explang.Funcs.READ_FROM_STRING;
-import org.dudinea.explang.reader.LispReader;
 
 import static org.dudinea.explang.Funcs.*;
+import static org.dudinea.explang.DWIM.*;
 
 public class Compiler {
     protected static Threads threads = new Threads();
@@ -254,6 +252,7 @@ public class Compiler {
 	addBuiltIn("SEQUENCEP", SEQUENCEP.class);
 	addBuiltIn("RANGE", RANGE.class);
 	addBuiltIn("SUBSEQ", SUBSEQ.class);
+	addBuiltIn("IN", IN.class);
         // java FFI
         addBuiltIn(".", DOT.class);
         addBuiltIn(".S", DOTS.class);
@@ -274,6 +273,7 @@ public class Compiler {
 	addBuiltIn("RE-GROUPS", RE_GROUPS.class);
 	addBuiltIn("RE-FIND", RE_FIND.class);
 	addBuiltIn("RE-SEQ", RE_SEQ.class);
+	addBuiltIn("DWIM-MATCHES", DWIM_MATCHES.class);
         addBuiltIn("STR", STR.class);
         addBuiltIn("FORMAT", FORMAT.class);
         addBuiltIn("SEQ", SEQ.class);
@@ -679,9 +679,10 @@ public class Compiler {
 	    loopCtx.replace(loopVarName, null);
 	    Seq.forEach(seq, new Seq.Operation() {
 		    @Override
-		    public void perform(Object item) {
+		    public boolean perform(Object item) {
 			loopCtx.replace(loopVarName, item);
 			evalBlocks(backtrace, blocks, loopCtx);
+			return false;
 		    }
 		}, false);
 	    loopCtx.replace(loopVarName, null);
