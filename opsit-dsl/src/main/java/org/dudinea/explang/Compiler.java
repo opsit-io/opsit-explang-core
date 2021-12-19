@@ -253,6 +253,7 @@ public class Compiler {
 	addBuiltIn("RANGE", RANGE.class);
 	addBuiltIn("SUBSEQ", SUBSEQ.class);
 	addBuiltIn("IN", IN.class);
+	addBuiltIn("GET-IN", GET_IN.class);
         // java FFI
         addBuiltIn(".", DOT.class);
         addBuiltIn(".S", DOTS.class);

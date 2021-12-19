@@ -590,9 +590,9 @@ public class CompilerTest {
 		{"(CHAR NIL)", '\0', false, null, null, p},
 		{"(CHAR 48)", '0', true, null, null, p},
 		{"(CHAR (CHAR 48))", '0', true, null, null, p},
-		{"(CHAR 198)", '\u00c6' /* AE ligature */, true, null, null, p},
-		{"(CHAR -58b)", '\u00c6' /* AE ligature */, true, null, null, p},
-		{"(CHAR \"198\")", '\u00c6' /* AE ligature */, true, null, null, p},
+		{"(CHAR 198)", '\u00c6' , true, null, null, p}, //AE ligature
+		{"(CHAR -58b)", '\u00c6' , true, null, null, p}, // AE ligature 
+		{"(CHAR \"198\")", '\u00c6', true, null, null, p}, // AE ligature 
 		{"(CHAR true)", 'T' , true, null, null, p},
 		{"(CHAR false)", '\0',false, null, null, p},
 
@@ -779,6 +779,25 @@ public class CompilerTest {
 		{"(DWIM-MATCHES 1 1.0)", list(1), true, null,null,p},
 		{"(DWIM-MATCHES 1.0 1)", list(1.0), true, null,null,p},
 		
+		{"(GET-IN  NIL        NIL)", null, false, null,null,p},
+		{"(GET-IN  NIL        NIL \"Nope\")", null, false, null,null,p},
+		{"(GET-IN  (LIST 1 2) NIL \"Nope\")", list(1,2), true, null,null,p},
+
+		{"(GET-IN  (LIST)     0)", null, false,
+		 new ExecutionException("Cannot use the provided class java.lang.Integer value as list of indexes"),null,p},
+		{"(GET-IN  (LIST)     0 \"Nope\")", null, false,
+		new ExecutionException("Cannot use the provided class java.lang.Integer value as list of indexes"),null,p},
+		{"(GET-IN  (LIST 10)  (LIST 0))", 10, true, null,null,p},
+		{"(GET-IN  (LIST 10)  (LIST 0) \"Nope\")", 10, true, null,null,p},
+		{"(GET-IN  (LIST 10)  (LIST 1) \"Nope\")", "Nope", true, null,null,p},
+		{"(GET-IN  (LIST 10)  () \"Nope\")", list(10), true, null,null,p},
+		{"(GET-IN  (HASHMAP \"foo\" 111 )  (LIST \"foo\") \"Nope\")", 111, true, null,null,p},
+		{"(GET-IN  (HASHMAP \"foo\" 111 )  (LIST \"boo\") \"Nope\")", "Nope", true, null,null,p},
+		{"(GET-IN  (HASHMAP \"foo\" (HASHMAP 11 22 ))  (LIST \"foo\" 11) \"Nope\")", 22, true, null,null,p},
+		{"(GET-IN  (HASHMAP \"foo\" (HASHMAP 11 \"AQ\" ))  (LIST \"foo\" 11 1) \"Nope\")", 'Q', true, null,null,p},
+		{"(LET ((a (MAKE-ARRAY 1 :element-type (QUOTE int)))) (ASET a 0 8) (GET-IN a (LIST 0)))"
+		 ,8, true,null,null,p},
+		
 		{"(LET ((M (RE-MATCHER (RE-PATTERN \"(F)([0-9])\") \"F1\"))) (LIST (RE-FIND M) (RE-FIND M)))", list(list("F1","F","1"), null), true, null,null,p},
 		{"(LET ((M (RE-MATCHER (RE-PATTERN \"(F)([0-9])\") \"F1\"))) (LIST (RE-FIND M) (RE-GROUPS M) (RE-GROUPS M)))", list(list("F1","F","1"),list("F1","F","1"),list("F1","F","1")), true, null,null,p},
 		{"(LET ((S (RE-SEQ (RE-PATTERN \"F[0-9]\") \"F1F2F3\"))) (APPEND () S S))" ,list("F1","F2","F3","F1","F2","F3"), true, null,null,p},
@@ -905,7 +924,8 @@ public class CompilerTest {
 		{"(LET ((a (MAKE-ARRAY 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1 \"start()\") (. t1 \"join()\") (AREF a 0))",
 		 2, true, null, null, p},
 		{"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
-		 2, true, null, null, p},
+		 2, true, null, null, p}
+		
 		
             });
     }
