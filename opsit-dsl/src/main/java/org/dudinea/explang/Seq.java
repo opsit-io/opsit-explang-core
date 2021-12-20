@@ -111,7 +111,7 @@ public class Seq {
 				boolean allowNonSeq) {
 	if (null == val) {
 	    if (allowNonSeq) {
-		return 1;
+		return 0;
 	    } else {
 		throw new RuntimeException("NIL not a sequence: ");
 	    }

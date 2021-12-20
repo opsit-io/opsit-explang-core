@@ -1778,9 +1778,22 @@ public class Funcs {
 		return notDefined;
 	    }
 	} else {
-	    // FIXME: java beans
-	    // FIXME: context object
-	    return null;
+	    final String keyStr=Utils.asStringOrEmpty(key).trim();
+	    if (keyStr.length() == 0) {
+		return notDefined;
+	    }
+	    // FIXME: better check for method name?
+	    try {
+		final String getName = Utils.concat("get",keyStr.substring(0,1).toUpperCase(),keyStr.substring(1));
+		final Method m = obj.getClass().getMethod(getName);
+		if (null == m.getReturnType()) {
+		    return notDefined;
+		}
+		result = m.invoke(obj);
+	    } catch (Exception ex) {
+		return notDefined;
+	    }
+	    // FIXME: if ICtx object
 	}
 	return doGetIn(result, ksObj, ksIdx + 1, notDefined, bt);
     }

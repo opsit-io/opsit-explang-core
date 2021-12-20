@@ -438,7 +438,7 @@ public class CompilerTest {
 		{"(LENGTH (LIST 1 2 3 (LIST 5 6)))", 4, true, null, null, p},
 		{"(LENGTH (MAKE-ARRAY 2 :element-type (QUOTE int)))", 2 ,true, null, null, p},
 		{"(LENGTH (MAKE-ARRAY 2))", 2 ,true, null, null, p},
-		{"(LENGTH NIL)", 1, true, null, null, p},
+		{"(LENGTH NIL)", 0, false, null, null, p},
 		{"(LENGTH \"\")", 0, false, null, null, p},
 		{"(LENGTH 222)", 1, true, null, null, p},
 
