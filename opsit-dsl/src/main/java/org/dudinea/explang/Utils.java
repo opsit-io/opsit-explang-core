@@ -500,4 +500,17 @@ public class Utils {
         }
         return null;
     }
+
+    public static String concat(String... strs) {
+	if (null!=strs) {
+	    final StringBuilder b =
+		new StringBuilder(strs.length << 4);
+	    for ( String str : strs) {
+		b.append(str);
+	    }
+	    return b.toString();
+	} else {
+		return "";
+	}
+    }
 }
