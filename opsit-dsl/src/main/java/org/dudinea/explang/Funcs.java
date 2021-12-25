@@ -1176,145 +1176,165 @@ public class Funcs {
             return eargs.getCompiler().newCtx();
         }
     }
+
     /***** JAVA INTEROP *****/
-    @Arguments(spec={"object",ARG_OPTIONAL,"prefix","suffix"})
-    @Docstring(text="Convert Java Bean to a Map. "+
-	       "Returns a Map based on getters in the passed java object. " +
-               "Accepts optional prefix and suffics arguments that are used " +
-               "to modify the generated keys.")
+    public static class BeanMap implements Map {
+        protected Object obj;
+        protected Backtrace backtrace;
+        protected String prefix;
+        protected String suffix;
+
+        public BeanMap(Object obj, Backtrace backtrace) {
+            this(obj, backtrace, null, null);
+        }
+
+        public BeanMap(Object obj, Backtrace backtrace, String prefix, String suffix) {
+            this.obj = obj;
+            this.backtrace = backtrace;
+            this.prefix = Utils.asStringOrEmpty(prefix);
+            this.suffix = Utils.asStringOrEmpty(suffix);
+            this.getters = getGettersMap();
+        }
+
+        protected Map<String,Method> getGettersMap() {
+            Map<String,Method> result = new HashMap<String,Method>();
+            Method[] methods = obj.getClass().getMethods();
+            for(int i = 0; i < methods.length; i++) {
+                Method m = methods[i];
+                //if (m.getParameterCount()>0) {
+                if (m.getParameterTypes().length > 0) {
+                    continue;
+                }
+                final String methodName = m.getName();
+                if (null==methodName || null == m.getReturnType()) {
+                    continue;
+                }
+                StringBuilder kb =  new StringBuilder();
+                kb.append(prefix);
+                if (methodName.startsWith("get") && (methodName.length()>=4)) {
+                    kb.append(methodName.substring(3,4).toLowerCase()+methodName.substring(4));
+                } else if (methodName.startsWith("is") && (methodName.length()>=3)) {
+                    kb.append(methodName.substring(2,3).toLowerCase()+methodName.substring(3));
+                } else {
+                    continue;
+                }
+                kb.append(suffix);
+                result.put(kb.toString(),m);
+            }
+            return result;
+        }
+                
+        protected Map<String,Method> getters;
+
+        @Override
+        public int size() {
+            return getters.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return 0 == this.getters.size();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return getters.containsKey(Utils.asString(key));
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            throw new ExecutionException(backtrace, "containsValue is not implemented");
+        }
+
+        @Override
+        public Object get(Object key) {
+            Method getter = getters.get(Utils.asString(key));
+            try {
+                return getter.invoke(obj);
+            } catch (IllegalAccessException ex) {
+                throw new ExecutionException(backtrace,ex);
+            } catch (InvocationTargetException ex) {
+                throw new ExecutionException(backtrace,ex);
+            }
+        }
+
+        @Override
+        public Object put(Object key, Object value) {
+            throw new ExecutionException(backtrace, "put is not implemented");
+        }
+
+        @Override
+        public Object remove(Object key) {
+            throw new ExecutionException(backtrace, "remove is not implemented");
+        }
+
+        @Override
+        public void putAll(Map m) {
+            throw new ExecutionException(backtrace, "putAll is not implemented");
+        }
+
+        @Override
+        public void clear() {
+            throw new ExecutionException(backtrace, "clear is not implemented");
+        }
+
+        @Override
+        public Set keySet() {
+            return getters.keySet();
+        }
+
+        @Override
+        public Collection values() {
+            Set<Object> values = new HashSet<Object>();
+            for (Object key : getters.keySet()) {
+                values.add(get(key));
+            }
+            return values;
+        }
+
+        @Override
+        public Set entrySet() {
+            Set<Map.Entry> entries = new HashSet<Map.Entry>();
+            for (Object key : getters.keySet()) {
+                final Object entryKey = key;
+                entries.add(new Map.Entry() {
+                        @Override
+                        public Object getKey() {
+                            return entryKey;
+                        }
+
+                        @Override
+                        public Object getValue() {
+                            return get(entryKey);
+                        }
+
+                        @Override
+                        public Object setValue(Object value) {
+                            return put(entryKey, value);
+                        }
+                    });
+            }
+            return entries;
+        }
+
+        @Override
+        public String toString() {
+            return "BEAN<"+obj+">";
+        }
+    }
+
+    @Arguments(spec = {"object", ARG_OPTIONAL, "prefix", "suffix"})
+    @Docstring(text = "Convert Java Bean to a Map. "
+            + "Returns a Map based on getters in the passed java object. "
+            + "Accepts optional prefix and suffics arguments that are used "
+            + "to modify the generated keys.")
     public static class BEAN extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
             final Object obj = eargs.get(0, backtrace);
-            final String prefix = Utils.asStringOrEmpty((eargs.size() > 1) ? eargs.get(1, backtrace) : null);
-            final String suffix = Utils.asStringOrEmpty((eargs.size() > 2) ? eargs.get(2, backtrace) : null);
-            return new Map() {
-                protected Map<String,Method> getGettersMap() {
-                    Map result = new HashMap();
-                    Method[] methods = obj.getClass().getMethods();
-                    for(int i = 0; i < methods.length; i++) {
-                        Method m = methods[i];
-                        //if (m.getParameterCount()>0) {
-                        if (m.getParameterTypes().length > 0) {
-                            continue;
-                        }
-                        final String methodName = m.getName();
-                        if (null==methodName || null == m.getReturnType()) {
-                            continue;
-                        }
-                        StringBuilder kb =  new StringBuilder();
-                        kb.append(prefix);
-                        if (methodName.startsWith("get") && (methodName.length()>=4)) {
-                            kb.append(methodName.substring(3,4).toLowerCase()+methodName.substring(4));
-                        } else if (methodName.startsWith("is") && (methodName.length()>=3)) {
-                            kb.append(methodName.substring(2,3).toLowerCase()+methodName.substring(3));
-                        } else {
-                            continue;
-                        }
-                        kb.append(suffix);
-                        result.put(kb.toString(),m);
-                    }
-                    return result;
-                }
-                
-                protected Map<String,Method>  getters = getGettersMap();
-
-                @Override
-                public int size() {
-                    return getters.size();
-                }
-
-                @Override
-                public boolean isEmpty() {
-                    return 0 == this.getters.size();
-                }
-
-                @Override
-                public boolean containsKey(Object key) {
-                    return getters.containsKey(Utils.asString(key));
-                }
-
-                @Override
-                public boolean containsValue(Object value) {
-                    throw new ExecutionException(backtrace, "containsValue is not implemented");
-                }
-
-                @Override
-                public Object get(Object key) {
-                    Method getter = getters.get(Utils.asString(key));
-                    try {
-                        return getter.invoke(obj);
-                    } catch (IllegalAccessException ex) {
-                        throw new ExecutionException(backtrace,ex);
-                    } catch (InvocationTargetException ex) {
-                        throw new ExecutionException(backtrace,ex);
-                    }
-                }
-
-                @Override
-                public Object put(Object key, Object value) {
-                    throw new ExecutionException(backtrace, "put is not implemented");
-                }
-
-                @Override
-                public Object remove(Object key) {
-                    throw new ExecutionException(backtrace, "remove is not implemented");
-                }
-
-                @Override
-                public void putAll(Map m) {
-                    throw new ExecutionException(backtrace, "putAll is not implemented");
-                }
-
-                @Override
-                public void clear() {
-                    throw new ExecutionException(backtrace, "clear is not implemented");
-                }
-
-                @Override
-                public Set keySet() {
-                    return getters.keySet();
-                }
-
-                @Override
-                public Collection values() {
-                    Set<Object> values = new HashSet<Object>();
-                    for (Object key : getters.keySet()) {
-                        values.add(get(key));
-                    }
-                    return values;
-                }
-
-                @Override
-                public Set entrySet() {
-                    Set<Map.Entry> entries = new HashSet<Map.Entry>();
-                    for (Object key : getters.keySet()) {
-                        final Object entryKey = key;
-                        entries.add(new Map.Entry() {
-                                @Override
-                                public Object getKey() {
-                                    return entryKey;
-                                }
-
-                                @Override
-                                public Object getValue() {
-                                    return get(entryKey);
-                                }
-
-                                @Override
-                                public Object setValue(Object value) {
-                                    return put(entryKey, value);
-                                }
-                            });
-                    }
-                    return entries;
-                }
-
-                @Override
-                public String toString() {
-                    return "BEAN<"+obj+">";
-                }
-            };
+            return new BeanMap(obj, backtrace, 
+                               (String) ((eargs.size() > 1) ? eargs.get(1, backtrace) : null),
+                               (String) ((eargs.size() > 2) ? eargs.get(2, backtrace) : null));
         }
     }
 
@@ -1819,7 +1839,6 @@ public class Funcs {
 	    return result;
         }
     }
-
 
 
     @Arguments(spec={"item", "sequence"})
