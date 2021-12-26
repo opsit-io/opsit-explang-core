@@ -34,7 +34,7 @@ public class Funcs {
     public static abstract class AbstractExpr implements IExpr, Runnable {
         protected ParseCtx debugInfo;
         protected String name = null;
-	
+    
 
         public void run () {
             final Compiler.ICtx ctx =
@@ -44,7 +44,7 @@ public class Funcs {
             Threads.results.put(Thread.currentThread(),result);
         }
         
-	abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
+        abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
 
         public void setName(String name) {
             this.name = name;
@@ -167,7 +167,7 @@ public class Funcs {
     }
 
     @Docstring(text="Compute Sum. "+
-	       "Returns the sum of numeric values of it's arguments, " +
+               "Returns the sum of numeric values of it's arguments, " +
                "performing any necessary type conversions in the process. " +
                "If no numbers are supplied, 0 is returned.")
     public static class ADDOP extends ABSTRACT_ADD {
@@ -190,7 +190,7 @@ public class Funcs {
     }
 
     @Docstring(text="Compute Product. "+
-	       "Returns the product of it's arguments , "+
+               "Returns the product of it's arguments , "+
                "performing any necessary type conversions in the process. "+
                "If no numbers are supplied, 1 is returned.")
     public static class MULOP extends ABSTRACT_ADD {
@@ -297,7 +297,7 @@ public class Funcs {
 
     @Arguments(spec={"x","y"})
     @Docstring(text="Compute Remainder. "+
-	       "Generalizations of the remainder function. When both operands are integer "+
+               "Generalizations of the remainder function. When both operands are integer "+
                "returns result of the remainder operation . If one of them is floating point "+
                "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "+
                "(same semantic as for the Java % operator.")
@@ -330,7 +330,7 @@ public class Funcs {
 
     @Arguments(spec={"number","divisor"})
     @Docstring(text="Compute Modulus. "+
-	       "Generalizations of the modulus function. When both operands are integer "+
+               "Generalizations of the modulus function. When both operands are integer "+
                "returns result of the modulus operation. If one of them is floating point "+
                "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
     public  static class MODOP extends FuncExp implements  ABSTRACT_OP {
@@ -365,12 +365,12 @@ public class Funcs {
     /**** BOOLEAN FUNCTIONS ****/
     @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
     @Docstring(text="Logical AND. "+
-	       "Function AND lazily evaluates each argument form, "+
-	       "one at a time from left to right. " +
+               "Function AND lazily evaluates each argument form, "+
+               "one at a time from left to right. " +
                "As soon as any form evaluates to NIL, "+
-	       "AND returns NIL without evaluating the remaining forms. " +
+               "AND returns NIL without evaluating the remaining forms. " +
                "If all forms but the last evaluate to true values, "+
-	       "AND returns the results " +
+               "AND returns the results " +
                "produced by evaluating the last form. " +
                "If no forms are supplied, (AND) returns true.")
     public static class AND extends FuncExp {
@@ -389,11 +389,11 @@ public class Funcs {
 
     @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
     @Docstring(text ="Logical OR. "+
-	       "Function OR lazily evaluates each form, "+
-	       "one at a time, from left to right. "+
-	       "The evaluation of all forms terminates when a form evaluates to true "+
+               "Function OR lazily evaluates each form, "+
+               "one at a time, from left to right. "+
+               "The evaluation of all forms terminates when a form evaluates to true "+
                "(i.e., something other than nil) "+
-	       "and OR immediately returns that value "+
+               "and OR immediately returns that value "+
                "without evaluating the remaining forms.")
     public static class OR extends FuncExp {
         @Override
@@ -411,10 +411,10 @@ public class Funcs {
 
     @Arguments(spec={"x"})
     @Docstring(text="Logical Negation. "+
-	       "Returns True if x has false logical value; otherwise, returns False."+
-	       "Parameter x can be any object. Only NIL, the empty list (), "+
-	       "the empty String \"\", 0  and FALSE have false logical value. "+
-	       "All other objects have true logical value")
+               "Returns True if x has false logical value; otherwise, returns False."+
+               "Parameter x can be any object. Only NIL, the empty list (), "+
+               "the empty String \"\", 0  and FALSE have false logical value. "+
+               "All other objects have true logical value")
     public static class NOT extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -426,8 +426,8 @@ public class Funcs {
     /**** COMPARISON ****/
     @Arguments(spec={"x","y"})
     @Docstring(text="Check Object Equality. "+
-	       "Returns true if x equal to y according to call to Java method "+
-	       "x.equals(y) or if both objects are NIL.")
+               "Returns true if x equal to y according to call to Java method "+
+               "x.equals(y) or if both objects are NIL.")
     public static class EQUAL extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1055,7 +1055,7 @@ public class Funcs {
 
     @Arguments(spec={"func", ArgSpec.ARG_REST,"lists"})
     @Docstring(text="Apply function on elements of collections. "+
-	       "Returns a sequence consisting of the result of applying func to "+
+               "Returns a sequence consisting of the result of applying func to "+
                "the set of first items of each list, followed by applying func to the "+
                "set of second items in each list, until any one of the lists is "+
                "exhausted.  Any remaining items in other lists are ignored. Function "+
@@ -1325,9 +1325,9 @@ public class Funcs {
 
     @Arguments(spec = {"object", ARG_OPTIONAL, "prefix", "suffix"})
     @Docstring(text = "Convert Java Bean to a Map. "
-            + "Returns a Map based on getters in the passed java object. "
-            + "Accepts optional prefix and suffics arguments that are used "
-            + "to modify the generated keys.")
+               + "Returns a Map based on getters in the passed java object. "
+               + "Accepts optional prefix and suffics arguments that are used "
+               + "to modify the generated keys.")
     public static class BEAN extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1340,9 +1340,9 @@ public class Funcs {
 
     @Arguments(spec={"class-spec"})
     @Docstring(text="Return Class by Class Name."+
-	       "Return class object according to it's fully qualified class name. " +
+               "Return class object according to it's fully qualified class name. " +
                "class-spec may be string, symbol or any object,"+
-	       "which string representation will be used")
+               "which string representation will be used")
     public static class CLASS extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
@@ -1485,7 +1485,7 @@ public class Funcs {
     // FIXME: proper docstring
     @Arguments(spec={"object", ArgSpec.ARG_REST, "call-args"})
     @Docstring(text="Call Java Object Method/Read Field"+
-	       "Call method of java object or read contend of object field. ")
+               "Call method of java object or read contend of object field. ")
     public static class DOT extends FFI {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1498,7 +1498,7 @@ public class Funcs {
 
     @Arguments(spec={"class", ArgSpec.ARG_REST, "call-args"})
     @Docstring(text="Call Static Java Method/Read Static Field"+
-	       "Call method of java object or read contend of object field. ")
+               "Call method of java object or read contend of object field. ")
     public static class DOTS extends FFI {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1516,7 +1516,7 @@ public class Funcs {
     /***** EXCEPTION HANDLING AND DEBUGGING *****/
     @Arguments(spec={})
     @Docstring(text="Return callstack backtrace. "+
-	       "Returns string representation of current stack frame.")
+               "Returns string representation of current stack frame.")
     public static class BACKTRACE extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1584,7 +1584,7 @@ public class Funcs {
 
     @Arguments(spec={"matcher"})
     @Docstring(text="Return Groups for a Regexp Match. "+
-	       "Returns the groups from the most recent match/find.\n"+
+               "Returns the groups from the most recent match/find.\n"+
                "If there are no nested groups, returns a string of the entire\n"+
                "match. If there are nested groups, returns a list of the groups,\n"+
                "the first element being the entire match.")
@@ -1597,8 +1597,8 @@ public class Funcs {
 
     @Arguments(spec={"pattern","char-seq"})
     @Docstring(text="Return Regexp Matcher. "+
-	       "Returns an instance of java.util.regex.Matcher, "+
-	       "for use, e.g. in RE-FIND.")
+               "Returns an instance of java.util.regex.Matcher, "+
+               "for use, e.g. in RE-FIND.")
     public static  class RE_MATCHER extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1630,7 +1630,7 @@ public class Funcs {
     
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="Perform Regexp Find. "+
-	       "When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
+               "When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
                "When called with one arguments it uses given Matcher. \n "+
                "Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n "+
                "if no groups were defined it returns the matched string.\n "+
@@ -1651,7 +1651,7 @@ public class Funcs {
     
     @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="Return Results of Regexp Find as a Lazy Sequence. "+
-	       "When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
+               "When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
                "Returns lazy iterable sequence (instance of Iterable) of matches of string to pattern, using Matcher.find(). \n "+
                "When called with one arguments it uses given Matcher. \n "+
                "if no groups were defined the elements of the sequence are the matched string.\n "+
@@ -1694,25 +1694,25 @@ public class Funcs {
     public static  class IN extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    if (2 != eargs.size()) {
+            if (2 != eargs.size()) {
                 throw new ExecutionException(backtrace,
-					     "Unexpected number of arguments: expected 2 but got "
-					     +eargs.size());
+                                             "Unexpected number of arguments: expected 2 but got "
+                                             +eargs.size());
             }
             Object elt = eargs.get(0, backtrace);
-	    Object seq = eargs.get(1, backtrace);
-	    final boolean[] holder = new boolean[1];
-	    Seq.forEach(seq, new Operation() {
-		    public boolean perform(Object obj) {
-			if (null != obj && obj.equals(elt)) {
-			    return (holder[0]=true);
-			} else if (null == obj && null == elt) {
-			    return (holder[0]=true);
-			}
-			return false;
-		    }
-		}, false);
-	    return holder[0];
+            Object seq = eargs.get(1, backtrace);
+            final boolean[] holder = new boolean[1];
+            Seq.forEach(seq, new Operation() {
+                    public boolean perform(Object obj) {
+                        if (null != obj && obj.equals(elt)) {
+                            return (holder[0]=true);
+                        } else if (null == obj && null == elt) {
+                            return (holder[0]=true);
+                        }
+                        return false;
+                    }
+                }, false);
+            return holder[0];
         }
     }
 
@@ -1721,122 +1721,122 @@ public class Funcs {
     // no need to check object type ons each level
     // FIXME: allow use other sequences, including lazy ones
     protected static Object getKeyByIndex(Object ksObj, int ksIdx) {
-	if (ksObj instanceof List) {
-	    if (ksIdx < 0 || ksIdx >= ((List)ksObj).size()) {
-		return null;
-	    }
-	    return ((List) ksObj).get(ksIdx);
-	}
-	if (null == ksObj) {
-		return null;
-	}
-	if (ksObj.getClass().isArray()) {
-	    if (ksIdx < 0 || ksIdx >= Array.getLength(ksObj)) {
-		return null;
-	    }
-	    return Array.get(ksObj,ksIdx);
-	}
-	throw new ExecutionException("Cannot use the provided "+
-				     ksObj.getClass()+
-				     " value as list of indexes");
+        if (ksObj instanceof List) {
+            if (ksIdx < 0 || ksIdx >= ((List)ksObj).size()) {
+                return null;
+            }
+            return ((List) ksObj).get(ksIdx);
+        }
+        if (null == ksObj) {
+            return null;
+        }
+        if (ksObj.getClass().isArray()) {
+            if (ksIdx < 0 || ksIdx >= Array.getLength(ksObj)) {
+                return null;
+            }
+            return Array.get(ksObj,ksIdx);
+        }
+        throw new ExecutionException("Cannot use the provided "+
+                                     ksObj.getClass()+
+                                     " value as list of indexes");
     }
 
     protected static int getIntIdx(Object key) {
-	try {
-	    return Utils.asNumberOrParse(key).intValue();
-	} catch (Exception ex) {
-	    return -1;
-	}
+        try {
+            return Utils.asNumberOrParse(key).intValue();
+        } catch (Exception ex) {
+            return -1;
+        }
     }
 
 
     @SuppressWarnings("unchecked")
     protected static Object doGetIn(final Object obj,
-				    final Object ksObj,
-				    final int ksIdx,
-				    final Object notDefined,
-				    final Backtrace bt) {
-	Object result = obj;
-	final Object key = getKeyByIndex(ksObj, ksIdx);
-	if (null == key) {
-	    return result;
-	}
-	if (obj instanceof Map) {
-	    final Map<Object,Object> map = (Map<Object,Object>) obj;
-	    result = map.get(key);
-	    if (null == result) {
-		if (!map.containsKey(key)) {
-		    return notDefined;
-		}
-	    }
-	} else if (obj instanceof List) {
-	    final List<Object> lst = (List<Object>) obj;
-	    try {
-		result = lst.get(getIntIdx(key));
-	    } catch (IndexOutOfBoundsException ex) {
-		return notDefined;
-	    }
-	} else if (obj instanceof Set) {
-	    final Set<Object> s = (Set<Object>) obj;
-	    if (! s.contains(key) ) {
-		return notDefined;
-	    }
-	    result = key;
-	} else if (obj == null) {
-	    return notDefined;
-	} else if (obj instanceof CharSequence) {
-	    final CharSequence s = (CharSequence) obj;
-	    try {
-		result = s.charAt(getIntIdx(key));
-	    } catch (IndexOutOfBoundsException ex) {
-		return notDefined;
-	    }
-	} else if (obj.getClass().isArray()) {
-	    try {
-		result = Array.get(obj, getIntIdx(key));
-	    } catch (ArrayIndexOutOfBoundsException ex) {
-		return notDefined;
-	    }
-	} else {
-	    final String keyStr=Utils.asStringOrEmpty(key).trim();
-	    if (keyStr.length() == 0) {
-		return notDefined;
-	    }
-	    // FIXME: better check for method name?
-	    try {
-		final String getName = Utils.concat("get",keyStr.substring(0,1).toUpperCase(),keyStr.substring(1));
-		final Method m = obj.getClass().getMethod(getName);
-		if (null == m.getReturnType()) {
-		    return notDefined;
-		}
-		result = m.invoke(obj);
-	    } catch (Exception ex) {
-		return notDefined;
-	    }
-	    // FIXME: if ICtx object
-	}
-	return doGetIn(result, ksObj, ksIdx + 1, notDefined, bt);
+                                    final Object ksObj,
+                                    final int ksIdx,
+                                    final Object notDefined,
+                                    final Backtrace bt) {
+        Object result = obj;
+        final Object key = getKeyByIndex(ksObj, ksIdx);
+        if (null == key) {
+            return result;
+        }
+        if (obj instanceof Map) {
+            final Map<Object,Object> map = (Map<Object,Object>) obj;
+            result = map.get(key);
+            if (null == result) {
+                if (!map.containsKey(key)) {
+                    return notDefined;
+                }
+            }
+        } else if (obj instanceof List) {
+            final List<Object> lst = (List<Object>) obj;
+            try {
+                result = lst.get(getIntIdx(key));
+            } catch (IndexOutOfBoundsException ex) {
+                return notDefined;
+            }
+        } else if (obj instanceof Set) {
+            final Set<Object> s = (Set<Object>) obj;
+            if (! s.contains(key) ) {
+                return notDefined;
+            }
+            result = key;
+        } else if (obj == null) {
+            return notDefined;
+        } else if (obj instanceof CharSequence) {
+            final CharSequence s = (CharSequence) obj;
+            try {
+                result = s.charAt(getIntIdx(key));
+            } catch (IndexOutOfBoundsException ex) {
+                return notDefined;
+            }
+        } else if (obj.getClass().isArray()) {
+            try {
+                result = Array.get(obj, getIntIdx(key));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                return notDefined;
+            }
+        } else {
+            final String keyStr=Utils.asStringOrEmpty(key).trim();
+            if (keyStr.length() == 0) {
+                return notDefined;
+            }
+            // FIXME: better check for method name?
+            try {
+                final String getName = Utils.concat("get",keyStr.substring(0,1).toUpperCase(),keyStr.substring(1));
+                final Method m = obj.getClass().getMethod(getName);
+                if (null == m.getReturnType()) {
+                    return notDefined;
+                }
+                result = m.invoke(obj);
+            } catch (Exception ex) {
+                return notDefined;
+            }
+            // FIXME: if ICtx object
+        }
+        return doGetIn(result, ksObj, ksIdx + 1, notDefined, bt);
     }
 
     @Arguments(spec={"structure", "ks", "&OPTIONAL", "not-found"})
     @Docstring(text = "Returns the value from an associative structure. \n" +
-	       "Return value from an associative structure struct, \n" + 
-	       "where ks is a sequence of keys. Returns NIL if the key\n " +
-	       "is not present, or the not-found value if supplied.")
+               "Return value from an associative structure struct, \n" + 
+               "where ks is a sequence of keys. Returns NIL if the key\n " +
+               "is not present, or the not-found value if supplied.")
     public static  class GET_IN extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    final int argsnum = eargs.size();
-	    if (argsnum != 2 && argsnum != 3) {
+            final int argsnum = eargs.size();
+            if (argsnum != 2 && argsnum != 3) {
                 throw new ExecutionException(backtrace,
-					     "Unexpected number of arguments: expected 2 or 3, but got "
-					     +eargs.size());
+                                             "Unexpected number of arguments: expected 2 or 3, but got "
+                                             +eargs.size());
             }
             final Object obj = eargs.get(0, backtrace);
-	    final Object ksObj = eargs.get(1, backtrace);
-	    final Object notDefined = argsnum == 2 ? null : eargs.get(2, backtrace);
-	    final Object result = doGetIn(obj, ksObj, 0, notDefined, backtrace);
-	    return result;
+            final Object ksObj = eargs.get(1, backtrace);
+            final Object notDefined = argsnum == 2 ? null : eargs.get(2, backtrace);
+            final Object result = doGetIn(obj, ksObj, 0, notDefined, backtrace);
+            return result;
         }
     }
 
@@ -1846,17 +1846,17 @@ public class Funcs {
     public static  class SEARCH extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-	    if (2 != eargs.size()) {
+            if (2 != eargs.size()) {
                 throw new ExecutionException(backtrace,
-					     "Unexpected number of arguments: expected 2 but got "
-					     +eargs.size());
+                                             "Unexpected number of arguments: expected 2 but got "
+                                             +eargs.size());
             }
             Object elt = eargs.get(0, backtrace);
-	    Object seq = eargs.get(1, backtrace);
-	    final boolean[] holder = new boolean[1];
-	    Operation op = null;
-	    Seq.forEach(seq, op, false);
-	    return holder[0];
+            Object seq = eargs.get(1, backtrace);
+            final boolean[] holder = new boolean[1];
+            Operation op = null;
+            Seq.forEach(seq, op, false);
+            return holder[0];
         }
     }
 
@@ -1865,14 +1865,14 @@ public class Funcs {
     
     @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
     @Docstring(text="Format String. "+
-	       "Returns a formatted string using the specified format string (in the "+
-	       "format of java.util.Formatter) and arguments. Arguments referenced by " +
-	       "the format specifiers in the format string. If there are more " +
-	       "arguments than format specifiers, the extra arguments are " +
-	       "ignored. Throws IllegalFormatException - If a format string contains " +
-	       "an illegal syntax, a format specifier that is incompatible with the " +
-	       "given arguments, insufficient arguments given the format string, or "+
-	       "other illegal conditions.")
+               "Returns a formatted string using the specified format string (in the "+
+               "format of java.util.Formatter) and arguments. Arguments referenced by " +
+               "the format specifiers in the format string. If there are more " +
+               "arguments than format specifiers, the extra arguments are " +
+               "ignored. Throws IllegalFormatException - If a format string contains " +
+               "an illegal syntax, a format specifier that is incompatible with the " +
+               "given arguments, insufficient arguments given the format string, or "+
+               "other illegal conditions.")
     public static  class FORMAT extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1897,7 +1897,7 @@ public class Funcs {
     
     @Arguments(spec={ArgSpec.ARG_REST,"values"})
     @Docstring(text="Concatenate Strings. Returns concatenation "+
-	       "of string representationx of the function arguments")
+               "of string representationx of the function arguments")
     public static class STR extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1912,11 +1912,11 @@ public class Funcs {
     /****** SEQUENCES ******/
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
     @Docstring(text="Concatenate sequences (destructive). "+
-	       "Adds to the first given sequence (target sequence) all the elements of" +
-	       "all of the following sequences and return the target sequence.  If no " +
-	       "sequences were given an empty list will be returned. Target sequence " +
-	       "must be extendable, that means that objects like Arrays or String " +
-	       "cannot be target of this operation")
+               "Adds to the first given sequence (target sequence) all the elements of" +
+               "all of the following sequences and return the target sequence.  If no " +
+               "sequences were given an empty list will be returned. Target sequence " +
+               "must be extendable, that means that objects like Arrays or String " +
+               "cannot be target of this operation")
     public static class NAPPEND extends APPEND {
         public NAPPEND() {
             super();
@@ -1935,7 +1935,7 @@ public class Funcs {
                         Utils.aset(arr,
                                    counter[0]++,
                                    Utils.asChar(obj));
-			return false;
+                        return false;
                     }
                 };
             } else if (componentType.equals(Boolean.TYPE)) {
@@ -1945,7 +1945,7 @@ public class Funcs {
                         Utils.aset(arr,
                                    counter[0]++,
                                    Utils.asBoolean(obj));
-			return false;
+                        return false;
                     }
                 };
             } else {
@@ -1956,7 +1956,7 @@ public class Funcs {
                         Utils.aset(arr,
                                    counter[0]++,
                                    Utils.asNumber(obj));
-			return false;
+                        return false;
                     }
                 };
             }
@@ -1965,7 +1965,7 @@ public class Funcs {
                 @Override
                 public boolean perform(Object obj) {
                     Utils.aset(arr, counter[0]++, obj);
-		    return false;
+                    return false;
                 }
             };
         }
@@ -1974,13 +1974,13 @@ public class Funcs {
 
     @Arguments(spec={"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
     @Docstring(text="Return subsequnce of a sequence. "+
-	       "subseq creates a sequence that is a copy of the subsequence of " +
-	       "sequence bounded by start and end. Start specifies an offset into the " +
-	       "original sequence and marks the beginning position of the " +
-	       "subsequence. end marks the position following the last element of the " +
-	       "subsequence. subseq always allocates a new sequence for a result; it " +
-	       "never shares storage with an old sequence. The result subsequence is " +
-	       "always of the same type as sequence.")
+               "subseq creates a sequence that is a copy of the subsequence of " +
+               "sequence bounded by start and end. Start specifies an offset into the " +
+               "original sequence and marks the beginning position of the " +
+               "subsequence. end marks the position following the last element of the " +
+               "subsequence. subseq always allocates a new sequence for a result; it " +
+               "never shares storage with an old sequence. The result subsequence is " +
+               "always of the same type as sequence.")
     public static class SUBSEQ extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -2035,11 +2035,11 @@ public class Funcs {
     
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
     @Docstring(text="Concatenate sequences (non-destructive). " +
-	       "append returns a new sequence that is the concatenation of the " +
-	       "elements of the arguments. All the argument remain unchanged. The " +
-	       "resulting sequence is of the same type as the first argument. In no " +
-	       "arguments were given an empty list is returned. If target sequence is " +
-	       "an array necessary coercions will be performed automatically.")
+               "append returns a new sequence that is the concatenation of the " +
+               "elements of the arguments. All the argument remain unchanged. The " +
+               "resulting sequence is of the same type as the first argument. In no " +
+               "arguments were given an empty list is returned. If target sequence is " +
+               "an array necessary coercions will be performed automatically.")
     public static class APPEND extends FuncExp {
         protected boolean isDestructive;
         public APPEND() {
@@ -2086,7 +2086,7 @@ public class Funcs {
                         @Override
                         public boolean perform(Object obj) {
                             result.append(Utils.asChar(obj));
-			    return false;
+                            return false;
                         }
                     }, true);
             }
@@ -2139,7 +2139,7 @@ public class Funcs {
                         @Override
                         public boolean perform(Object obj) {
                             resultCol.add(obj);
-			    return false;
+                            return false;
                         }
                     }, true);
             }
@@ -2391,8 +2391,8 @@ public class Funcs {
     /***** LANGUAGE ****/
     @Arguments(spec={"fn", ARG_OPTIONAL,"name"})
     @Docstring(text="Create new Java thread. "+
-	       "Creates new Java thread and prepare it for execution of given function fn."+
-	       "fn must not require parameters for it's execution. The created thread is not started." )
+               "Creates new Java thread and prepare it for execution of given function fn."+
+               "fn must not require parameters for it's execution. The created thread is not started." )
     public static class NEW_THREAD extends FuncExp {
         @Override
         protected Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2432,7 +2432,7 @@ public class Funcs {
 
     @Arguments(spec={"file-spec"})
     @Docstring(text="Execute program from a file/stream. "+
-	       "Sequentially executes each form it encounters in the input file/or stream named by resource-spec. Returns exception if input could not be read or there were exceptions while compiling or executing forms an exception will be raised. file-spec may be a java.io.File object, file path as String or opened InputStream.")
+               "Sequentially executes each form it encounters in the input file/or stream named by resource-spec. Returns exception if input could not be read or there were exceptions while compiling or executing forms an exception will be raised. file-spec may be a java.io.File object, file path as String or opened InputStream.")
     public static class LOAD extends FuncExp {
         protected InputStream openInput(Object loadObj, Backtrace bt) {
             File f = null;
@@ -2570,7 +2570,7 @@ public class Funcs {
 
     @Arguments(spec={"string"})
     @Docstring(text="Parse expression from string. "+
-	       "Reads expression from string using default parser. Returns expression or NIL if no expression has been read")
+               "Reads expression from string using default parser. Returns expression or NIL if no expression has been read")
     public static class READ_FROM_STRING extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace bt,Eargs eargs) {
@@ -2619,7 +2619,7 @@ public class Funcs {
 
     
     @Docstring(text="Change variable value in specified context. "+
-	       "Set changes the contents of variable symbol in the dynamic context to the given value. If uplevel is set the value will be set in the uplevel-ths previous context. If level is set the value will be changed in the level-th context from the level0 ")
+               "Set changes the contents of variable symbol in the dynamic context to the given value. If uplevel is set the value will be set in the uplevel-ths previous context. If level is set the value will be changed in the level-th context from the level0 ")
     @Arguments(spec={"symbol","value",ArgSpec.ARG_KEY,"uplevel", "level"}, text="symbol value { level | uplevel }?")
     public static class SET extends FuncExp {
         @Override
@@ -2690,7 +2690,7 @@ public class Funcs {
 
     @Arguments(spec={"size", ArgSpec.ARG_KEY, "element-type"})
     @Docstring(text="Ceate an Array. "+
-	       "Creates array of objects of specified size. Optional :element-type argument specifies type of array elements. The default is java.lang.Object")
+               "Creates array of objects of specified size. Optional :element-type argument specifies type of array elements. The default is java.lang.Object")
     public static class MAKE_ARRAY extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2720,7 +2720,7 @@ public class Funcs {
     
     @Arguments(spec={"function"})
     @Docstring(text="Describe function. "+
-	       "Return textual description of given function or "+
+               "Return textual description of given function or "+
                "built-in form. function is a symbol or function name or a lambda")
     public static class DESCRIBE_FUNCTION extends FuncExp {
         @Override
@@ -2756,7 +2756,7 @@ public class Funcs {
     
     @Arguments(spec = { "function-name" })
     @Docstring(text = "Get Function Docstring. "+
-	       "Return documentation string of given function or "
+               "Return documentation string of given function or "
                + "built-in form. function is a symbol or function name or a lambda")
     public static class DOCUMENTATION extends FuncExp {
         @Override
