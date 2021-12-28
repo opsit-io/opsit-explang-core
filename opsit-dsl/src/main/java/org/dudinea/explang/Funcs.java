@@ -1178,21 +1178,170 @@ public class Funcs {
     }
 
     /***** JAVA INTEROP *****/
-    public static class BeanMap implements Map {
-        protected Object obj;
-        protected Backtrace backtrace;
-        protected String prefix;
-        protected String suffix;
+    public static class FilteredMap implements Map {
+        protected Map src;
+        protected Set<Object> filterSet;
 
-        public BeanMap(Object obj, Backtrace backtrace) {
-            this(obj, backtrace, null, null);
+        public FilteredMap(Map src, Object filter) {
+            this.src = src;
+            this.filterSet = Seq.asSet(filter);
         }
 
-        public BeanMap(Object obj, Backtrace backtrace, String prefix, String suffix) {
+        @Override
+        public int size() {
+            return keySet().size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return this.keySet().isEmpty();
+        }
+
+        @Override
+        public boolean containsKey(Object key) {
+            return this.keySet().contains(key);
+        }
+
+        @Override
+        public boolean containsValue(Object value) {
+            if (!src.containsValue(value)) {
+                return false;
+            } else {
+                for (Object key : filterSet) {
+                    if (src.containsKey(key)) {
+                        Object val = src.get(key);
+                        if (null == val) {
+                            if (null == value) {
+                                return true;
+                            }
+                        } else {
+                            if (val.equals(value)) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+        @Override
+        public Object get(Object key) {
+            if (containsKey(key)) {
+                return src.get(key);
+            } else {
+                return null;
+            }
+        }
+
+        @Override
+        public Object put(Object key, Object value) {
+            // FIXME: do we need write methods
+            return src.put(key, value);
+        }
+
+        @Override
+        public Object remove(Object key) {
+            return src.remove(key);
+        }
+
+        @Override
+        public void putAll(Map m) {
+            src.putAll(m);
+        }
+
+        @Override
+        public void clear() {
+            src.clear();
+        }
+
+        @Override
+        public Set keySet() {
+            return Utils.intersectSets(filterSet, src.keySet());
+        }
+
+        @Override
+        public Collection values() {
+            Set<Object> values = new HashSet<Object>();
+            for (Object key : this.keySet()) {
+                values.add(get(key));
+            }
+            return values;
+        }
+
+        @Override
+        public Set entrySet() {
+            Set<Map.Entry> entries = new HashSet<Map.Entry>();
+            for (Object key : this.keySet()) {
+                final Object entryKey = key;
+                entries.add(new Map.Entry() {
+                        @Override
+                        public Object getKey() {
+                            return entryKey;
+                        }
+
+                        @Override
+                        public Object getValue() {
+                            return get(entryKey);
+                        }
+
+                        @Override
+                        public Object setValue(Object value) {
+                            return put(entryKey, value);
+                        }
+                    });
+            }
+            return entries;
+        }
+
+        @Override
+        public String toString() {
+            Iterator<Entry> i = entrySet().iterator();
+            if (!i.hasNext())
+                return "{}";
+
+            StringBuilder sb = new StringBuilder();
+            sb.append('{');
+            for (;;) {
+                Entry e = i.next();
+                Object key = e.getKey();
+                Object value = e.getValue();
+                sb.append(key == this ? "(this Map)" : key);
+                sb.append('=');
+                sb.append(value == this ? "(this Map)" : value);
+                if (!i.hasNext())
+                    return sb.append('}').toString();
+                sb.append(',').append(' ');
+            }
+        }
+    }
+    
+    public static class BeanMap implements Map {
+        protected Object obj;
+        //protected Backtrace backtrace;
+        protected String prefix;
+        protected String suffix;
+        // collection of fields names
+        protected Object fields;
+
+        public BeanMap(Object obj) {
+            this(obj, null, null);
+        }
+
+        public BeanMap(Object obj, String prefix, String suffix) {
             this.obj = obj;
-            this.backtrace = backtrace;
+            //this.backtrace = backtrace;
             this.prefix = Utils.asStringOrEmpty(prefix);
             this.suffix = Utils.asStringOrEmpty(suffix);
+            this.getters = getGettersMap();
+        }
+
+        public BeanMap(Object obj, String prefix, String suffix, Object  fields) {
+            this.obj = obj;
+            //this.backtrace = backtrace;
+            this.prefix = Utils.asStringOrEmpty(prefix);
+            this.suffix = Utils.asStringOrEmpty(suffix);
+            this.fields = fields;
             this.getters = getGettersMap();
         }
 
@@ -1211,13 +1360,20 @@ public class Funcs {
                 }
                 StringBuilder kb =  new StringBuilder();
                 kb.append(prefix);
+                String fieldName = null;
                 if (methodName.startsWith("get") && (methodName.length()>=4)) {
-                    kb.append(methodName.substring(3,4).toLowerCase()+methodName.substring(4));
+                    fieldName = methodName.substring(3, 4).toLowerCase() + methodName.substring(4);
                 } else if (methodName.startsWith("is") && (methodName.length()>=3)) {
-                    kb.append(methodName.substring(2,3).toLowerCase()+methodName.substring(3));
+                    fieldName = methodName.substring(2, 3).toLowerCase() + methodName.substring(3);
                 } else {
                     continue;
                 }
+                if (null != this.fields) {
+                    if (!Seq.containsElement(fields, fieldName)) {
+                        continue;
+                    }
+                }
+                kb.append(fieldName);
                 kb.append(suffix);
                 result.put(kb.toString(),m);
             }
@@ -1243,7 +1399,7 @@ public class Funcs {
 
         @Override
         public boolean containsValue(Object value) {
-            throw new ExecutionException(backtrace, "containsValue is not implemented");
+            throw new RuntimeException("containsValue is not implemented");
         }
 
         @Override
@@ -1252,30 +1408,30 @@ public class Funcs {
             try {
                 return getter.invoke(obj);
             } catch (IllegalAccessException ex) {
-                throw new ExecutionException(backtrace,ex);
+                throw new RuntimeException(ex);
             } catch (InvocationTargetException ex) {
-                throw new ExecutionException(backtrace,ex);
+                throw new RuntimeException(ex);
             }
         }
 
         @Override
         public Object put(Object key, Object value) {
-            throw new ExecutionException(backtrace, "put is not implemented");
+            throw new RuntimeException("put is not implemented");
         }
 
         @Override
         public Object remove(Object key) {
-            throw new ExecutionException(backtrace, "remove is not implemented");
+            throw new RuntimeException("remove is not implemented");
         }
 
         @Override
         public void putAll(Map m) {
-            throw new ExecutionException(backtrace, "putAll is not implemented");
+            throw new RuntimeException("putAll is not implemented");
         }
 
         @Override
         public void clear() {
-            throw new ExecutionException(backtrace, "clear is not implemented");
+            throw new RuntimeException("clear is not implemented");
         }
 
         @Override
@@ -1319,10 +1475,47 @@ public class Funcs {
 
         @Override
         public String toString() {
-            return "BEAN<"+obj+">";
+            Iterator<Entry> i = entrySet().iterator();
+            if (!i.hasNext())
+                return "{}";
+            StringBuilder sb = new StringBuilder();
+            sb.append('{');
+            for (;;) {
+                Entry e = i.next();
+                Object key = e.getKey();
+                Object value = e.getValue();
+                sb.append(key == this ? "(this Map)" : key);
+                sb.append('=');
+                sb.append(value == this ? "(this Map)" : value);
+                if (!i.hasNext())
+                    return sb.append('}').toString();
+                sb.append(',').append(' ');
+            }
+            //return sb.toString();
         }
     }
 
+    @Arguments(spec = {"object",  "keyseq"})
+    @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
+    public static class SELECT_KEYS extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            final Object obj = eargs.get(0, backtrace);
+            final Object ksObj = eargs.get(1, backtrace);
+            if (obj == null || ksObj== null) {
+                return Utils.map();
+            } else if (obj instanceof Map) {
+                return new FilteredMap((Map)obj, ksObj);
+            } else {
+                return new BeanMap(obj,
+                                   null,
+                                   null,
+                                   ksObj);
+            }
+        }        
+    }
+
+    
     @Arguments(spec = {"object", ARG_OPTIONAL, "prefix", "suffix"})
     @Docstring(text = "Convert Java Bean to a Map. "
                + "Returns a Map based on getters in the passed java object. "
@@ -1332,7 +1525,7 @@ public class Funcs {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
             final Object obj = eargs.get(0, backtrace);
-            return new BeanMap(obj, backtrace, 
+            return new BeanMap(obj, 
                                (String) ((eargs.size() > 1) ? eargs.get(1, backtrace) : null),
                                (String) ((eargs.size() > 2) ? eargs.get(2, backtrace) : null));
         }
@@ -2108,7 +2301,7 @@ public class Funcs {
             // FIXME: support for sequences that cannot return their size
             for (int i = 0; i < numArgs; i++) {
                 final Object seq = seqs.get(i);
-                totalLength += Seq.getLength(seq, bt, true);
+                totalLength += Seq.getLength(seq, true);
             }
             final Class componentType = clz.getComponentType();
             Object result = Array.newInstance(componentType, totalLength);
@@ -2188,7 +2381,7 @@ public class Funcs {
         @Override
         @SuppressWarnings("unchecked")
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-            return Seq.getLength(eargs.get(0, backtrace), backtrace, true);
+            return Seq.getLength(eargs.get(0, backtrace), true);
         }
     }
 
@@ -2892,5 +3085,6 @@ public class Funcs {
             super(value);
         }
     }
-
+    
+    
 }

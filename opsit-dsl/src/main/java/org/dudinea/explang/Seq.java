@@ -6,6 +6,8 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 
 
 public class Seq {
@@ -72,6 +74,43 @@ public class Seq {
         }
     }
 
+    public static boolean containsElement(Object seq, Object obj) {
+	    if (null == seq) {
+            return false;
+	    } else if (seq instanceof Collection) {
+            return ((Collection)seq).contains(obj);
+	    } else if (seq.getClass().isArray()) {
+            final int len = Array.getLength(seq);
+            for (int j = 0; j < len; j++) {
+                Object elt = Array.get(seq, j);
+                if (null == obj) {
+                    if (null == elt) {
+                        return true;
+                    }
+                } else {
+                    return elt.equals(obj);
+                }
+            }
+            return false;
+	    } else if (seq instanceof CharSequence) {
+            if (! (obj instanceof Character)) {
+                return false;
+            }
+            final CharSequence cs = ((CharSequence) seq);
+            final Character chr = (Character) obj;
+            final int len = cs.length();
+            for (int i = 0; i < len; i++) {
+                if (cs.charAt(i) == chr) {
+                    return true;
+                }
+            }
+            return false;
+        } else if (seq instanceof Map) {
+            return ((Map) seq).containsValue(obj);
+        } else {
+            return false;
+	    }
+    }
     
     public static Object getElement(Object seq, int index) {
 	    if (null == seq) {
@@ -103,7 +142,6 @@ public class Seq {
     }
     
     public static int getLength(Object val,
-                                Backtrace bt,
                                 boolean allowNonSeq) {
         if (null == val) {
             if (allowNonSeq) {
@@ -126,5 +164,18 @@ public class Seq {
                 throw new RuntimeException("Given object type is not a sequence: "+val.getClass());
             }
         }
+    }
+
+    public static Set asSet(Object obj) {
+        final Set result = new HashSet();
+        forEach(obj, new Operation () {
+                @Override
+                public boolean perform(Object obj) {
+                    result.add(obj);
+                    return false;
+                }
+                
+            }, false);
+        return result;
     }
 }

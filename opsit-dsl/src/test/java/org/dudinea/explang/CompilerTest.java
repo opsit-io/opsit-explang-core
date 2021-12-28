@@ -832,7 +832,15 @@ public class CompilerTest {
                       testBean.isAccepted(),
                       testBean.getChildren()),
                  true, null, beanVars, p},
-                {quine, parsedQuine, true, null, null, p},
+                {"(SELECT-KEYS testbean (LIST \"name\" \"surName\"))",
+                 Utils.map("name", testBean.getName(), "surName", testBean.getSurName()), true, null, beanVars, p},
+                {"(SELECT-KEYS testbean (LIST \"name\" \"surName\" \"nosuchkey\"))",
+                 Utils.map("name", testBean.getName(), "surName", testBean.getSurName()), true, null, beanVars, p},
+                {"(SELECT-KEYS (HASHMAP \"name\" \"Scott\" \"surName\" \"D.\" \"familyName\" \"Adams\") (LIST \"name\" \"surName\"))",
+                 Utils.map("name", "Scott", "surName", "D."), true, null, beanVars, p},
+                {"(SELECT-KEYS (HASHMAP \"name\" \"Scott\" \"surName\" \"D.\" \"familyName\" \"Adams\") (LIST \"name\" \"surName\" \"noShuchKey\"))",
+                 Utils.map("name", "Scott", "surName", "D."), true, null, beanVars, p},
+                                {quine, parsedQuine, true, null, null, p},
 
                 {"((LAMBDA (x y) (SETV x y) x) 1 2)",
                  2, true, null, null, p},
@@ -924,7 +932,7 @@ public class CompilerTest {
                 {"(LET ((a (MAKE-ARRAY 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1 \"start()\") (. t1 \"join()\") (AREF a 0))",
                  2, true, null, null, p},
                 {"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
-                 2, true, null, null, p}
+                        2, true, null, null, p}
 		
 		
             });

@@ -513,4 +513,23 @@ public class Utils {
             return "";
         }
     }
+
+    public static Set intersectSets(Set... sets) {
+        final Set result = new HashSet();
+        if (sets.length > 0) {
+            result.addAll(sets[0]);
+            for (int i = 1; i < sets.length; i++) {
+                result.retainAll(sets[i]);
+            }
+        }
+        return result;
+    }
+
+    public static Set unionSets(Set... sets) {
+        final Set result = new HashSet();
+        for (int i = 0; i < sets.length; i++) {
+            result.addAll(sets[i]);
+        }
+        return result;
+    }
 }
