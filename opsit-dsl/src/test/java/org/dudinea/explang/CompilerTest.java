@@ -18,6 +18,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import static org.dudinea.explang.Utils.list;
+import static org.dudinea.explang.Utils.map;
+import static org.dudinea.explang.Utils.set;;
 
 @RunWith(Parameterized.class)
 public class CompilerTest {
@@ -795,6 +797,20 @@ public class CompilerTest {
                 {"(GET-IN  (HASHMAP \"foo\" 111 )  (LIST \"boo\") \"Nope\")", "Nope", true, null,null,p},
                 {"(GET-IN  (HASHMAP \"foo\" (HASHMAP 11 22 ))  (LIST \"foo\" 11) \"Nope\")", 22, true, null,null,p},
                 {"(GET-IN  (HASHMAP \"foo\" (HASHMAP 11 \"AQ\" ))  (LIST \"foo\" 11 1) \"Nope\")", 'Q', true, null,null,p},
+
+                {"(ASSOC  (HASHMAP) 1 2)", map(1,2), true, null,null,p},
+                {"(ASSOC  (HASHMAP) 1 2 3 4)", map(1,2,3,4), true, null,null,p},
+                {"(ASSOC  (HASHMAP) 1 2 3)", map(1,2,3,null), true, null,null,p},
+                {"(ASSOC  (HASHMAP 1 2) 3 4 5 6)", map(1,2,3,4,5,6), true, null,null,p},
+                {"(PROGN (SETQ m (HASHMAP)) (ASSOC m 2 3) m)", map(), true, null,null,p},
+
+                {"(ASSOC!  (HASHMAP) 1 2)", map(1,2), true, null,null,p},
+                {"(ASSOC!  (HASHMAP) 1 2 3 4)", map(1,2,3,4), true, null,null,p},
+                {"(ASSOC!  (HASHMAP) 1 2 3)", map(1,2,3,null), true, null,null,p},
+                {"(ASSOC!  (HASHMAP 1 2) 3 4 5 6)", map(1,2,3,4,5,6), true, null,null,p},
+                {"(PROGN (SETQ m (HASHMAP)) (ASSOC! m 2 3) m)", map(2,3), true, null,null,p},
+
+                
                 {"(LET ((a (MAKE-ARRAY 1 :element-type (QUOTE int)))) (ASET a 0 8) (GET-IN a (LIST 0)))"
                  ,8, true,null,null,p},
 		

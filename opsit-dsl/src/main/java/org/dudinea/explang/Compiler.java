@@ -254,6 +254,9 @@ public class Compiler {
         addBuiltIn("SUBSEQ", SUBSEQ.class);
         addBuiltIn("IN", IN.class);
         addBuiltIn("GET-IN", GET_IN.class);
+        addBuiltIn("ASSOC", ASSOC.class);
+        addBuiltIn("ASSOC!", NASSOC.class);
+        
         // java FFI
         addBuiltIn(".", DOT.class);
         addBuiltIn(".S", DOTS.class);

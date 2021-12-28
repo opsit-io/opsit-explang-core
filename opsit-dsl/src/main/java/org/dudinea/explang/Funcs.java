@@ -2033,6 +2033,63 @@ public class Funcs {
         }
     }
 
+    @Arguments(text = "map {key val}+", spec = {"map", "key", "val",ArgSpec.ARG_REST, "kvpairs"})
+    @Docstring(text = "Associates value with key in an map structure. \n" +
+               "Return new instance of the structure, the original is left unchanged.")
+    public static  class ASSOC extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Map result = null;
+            final int argsnum = eargs.size();
+            if (argsnum < 1) {
+                throw new ExecutionException(backtrace,
+                                             "Unexpected number of arguments: expected at least one argument, but got "
+                                             +eargs.size());
+            }
+            final Object obj = eargs.get(0, backtrace);
+            // FIXME: use same type?
+            // FIXME: data sharing?
+            result = new HashMap();
+            if (null != obj) {
+                result.putAll((Map)obj);
+            }
+            doMapAssoc(result, eargs, backtrace);
+            return result;
+        }
+    }
+
+   
+    @Arguments(text = "map {key val}+", spec = {"map", "key", "val",ArgSpec.ARG_REST, "kvpairs"})
+    @Docstring(text = "Associates value with key in an map structure. \n" +
+               "Modifies the object and returns it as the result.")
+    public static  class NASSOC extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Map result = null;
+            if (eargs.size() < 1) {
+                throw new ExecutionException(backtrace,
+                                             "Unexpected number of arguments: expected at least one argument, but got "
+                                             +eargs.size());
+            }
+            final Object obj = eargs.get(0, backtrace);
+            result = null == obj ? new HashMap() : (Map) obj;
+            doMapAssoc(result, eargs, backtrace);
+            return result;
+        }
+    }
+
+    protected static void doMapAssoc(Map target, Eargs eargs,Backtrace backtrace) {
+        final int argsnum = eargs.size();
+        target.put(eargs.get(1,backtrace), eargs.get(2,backtrace));
+        if (argsnum > 3) {
+            List rest = (List)eargs.get(3,backtrace);
+            for (int i = 0; i < rest.size(); i += 2) {
+                final Object k = rest.get(i);
+                final Object v = i + 1 < rest.size() ? rest.get(i + 1) : null;
+                target.put(k, v);
+            }
+        }
+    }
 
     @Arguments(spec={"item", "sequence"})
     @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
