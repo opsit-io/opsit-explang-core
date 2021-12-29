@@ -266,6 +266,7 @@ public class Compiler {
         addBuiltIn("TYPE-OF", TYPE_OF.class);
         addBuiltIn("BEAN", BEAN.class);
         addBuiltIn("SELECT-KEYS", SELECT_KEYS.class);
+        addBuiltIn("DWIM_FIELDS", DWIM_FIELDS.class);
         addBuiltIn("TYPEP", TYPEP.class);
         // mapping functions
         addBuiltIn("MAP", MAP.class);

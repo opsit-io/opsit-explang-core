@@ -1405,13 +1405,16 @@ public class Funcs {
         @Override
         public Object get(Object key) {
             Method getter = getters.get(Utils.asString(key));
-            try {
-                return getter.invoke(obj);
-            } catch (IllegalAccessException ex) {
-                throw new RuntimeException(ex);
-            } catch (InvocationTargetException ex) {
-                throw new RuntimeException(ex);
-            }
+            if (null != getter) {
+                try {
+                    return getter.invoke(obj);
+                } catch (IllegalAccessException ex) {
+                    throw new RuntimeException(ex);
+                } catch (InvocationTargetException ex) {
+                    throw new RuntimeException(ex);
+                }
+            } 
+            return null;
         }
 
         @Override
@@ -1495,6 +1498,20 @@ public class Funcs {
         }
     }
 
+    protected static Object doSelectKeys(Object obj, Object ksObj) {
+        if (obj == null || ksObj== null) {
+            return Utils.map();
+        } else if (obj instanceof Map) {
+            return new FilteredMap((Map)obj, ksObj);
+        } else {
+            return new BeanMap(obj,
+                               null,
+                               null,
+                               ksObj);
+        }
+    }
+
+    
     @Arguments(spec = {"object",  "keyseq"})
     @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
     public static class SELECT_KEYS extends FuncExp {
@@ -1502,15 +1519,30 @@ public class Funcs {
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
             final Object obj = eargs.get(0, backtrace);
             final Object ksObj = eargs.get(1, backtrace);
-            if (obj == null || ksObj== null) {
-                return Utils.map();
-            } else if (obj instanceof Map) {
-                return new FilteredMap((Map)obj, ksObj);
+            return doSelectKeys(obj, ksObj);
+        }        
+    }
+
+    @Arguments(spec = {"object",  "keyseq"})
+    @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
+    public static class DWIM_FIELDS extends FuncExp {
+        @Override
+        public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+            final Object obj = eargs.get(0, backtrace);
+            final Object ksObj = eargs.get(1, backtrace);
+            if (Seq.isSequence(obj) && !(obj instanceof Map)) {
+                final List result = Utils.list();
+                Seq.forEach(obj, new Seq.Operation() {
+                        @Override
+                        public boolean perform(Object obj) {
+                            result.add(doSelectKeys(obj, ksObj));
+                            return false;
+                        }
+                    }
+                    , true);
+                return result;
             } else {
-                return new BeanMap(obj,
-                                   null,
-                                   null,
-                                   ksObj);
+                return doSelectKeys(obj, ksObj);
             }
         }        
     }

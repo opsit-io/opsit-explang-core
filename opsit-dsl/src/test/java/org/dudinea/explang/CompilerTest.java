@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -66,7 +67,7 @@ public class CompilerTest {
 
 	
         return Arrays.asList(new Object[][] {
-                /*//empty list
+                //empty list
                 { "()",         new ArrayList<Object>(0)  , false, null, null, p},
                 //atomic values
                 { "1",         1 , true, null, null, p},
@@ -778,7 +779,6 @@ public class CompilerTest {
                 {"(DWIM-MATCHES 1 1)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1 1.0)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1.0 1)", list(1.0), true, null,null,p},
-                */
                 {"(GET-IN  NIL        NIL)", null, false, null,null,p},
                 {"(GET-IN  NIL        NIL \"Nope\")", null, false, null,null,p},
                 {"(GET-IN  (LIST 1 2) NIL \"Nope\")", list(1,2), true, null,null,p},
