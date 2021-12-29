@@ -252,6 +252,7 @@ public class Compiler {
         addBuiltIn("SEQUENCEP", SEQUENCEP.class);
         addBuiltIn("RANGE", RANGE.class);
         addBuiltIn("SUBSEQ", SUBSEQ.class);
+        addBuiltIn("TAKE", TAKE.class);
         addBuiltIn("IN", IN.class);
         addBuiltIn("GET-IN", GET_IN.class);
         addBuiltIn("GET", GET.class);

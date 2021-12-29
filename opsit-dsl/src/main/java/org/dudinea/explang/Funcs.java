@@ -2340,6 +2340,68 @@ public class Funcs {
         }
     }
 
+    private static Object charSeqSubseq(Class clz, Backtrace bt,
+                                 CharSequence seq,
+                                 int start,
+                                 Integer end) {
+        final int siz = seq.length();
+        return seq.subSequence(start, null == end ? siz : (end >= siz ? siz : end));
+    }
+
+    private static Object arraySubseq(Class clz, Backtrace bt, Object arrayObj, int start, Integer end) {
+        final Class componentType = clz.getComponentType();
+        final int siz = Array.getLength(arrayObj);
+        final int endPos = null == end ? siz : (end >= siz ? siz : end);
+        final Object result = Array.newInstance(componentType, endPos - start);
+        final int[] counter = new int[1];
+        final Operation setter = mkArraySetter(result, counter, componentType);
+        for (int i = start; i < endPos ; i++) {
+            setter.perform(Array.get(arrayObj, i));
+        }
+        return result;
+    }
+
+    protected static List listSubseq(Class clz, Backtrace bt, List lst, int start, Integer end) {
+        final int siz = lst.size();
+        return lst.subList(start,  null == end ? siz : (end >= siz ? siz : end));
+    }
+
+    protected static Object seqSubseq(Object seqObj, Backtrace backtrace, int start, Integer end) {
+        Class clz = null == seqObj ? Utils.defListClz() : seqObj.getClass();
+        if (clz.isArray()) {
+            return arraySubseq(clz, backtrace, seqObj, start, end);
+        } else if (CharSequence.class.isAssignableFrom(clz)) {
+            return charSeqSubseq(clz, backtrace, (CharSequence) seqObj, start, end);
+        } else if (List.class.isAssignableFrom(clz)) {
+            return listSubseq(clz, backtrace, (List)seqObj, start, end);
+        } else {
+            throw new ExecutionException(backtrace, "SUBSEQ: Unsupported sequence type: " + clz);
+        }
+    }
+
+    @Arguments(spec = {"n", "seq"})
+    @Docstring(text = "Return  first n elements of a sequence. "
+            + "take creates new sequence with first n elements of seq. "
+            + "If n is bigger than length of the sequence all the elements"
+            + "are returned. The result subsequence is of the same kind as sequence.")
+    public static class TAKE extends FuncExp {
+        @Override
+        @SuppressWarnings("unchecked")
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Object result = null;
+            final int size = eargs.size();
+            if (2 != size) {
+                throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
+            }
+            final Object seqObj  =  eargs.get(1, backtrace);
+            if (null == seqObj) {
+                throw new ExecutionException("sequence parameter cannot be NIL");
+            }
+            final Object endObj  = eargs.get(0, backtrace);
+            final int end = (null == endObj) ? 0 : Utils.asNumber(endObj).intValue();
+            return seqSubseq(seqObj, backtrace, 0, end);
+        }
+    }
 
     @Arguments(spec={"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
     @Docstring(text="Return subsequnce of a sequence. "+
@@ -2366,43 +2428,9 @@ public class Funcs {
             final int start = Utils.asNumber(eargs.get(1, backtrace)).intValue();
             final Object endObj  = eargs.get(2, backtrace);
             final Integer end = (null == endObj) ? null : Utils.asNumber(endObj).intValue();
-            Class clz = null == seqObj ? Utils.defListClz() : seqObj.getClass();
-            if (clz.isArray()) {
-                return arraySubseq(clz, backtrace, seqObj, start, end);
-            } else if (CharSequence.class.isAssignableFrom(clz)) {
-                return charSeqSubseq(clz, backtrace, (CharSequence) seqObj, start, end);
-            } else if (List.class.isAssignableFrom(clz)) {
-                return listSubseq(clz, backtrace, (List)seqObj, start, end);
-            } else {
-                throw new ExecutionException(backtrace, "SUBSEQ: Unsupported sequence type: " + clz);
-            }
+            return seqSubseq(seqObj, backtrace, start, end);
         }
 
-        private Object charSeqSubseq(Class clz, Backtrace bt,
-                                     CharSequence seq,
-                                     int start,
-                                     Integer end) {
-            final int siz = seq.length();
-            return seq.subSequence(start, null == end ? siz : (end >= siz ? siz : end));
-        }
-
-        private Object arraySubseq(Class clz, Backtrace bt, Object arrayObj, int start, Integer end) {
-            final Class componentType = clz.getComponentType();
-            final int siz = Array.getLength(arrayObj);
-            final int endPos = null == end ? siz : (end >= siz ? siz : end);
-            final Object result = Array.newInstance(componentType, endPos - start);
-            final int[] counter = new int[1];
-            final Operation setter = mkArraySetter(result, counter, componentType);
-            for (int i = start; i < endPos ; i++) {
-                setter.perform(Array.get(arrayObj, i));
-            }
-            return result;
-        }
-
-        protected List  listSubseq(Class clz, Backtrace bt, List lst, int start, Integer end) {
-            final int siz = lst.size();
-            return lst.subList(start,  null == end ? siz : (end >= siz ? siz : end));
-        }
     }
     
     @Arguments(spec={ArgSpec.ARG_REST,"sequences"})

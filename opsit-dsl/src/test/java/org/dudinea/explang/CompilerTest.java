@@ -469,7 +469,24 @@ public class CompilerTest {
                 {"(SUBSEQ \"1234\" 0 4)", "1234" , true, null, null, p},
                 {"(SUBSEQ \"1234\" 0 5)", "1234" , true, null, null, p},
                 {"(SUBSEQ \"1234\" 1)",   "234" , true, null, null, p},
-                {"(SUBSEQ \"1234\" 4 4)", "" , false, null, null, p},
+                {"(SUBSEQ \"1234\" 4 4)", "", false, null, null, p},
+
+                {"(TAKE 0 (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)))", new Object[] {}, false, null, null, p},
+                {"(TAKE 1 (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)))", new Object[] {1} , true, null, null, p},
+                {"(TAKE 4 (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)))", new Object[] {1,2,3,4} , true, null, null, p},
+                {"(TAKE 5 (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)))", new Object[] {1,2,3,4} , true, null, null, p},
+                
+                {"(TAKE 0 (LIST 1 2 3 4))",   list() , false, null, null, p},
+                {"(TAKE 1 (LIST 1 2 3 4))",   list(1) , true, null, null, p},
+                {"(TAKE 4 (LIST 1 2 3 4))",   list(1,2,3,4) , true, null, null, p},
+                {"(TAKE 5 (LIST 1 2 3 4))",   list(1,2,3,4) , true, null, null, p},
+                
+                {"(TAKE 0 \"1234\")",   "" , false, null, null, p},
+                {"(TAKE 1 \"1234\")",   "1", true, null, null, p},
+                {"(TAKE 4 \"1234\")",   "1234" , true, null, null, p},
+                {"(TAKE 5 \"1234\")",   "1234" , true, null, null, p},
+
+                
                 {"(IN  (CHAR 81)  \"Quogga\")", true , true, null, null, p},
                 {"(IN  (CHAR 97)  \"Quogga\")", true , true, null, null, p},
                 {"(IN  (CHAR 97)  \"Quagga\")", true , true, null, null, p},
