@@ -443,10 +443,22 @@ public class CompilerTest {
                 {"(LENGTH \"\")", 0, false, null, null, p},
                 {"(LENGTH 222)", 1, true, null, null, p},
 
+
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 0)", new Object[] {1, 2, 3, 4}, true, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 1)",   new Object[] {2,3,4} , true, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 4)",   new Object[] {} , false, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 0 3)", new Object[] {1,2,3} , true, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 0 4)", new Object[] {1,2,3,4} , true, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 0 5)", new Object[] {1,2,3,4} , true, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 1)",   new Object[] {2,3,4} , true, null, null, p},
+                {"(SUBSEQ (APPEND (MAKE-ARRAY 0) (LIST 1 2 3 4)) 4 4)", new Object[] {}, false, null, null, p},
+                
                 {"(SUBSEQ (LIST 1 2 3 4) 0)",   list(1,2,3,4) , true, null, null, p},
                 {"(SUBSEQ (LIST 1 2 3 4) 1)",   list(2,3,4) , true, null, null, p},
                 {"(SUBSEQ (LIST 1 2 3 4) 4)",   list() , false, null, null, p},
                 {"(SUBSEQ (LIST 1 2 3 4) 0 3)", list(1,2,3) , true, null, null, p},
+                {"(SUBSEQ (LIST 1 2 3 4) 0 4)", list(1,2,3,4) , true, null, null, p},
+                {"(SUBSEQ (LIST 1 2 3 4) 0 5)", list(1,2,3,4) , true, null, null, p},
                 {"(SUBSEQ (LIST 1 2 3 4) 1)",   list(2,3,4) , true, null, null, p},
                 {"(SUBSEQ (LIST 1 2 3 4) 4 4)", list() , false, null, null, p},
 
@@ -454,6 +466,8 @@ public class CompilerTest {
                 {"(SUBSEQ \"1234\" 1)",   "234", true, null, null, p},
                 {"(SUBSEQ \"1234\" 4)",   "" , false, null, null, p},
                 {"(SUBSEQ \"1234\" 0 3)", "123" , true, null, null, p},
+                {"(SUBSEQ \"1234\" 0 4)", "1234" , true, null, null, p},
+                {"(SUBSEQ \"1234\" 0 5)", "1234" , true, null, null, p},
                 {"(SUBSEQ \"1234\" 1)",   "234" , true, null, null, p},
                 {"(SUBSEQ \"1234\" 4 4)", "" , false, null, null, p},
                 {"(IN  (CHAR 81)  \"Quogga\")", true , true, null, null, p},

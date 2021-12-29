@@ -2349,7 +2349,7 @@ public class Funcs {
                "subsequence. end marks the position following the last element of the " +
                "subsequence. subseq always allocates a new sequence for a result; it " +
                "never shares storage with an old sequence. The result subsequence is " +
-               "always of the same type as sequence.")
+               "of the same kind as sequence.")
     public static class SUBSEQ extends FuncExp {
         @Override
         @SuppressWarnings("unchecked")
@@ -2382,12 +2382,14 @@ public class Funcs {
                                      CharSequence seq,
                                      int start,
                                      Integer end) {
-            return seq.subSequence(start, null == end ? seq.length() : end);
+            final int siz = seq.length();
+            return seq.subSequence(start, null == end ? siz : (end >= siz ? siz : end));
         }
 
         private Object arraySubseq(Class clz, Backtrace bt, Object arrayObj, int start, Integer end) {
             final Class componentType = clz.getComponentType();
-            final int endPos = null == end ? Array.getLength(arrayObj) : end;
+            final int siz = Array.getLength(arrayObj);
+            final int endPos = null == end ? siz : (end >= siz ? siz : end);
             final Object result = Array.newInstance(componentType, endPos - start);
             final int[] counter = new int[1];
             final Operation setter = mkArraySetter(result, counter, componentType);
@@ -2398,7 +2400,8 @@ public class Funcs {
         }
 
         protected List  listSubseq(Class clz, Backtrace bt, List lst, int start, Integer end) {
-            return lst.subList(start,  null == end ? lst.size() : end);
+            final int siz = lst.size();
+            return lst.subList(start,  null == end ? siz : (end >= siz ? siz : end));
         }
     }
     
