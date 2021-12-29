@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,7 +18,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import static org.dudinea.explang.Utils.list;
 import static org.dudinea.explang.Utils.map;
-import static org.dudinea.explang.Utils.set;;
 
 @RunWith(Parameterized.class)
 public class CompilerTest {
@@ -68,7 +66,7 @@ public class CompilerTest {
 
 	
         return Arrays.asList(new Object[][] {
-                //empty list
+                /*//empty list
                 { "()",         new ArrayList<Object>(0)  , false, null, null, p},
                 //atomic values
                 { "1",         1 , true, null, null, p},
@@ -780,7 +778,7 @@ public class CompilerTest {
                 {"(DWIM-MATCHES 1 1)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1 1.0)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1.0 1)", list(1.0), true, null,null,p},
-		
+                */
                 {"(GET-IN  NIL        NIL)", null, false, null,null,p},
                 {"(GET-IN  NIL        NIL \"Nope\")", null, false, null,null,p},
                 {"(GET-IN  (LIST 1 2) NIL \"Nope\")", list(1,2), true, null,null,p},
@@ -797,7 +795,23 @@ public class CompilerTest {
                 {"(GET-IN  (HASHMAP \"foo\" 111 )  (LIST \"boo\") \"Nope\")", "Nope", true, null,null,p},
                 {"(GET-IN  (HASHMAP \"foo\" (HASHMAP 11 22 ))  (LIST \"foo\" 11) \"Nope\")", 22, true, null,null,p},
                 {"(GET-IN  (HASHMAP \"foo\" (HASHMAP 11 \"AQ\" ))  (LIST \"foo\" 11 1) \"Nope\")", 'Q', true, null,null,p},
-
+                {"(GET  (HASHMAP \"foo\" \"bar\")  \"foo\"  \"Nope\")", "bar", true, null,null,p},
+                {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\"  \"Nope\")", "Nope", true, null,null,p},
+                {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\")", null, false, null,null,p},
+                {"(GET  testbean \"name\")", testBean.getName(), true, null,beanVars,p},
+                {"(GET  testbean \"nosuchkey\")", null, false, null,beanVars,p},
+                {"(GET  testbean \"name\" \"Nope\")", testBean.getName(), true, null,beanVars,p},
+                {"(GET  testbean \"nosuchkey\" \"Nope\")", "Nope", true, null,beanVars,p},
+                {"(GET  (LIST 11 12)  1 \"Nope\")", 12, true, null,beanVars,p},
+                {"(GET  (LIST 11 12)  2 \"Nope\")", "Nope", true, null,beanVars,p},
+                {"(GET  (LIST 11 12)  2 )", null, false, null,beanVars,p},
+                {"(GET  (LIST 11 12)  \"sss\" \"Nope\")", "Nope", true, null,beanVars,p},
+                {"(GET  \"ASDF\"  1)", 'S', true, null,null,p},
+                {"(GET  \"ASDF\"  4)", null, false, null,null,p},
+                {"(GET  \"ASDF\"  4 \"Nope\")", "Nope", true, null,null,p},
+                {"(GET  null  4 \"Nope\")", "Nope", true, null,null,p},
+                {"(GET  null  4)", null,  false, null,null,p},
+                
                 {"(ASSOC  (HASHMAP) 1 2)", map(1,2), true, null,null,p},
                 {"(ASSOC  (HASHMAP) 1 2 3 4)", map(1,2,3,4), true, null,null,p},
                 {"(ASSOC  (HASHMAP) 1 2 3)", map(1,2,3,null), true, null,null,p},
@@ -947,10 +961,8 @@ public class CompilerTest {
                 // THREADS
                 {"(LET ((a (MAKE-ARRAY 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1 \"start()\") (. t1 \"join()\") (AREF a 0))",
                  2, true, null, null, p},
-                {"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
+                 {"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
                         2, true, null, null, p}
-		
-		
             });
     }
 

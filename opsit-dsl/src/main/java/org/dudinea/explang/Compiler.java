@@ -254,6 +254,7 @@ public class Compiler {
         addBuiltIn("SUBSEQ", SUBSEQ.class);
         addBuiltIn("IN", IN.class);
         addBuiltIn("GET-IN", GET_IN.class);
+        addBuiltIn("GET", GET.class);
         addBuiltIn("ASSOC", ASSOC.class);
         addBuiltIn("ASSOC!", NASSOC.class);
         

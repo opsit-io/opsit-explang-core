@@ -1942,18 +1942,84 @@ public class Funcs {
         }
     }
 
-
+    protected static boolean doGet(final Object obj,
+                                   final Object[] result,
+                                   final Object keyObj
+                                   /*final Backtrace bt*/) {
+        result[0] = null;
+        if (obj instanceof Map) {
+            final Map<Object,Object> map = (Map<Object,Object>) obj;
+            result[0] = map.get(keyObj);
+            if (null == result[0]) {
+                if (!map.containsKey(keyObj)) {
+                    return false;
+                }
+            }
+        } else if (obj instanceof List) {
+            final List<Object> lst = (List<Object>) obj;
+            try {
+                result[0] = lst.get(getIntIdx(keyObj));
+            } catch (IndexOutOfBoundsException ex) {
+                return false;
+            }
+        } else if (obj instanceof Set) {
+            final Set<Object> s = (Set<Object>) obj;
+            if (! s.contains(keyObj) ) {
+                return false;
+            }
+            result[0] = keyObj;
+        } else if (obj == null) {
+            return false;
+        } else if (obj instanceof CharSequence) {
+            final CharSequence s = (CharSequence) obj;
+            try {
+                result[0] = s.charAt(getIntIdx(keyObj));
+            } catch (IndexOutOfBoundsException ex) {
+                return false;
+            }
+        } else if (obj.getClass().isArray()) {
+            try {
+                result[0] = Array.get(obj, getIntIdx(keyObj));
+            } catch (ArrayIndexOutOfBoundsException ex) {
+                return false;
+            }
+        } else {
+            final String keyStr=Utils.asStringOrEmpty(keyObj).trim();
+            if (keyStr.length() == 0) {
+                return false;
+            }
+            // FIXME: better check for method name?
+            try {
+                final String getName = Utils.concat("get",keyStr.substring(0,1).toUpperCase(),keyStr.substring(1));
+                final Method m = obj.getClass().getMethod(getName);
+                if (null == m.getReturnType()) {
+                    return false;
+                }
+                result[0] = m.invoke(obj);
+            } catch (Exception ex) {
+                return false;
+            }
+            // FIXME: if ICtx object
+        }
+        return true;
+    }
+    
     @SuppressWarnings("unchecked")
     protected static Object doGetIn(final Object obj,
                                     final Object ksObj,
                                     final int ksIdx,
                                     final Object notDefined,
                                     final Backtrace bt) {
-        Object result = obj;
+        Object result[] = new Object[1];
         final Object key = getKeyByIndex(ksObj, ksIdx);
         if (null == key) {
-            return result;
+            return obj;
         }
+        if (doGet(obj, result, key)) {
+            return doGetIn(result[0], ksObj, ksIdx + 1, notDefined, bt);
+        }
+        return notDefined;
+        /*
         if (obj instanceof Map) {
             final Map<Object,Object> map = (Map<Object,Object>) obj;
             result = map.get(key);
@@ -2007,8 +2073,8 @@ public class Funcs {
                 return notDefined;
             }
             // FIXME: if ICtx object
-        }
-        return doGetIn(result, ksObj, ksIdx + 1, notDefined, bt);
+            }*/
+        //return doGetIn(result[0], ksObj, ksIdx + 1, notDefined, bt);
     }
 
     @Arguments(spec={"structure", "ks", "&OPTIONAL", "not-found"})
@@ -2033,6 +2099,27 @@ public class Funcs {
         }
     }
 
+    @Arguments(spec={"structure", "key", "&OPTIONAL", "not-found"})
+    @Docstring(text = "Returns the value from an associative structure. \n" +
+               "Return value from an associative structure struct, \n" + 
+               " Returns NIL if the key is not present, or the not-found value if supplied.")
+    public static  class GET extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final int argsnum = eargs.size();
+            if (argsnum != 2 && argsnum != 3) {
+                throw new ExecutionException(backtrace,
+                                             "Unexpected number of arguments: expected 2 or 3, but got "
+                                             +eargs.size());
+            }
+            final Object obj = eargs.get(0, backtrace);
+            final Object keyObj = eargs.get(1, backtrace);
+            final Object notDefined = argsnum > 2 ? eargs.get(2, backtrace) : null;
+            final Object result[] = new Object[1];
+            return doGet(obj, result, keyObj) ? result[0] : notDefined;
+        }
+    }
+    
     @Arguments(text = "map {key val}+", spec = {"map", "key", "val",ArgSpec.ARG_REST, "kvpairs"})
     @Docstring(text = "Associates value with key in an map structure. \n" +
                "Return new instance of the structure, the original is left unchanged.")
