@@ -217,6 +217,8 @@ public class Compiler {
         addBuiltIn("PROGN", PROGN.class);
         addBuiltIn("TRY", TRY.class);
         addBuiltIn("AS->", TH_AS.class);
+        addBuiltIn("->", TH_1ST.class);
+        addBuiltIn("->>", TH_LAST.class);
         
         // functional programming
         addBuiltIn("LAMBDA", LAMBDA.class);
@@ -756,6 +758,72 @@ public class Compiler {
 
 
     @Docstring(text = "Threading form on first argument")
+    public class TH_LAST extends TH_X {
+        protected ASTNList insertVar(ASTNList expr) {
+            List lst = Utils.list();
+            lst.addAll(expr.getList());
+            lst.add(new ASTNLeaf(new Symbol(VARNAME), expr.getPctx()));
+            ASTNList result = new ASTNList(lst, expr.getPctx());
+            return result;
+        }
+    }
+
+    @Docstring(text = "Threading form on last argument")
+    public class TH_1ST extends TH_X {
+        protected ASTNList insertVar(ASTNList expr) {
+            List lst = Utils.list();
+            lst.addAll(expr.getList());
+            lst.add(1,new ASTNLeaf(new Symbol(VARNAME), expr.getPctx()));
+            ASTNList result = new ASTNList(lst, expr.getPctx());
+            return result;
+        }
+    }
+
+    
+    public abstract class TH_X  extends AbstractForm {
+        // ( -> expr  (expr)*)
+        protected List<ICompiled> blocks = new ArrayList<ICompiled>();
+        protected ICompiled startExpr = null;
+        protected final static String VARNAME = "%%";
+        
+        @Override
+        public void setRawParams(ASTNList params)
+            throws InvalidParametersException {
+            if (params.size() < 1) {
+                throw new InvalidParametersException(debugInfo, "Threading Form:  expects at least 1 parameters");
+            }
+            this.startExpr = compile(params.get(0));
+
+            for (int i = 1; i < params.size(); i++) {
+                ASTN expr = params.get(i);
+                if (expr instanceof ASTNList) {
+                    ASTNList blockExpr = insertVar((ASTNList)expr);
+                    blocks.add(compile(blockExpr));
+                } else {
+                    throw new InvalidParametersException("Threading form: argument "+i+
+                                                   " must be a function call, but got "+expr);
+                }
+            }
+        }
+
+        protected abstract ASTNList insertVar(ASTNList expr);
+
+        @Override
+        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+            //return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx),ctx);
+            ICtx localCtx = new Ctx(ctx);
+            Object result = startExpr.evaluate(backtrace, localCtx);
+            for (ICompiled block : blocks) {
+                localCtx.getMappings().put(VARNAME, result);
+                //localCtx.replace(VARNAME, result);
+                result = block.evaluate(backtrace, localCtx);
+            }
+            return result;
+        }
+
+    }
+    
+    @Docstring(text = "Threading form on named argument")
     public class TH_AS  extends AbstractForm {
         // ( as-> expr name  (expr)*)
         protected List<ICompiled> blocks = new ArrayList<ICompiled>();
@@ -765,15 +833,15 @@ public class Compiler {
         @Override
         public void setRawParams(ASTNList params)
             throws InvalidParametersException {
-            if (params.size() < 1) {
-                throw new InvalidParametersException(debugInfo, "IF expects at least 1 parameters");
+            if (params.size() < 2) {
+                throw new InvalidParametersException(debugInfo, "Threading Form: expect at least 2 parameters");
             }
             this.startExpr = compile(params.get(0));
 
             final ICompiled varExp = compile(params.get(1));
             if (!(varExp instanceof VarExp)) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "Threading Form: Invalid 2nd parameter,  must be a variable name");
+                                                     "Threading Form: Invalid 2nd parameter, must be a variable name");
             }
             this.varName = ((VarExp) varExp).getName();
             for (int i = 2; i < params.size(); i++) {
@@ -783,11 +851,11 @@ public class Compiler {
 
         @Override
         public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            //return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx),ctx);
             ICtx localCtx = new Ctx(ctx);
             Object result = startExpr.evaluate(backtrace, localCtx);
             for (ICompiled block : blocks) {
-                localCtx.replace(varName, result);
+                localCtx.getMappings().put(varName, result);
+                //localCtx.replace(varName, result);
                 result = block.evaluate(backtrace, localCtx);
             }
             return result;

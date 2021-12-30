@@ -292,6 +292,13 @@ public class CompilerTest {
                 {"(AS-> (+ 1 0) foo)", 1, true, null, null, p },
                 {"(AS-> (+ 1 0) foo (* 10 foo))", 10, true, null, null, p },
                 {"(AS-> (+ 1 0) foo (* 10 foo) (* 2 foo))", 20, true, null, null, p },
+                {"(LET ((foo 100)) (AS-> (+ 1 0) foo (* 10 foo) (* 2 foo)) foo)", 100, true, null, null, p},
+
+                {"(->> 10 (- 1) (- 2))", 11, true, null, null, p},
+                {"(->  10 (- 1) (- 2))", 7, true, null, null, p},
+                {"(->  10 (- 1) (- 2))", 7, true, null, null, p},
+                {"(LET ((%% 100)) (->  10 (- 1) (- 2)) %%)", 100, true, null, null, p},
+                {"(LET ((%% 100)) (->> 10 (- 1) (- 2)) %%)", 100, true, null, null, p},
                 
                 // RANGE
                 {"(APPEND ()  (RANGE 0 0))",list(), false, null,null,p},
