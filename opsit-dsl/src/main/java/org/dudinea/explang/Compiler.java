@@ -762,7 +762,7 @@ public class Compiler {
         protected ASTNList insertVar(ASTNList expr) {
             List lst = Utils.list();
             lst.addAll(expr.getList());
-            lst.add(new ASTNLeaf(new Symbol(VARNAME), expr.getPctx()));
+            lst.add(new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
             ASTNList result = new ASTNList(lst, expr.getPctx());
             return result;
         }
@@ -773,18 +773,34 @@ public class Compiler {
         protected ASTNList insertVar(ASTNList expr) {
             List lst = Utils.list();
             lst.addAll(expr.getList());
-            lst.add(1,new ASTNLeaf(new Symbol(VARNAME), expr.getPctx()));
+            lst.add(1,new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
             ASTNList result = new ASTNList(lst, expr.getPctx());
             return result;
         }
     }
 
-    
-    public abstract class TH_X  extends AbstractForm {
-        // ( -> expr  (expr)*)
+    public abstract class TH_BASE  extends AbstractForm {
         protected List<ICompiled> blocks = new ArrayList<ICompiled>();
         protected ICompiled startExpr = null;
-        protected final static String VARNAME = "%%";
+        protected abstract String getVarName();
+        @Override
+        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+            ICtx localCtx = new Ctx(ctx);
+            Object result = startExpr.evaluate(backtrace, localCtx);
+            for (ICompiled block : blocks) {
+                localCtx.getMappings().put(getVarName(), result);
+                result = block.evaluate(backtrace, localCtx);
+            }
+            return result;
+        }
+    }
+    
+    public abstract class TH_X  extends TH_BASE {
+        // ( -> expr  (expr)*)
+        @Override
+        protected String getVarName() {
+            return "%%";
+        }
         
         @Override
         public void setRawParams(ASTNList params)
@@ -793,7 +809,6 @@ public class Compiler {
                 throw new InvalidParametersException(debugInfo, "Threading Form:  expects at least 1 parameters");
             }
             this.startExpr = compile(params.get(0));
-
             for (int i = 1; i < params.size(); i++) {
                 ASTN expr = params.get(i);
                 if (expr instanceof ASTNList) {
@@ -805,30 +820,18 @@ public class Compiler {
                 }
             }
         }
-
         protected abstract ASTNList insertVar(ASTNList expr);
-
-        @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            //return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx),ctx);
-            ICtx localCtx = new Ctx(ctx);
-            Object result = startExpr.evaluate(backtrace, localCtx);
-            for (ICompiled block : blocks) {
-                localCtx.getMappings().put(VARNAME, result);
-                //localCtx.replace(VARNAME, result);
-                result = block.evaluate(backtrace, localCtx);
-            }
-            return result;
-        }
-
     }
     
     @Docstring(text = "Threading form on named argument")
-    public class TH_AS  extends AbstractForm {
+    public class TH_AS  extends TH_BASE {
         // ( as-> expr name  (expr)*)
-        protected List<ICompiled> blocks = new ArrayList<ICompiled>();
-        protected ICompiled startExpr = null;
         protected String varName;
+
+        @Override
+        protected String getVarName() {
+            return varName;
+        }
         
         @Override
         public void setRawParams(ASTNList params)
@@ -848,19 +851,6 @@ public class Compiler {
                 blocks.add(compile(params.get(i)));
             }
         }
-
-        @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            ICtx localCtx = new Ctx(ctx);
-            Object result = startExpr.evaluate(backtrace, localCtx);
-            for (ICompiled block : blocks) {
-                localCtx.getMappings().put(varName, result);
-                //localCtx.replace(varName, result);
-                result = block.evaluate(backtrace, localCtx);
-            }
-            return result;
-        }
-
     }
     
     @Docstring(text = "If-else conditional construct.")
