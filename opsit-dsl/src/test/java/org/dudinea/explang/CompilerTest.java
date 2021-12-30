@@ -288,6 +288,11 @@ public class CompilerTest {
                 {"(LET ((r ()) (ar (MAKE-ARRAY 3))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH (a ar)  (SETV r (APPEND r (LIST 1 a)))) r)", list(1,2,1,3,1,4), true, null,null,p},
                 {"(LET ((r ()) (ar (MAKE-ARRAY 3))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH (a ar)  (SETV r (APPEND r (LIST 1 a)))))", null, false, null,null,p},
                 {"(LET ((r ()) (ar (MAKE-ARRAY 3))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH (a ar r)  (SETV r (APPEND r (LIST 1 a)))))", list(1,2,1,3,1,4), true, null,null,p},
+
+                {"(AS-> (+ 1 0) foo)", 1, true, null, null, p },
+                {"(AS-> (+ 1 0) foo (* 10 foo))", 10, true, null, null, p },
+                {"(AS-> (+ 1 0) foo (* 10 foo) (* 2 foo))", 20, true, null, null, p },
+                
                 // RANGE
                 {"(APPEND ()  (RANGE 0 0))",list(), false, null,null,p},
                 {"(APPEND ()  (RANGE 0 -2))",list(), false, null,null,p},

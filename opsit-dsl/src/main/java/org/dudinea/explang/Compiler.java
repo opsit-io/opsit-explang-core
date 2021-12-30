@@ -201,7 +201,7 @@ public class Compiler {
         addBuiltIn("LET", LET.class);
         addBuiltIn("DLET", DLET.class);
         addBuiltIn("MAKUNBOUND", MAKUNBOUND.class);
-
+        addBuiltIn("BOUNDP", BOUNDP.class);
         addBuiltIn("NEW-CTX", NEW_CTX.class);
         addBuiltIn("WITH-CTX", WITH_CTX.class);
         addBuiltIn("GETPROPS", GETPROPS.class);
@@ -216,7 +216,8 @@ public class Compiler {
         addBuiltIn("FOREACH", FOREACH.class);	
         addBuiltIn("PROGN", PROGN.class);
         addBuiltIn("TRY", TRY.class);
-        addBuiltIn("BOUNDP", BOUNDP.class);
+        addBuiltIn("AS->", TH_AS.class);
+        
         // functional programming
         addBuiltIn("LAMBDA", LAMBDA.class);
         addBuiltIn("FUNCALL", FUNCALL.class);
@@ -753,12 +754,54 @@ public class Compiler {
         }
     }
 
+
+    @Docstring(text = "Threading form on first argument")
+    public class TH_AS  extends AbstractForm {
+        // ( as-> expr name  (expr)*)
+        protected List<ICompiled> blocks = new ArrayList<ICompiled>();
+        protected ICompiled startExpr = null;
+        protected String varName;
+        
+        @Override
+        public void setRawParams(ASTNList params)
+            throws InvalidParametersException {
+            if (params.size() < 1) {
+                throw new InvalidParametersException(debugInfo, "IF expects at least 1 parameters");
+            }
+            this.startExpr = compile(params.get(0));
+
+            final ICompiled varExp = compile(params.get(1));
+            if (!(varExp instanceof VarExp)) {
+                throw new InvalidParametersException(debugInfo,
+                                                     "Threading Form: Invalid 2nd parameter,  must be a variable name");
+            }
+            this.varName = ((VarExp) varExp).getName();
+            for (int i = 2; i < params.size(); i++) {
+                blocks.add(compile(params.get(i)));
+            }
+        }
+
+        @Override
+        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+            //return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx),ctx);
+            ICtx localCtx = new Ctx(ctx);
+            Object result = startExpr.evaluate(backtrace, localCtx);
+            for (ICompiled block : blocks) {
+                localCtx.replace(varName, result);
+                result = block.evaluate(backtrace, localCtx);
+            }
+            return result;
+        }
+
+    }
+    
     @Docstring(text = "If-else conditional construct.")
     public class IF extends AbstractForm {
         private List<ICompiled> elseBlocks = null;
         private ICompiled condition = null;
         private ICompiled thenBlock = null;
 
+        @Override
         public void setRawParams(ASTNList params)
             throws InvalidParametersException {
             if (params.size() < 2) {
