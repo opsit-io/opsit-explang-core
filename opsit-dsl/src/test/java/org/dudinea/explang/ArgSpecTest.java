@@ -41,7 +41,7 @@ public class ArgSpecTest {
 
     protected static Arg arg(String name,
                              AF flag) {
-        return new Arg(name,flag, null, null, false, false);
+        return new Arg(name,flag, null, null, false, false, false);
     }
 
     protected static Arg arg(String name,
@@ -49,7 +49,7 @@ public class ArgSpecTest {
                              ICompiled initForm,
                              String svar,
                              boolean allowOtherKeys) {
-        return new Arg(name,flag,initForm, svar, allowOtherKeys, false);
+        return new Arg(name,flag,initForm, svar, allowOtherKeys, false, false);
     }
 
     protected static Arg arg(String name,
@@ -58,7 +58,17 @@ public class ArgSpecTest {
                              String svar,
                              boolean allowOtherKeys,
                              boolean isLazy) {
-        return new Arg(name,flag,initForm, svar, allowOtherKeys, isLazy);
+        return new Arg(name,flag,initForm, svar, allowOtherKeys, isLazy, false);
+    }
+
+    protected static Arg arg(String name,
+                             AF flag,
+                             ICompiled initForm,
+                             String svar,
+                             boolean allowOtherKeys,
+                             boolean isLazy,
+                             boolean isPipe) {
+        return new Arg(name,flag,initForm, svar, allowOtherKeys, isLazy, isPipe);
     }
     
     @Parameters
@@ -71,8 +81,35 @@ public class ArgSpecTest {
 
                     { list("a"),
                       list(arg("a",MANDATORY)),
-                      null},
+                                null},
 
+                    { list("a", "b","c"),
+                      list(arg("a", MANDATORY,null,null,false, false,false),
+                           arg("b", MANDATORY,null,null,false, false,false),
+                           arg("c", MANDATORY,null,null,false, false,false)),
+                      null
+                    },
+                    
+                    { list("a", "&PIPE","b","c"),
+                      list(arg("a", MANDATORY,null,null,false, false,false),
+                           arg("b", MANDATORY,null,null,false, false,true),
+                           arg("c", MANDATORY,null,null,false, false,false)),
+                      null
+                    },
+
+                    { list("&PIPE", "a", "b","c"),
+                      list(arg("a", MANDATORY,null,null,false, false,true),
+                           arg("b", MANDATORY,null,null,false, false,false),
+                           arg("c", MANDATORY,null,null,false, false,false)),
+                      null
+                    },
+
+                    { list("&PIPE", "a", "b", "&PIPE", "c"),
+                      null,
+                      new InvalidParametersException("Invalid parameter spec: only one " +
+                                                     ArgSpec.ARG_PIPE+ " can be specified")
+                    },
+                    
                     { list("&LAZY", "a"),
                       list(arg("a",MANDATORY,null,null,false,true)),
                       null},

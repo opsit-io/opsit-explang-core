@@ -18,6 +18,7 @@ public class ArgSpec {
     
     static public final String ARG_EAGER = "&EAGER";
     static public final String ARG_LAZY = "&LAZY";
+    static public final String ARG_PIPE = "&PIPE";
 
     private static final Set argSyms = Utils.set(ARG_REST,
                                                  ARG_OPTIONAL,
@@ -45,6 +46,7 @@ public class ArgSpec {
         private String svar;
         private boolean allowOtherKeys = false;
         private boolean lazy = false;
+        private boolean pipe = false;
 
         /**
          * @return the flag
@@ -60,6 +62,11 @@ public class ArgSpec {
             return lazy;
         }
 
+        public boolean isPipe() {
+            return this.pipe;
+        }
+
+        
         public boolean isAllowOtherKeys() {
             return allowOtherKeys;
         }
@@ -79,7 +86,8 @@ public class ArgSpec {
                       ICompiled initForm,
                       String svar,
                       boolean allowOtherKeys,
-                      boolean isLazy) {
+                      boolean isLazy,
+                      boolean pipe) {
             super();
             this.name = name;
             this.flag = flag;
@@ -87,14 +95,16 @@ public class ArgSpec {
             this.svar = svar;
             this.allowOtherKeys = allowOtherKeys;
             this.lazy = isLazy;
+            this.pipe = pipe;
         }
 
         @Override
         public String toString() {
             return "(" + flag +" "+
                 (this.isAllowOtherKeys() ? ARG_ALLOW_OTHER_KEYS : "") + " " +
-                (this.lazy ? ARG_LAZY : "") +" "
-                + name +" "+initForm+" "+ svar +")";
+                (this.lazy ? ARG_LAZY : "") +" " +
+                (this.pipe ? ARG_PIPE : "") +" " +
+                name +" "+initForm+" "+ svar +")";
         }
 
         @Override
@@ -108,6 +118,7 @@ public class ArgSpec {
                      (null != this.flag && this.flag.equals(a.flag))) &&
                     (this.isAllowOtherKeys() == a.isAllowOtherKeys()) &&
                     (this.isLazy() == a.isLazy()) &&
+                    (this.isPipe() == a.isPipe()) &&
                     ((null == this.initForm && null == a.initForm)  ||
                      (null != this.initForm && this.initForm.equals(a.initForm))) &&
                     ((null == this.svar && null == a.svar)  ||
@@ -316,6 +327,8 @@ public class ArgSpec {
         Arg args[] = new Arg[argSpecs.length];
         boolean otherKeys  = false;
         boolean lazy = false;
+        boolean pipe = false;
+        boolean hadPipe = false;
     	int j = 0;
         Arg arg;
     	for (int i=0; i < argSpecs.length; i++) {
@@ -350,6 +363,9 @@ public class ArgSpec {
                 } else if (ARG_EAGER.equalsIgnoreCase(specSym.getName())) {
                     lazy = false;
                     continue;
+                } else if (ARG_PIPE.equalsIgnoreCase(specSym.getName())) {
+                    pipe = true;
+                    continue;
                 }
                 arg = new Arg();
                 arg.name = specSym.getName();
@@ -382,7 +398,16 @@ public class ArgSpec {
             arg.flag = flag;
             arg.allowOtherKeys = otherKeys;
             arg.lazy = lazy;
-    	    hasRest|=(AF.REST == flag);
+            if (pipe && hadPipe) {
+                throw new InvalidParametersException("Invalid parameter spec: only one " +
+                        ArgSpec.ARG_PIPE + " can be specified");
+            }
+            arg.pipe = pipe;
+            if (pipe) {
+                pipe = false;
+                hadPipe = true;
+            }
+            hasRest|=(AF.REST == flag);
             args[j] = arg;
     	    j++;
     	}
