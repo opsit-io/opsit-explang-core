@@ -1346,7 +1346,7 @@ public class Compiler {
         public void setRawParams(ASTNList params)
             throws InvalidParametersException {
             if (params.size() != 2) {
-                throw new InvalidParametersException(debugInfo, "SEARCH expects 2 parameters: sequence, test");
+                throw new InvalidParametersException(debugInfo, "DWIM-SEARCH expects 2 parameters: sequence, test");
             }
             input = compile(params.get(0));
             predicate = compile(params.get(1));
