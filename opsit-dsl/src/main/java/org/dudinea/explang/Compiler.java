@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.dudinea.explang.Funcs.ObjectExp;
@@ -16,6 +17,7 @@ import org.dudinea.explang.Funcs.READ_FROM_STRING;
 import static org.dudinea.explang.Funcs.*;
 import static org.dudinea.explang.DWIM.*;
 import static org.dudinea.explang.Seq.*;
+
 
 public class Compiler {
     protected static Threads threads = new Threads();
@@ -1340,8 +1342,10 @@ public class Compiler {
     @Arguments(spec={ "sequence","test"})
     @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
     public class DWIM_SEARCH extends AbstractForm {
-        ICompiled input;
-        ICompiled predicate;
+        protected ICompiled input;
+        protected ICompiled predicate;
+        protected ASTN testASTN;
+        
         @Override
         public void setRawParams(ASTNList params)
             throws InvalidParametersException {
@@ -1349,7 +1353,20 @@ public class Compiler {
                 throw new InvalidParametersException(debugInfo, "DWIM-SEARCH expects 2 parameters: sequence, test");
             }
             input = compile(params.get(0));
-            predicate = compile(params.get(1));
+            ASTN test = params.get(1);
+            testASTN = test;
+            if (test instanceof ASTNLeaf) {
+                Object testObj = test.getObject();
+                if ((testObj instanceof CharSequence) ||
+                    (testObj instanceof Pattern) ||
+                    (testObj instanceof Number)) {
+                    ParseCtx pctx = test.getPctx();
+                    test = new ASTNList(Utils.list(new ASTNLeaf(new Symbol("DWIM-MATCHES"),pctx),
+                                             new ASTNLeaf(new Symbol("_"),pctx),
+                                             test), pctx);
+                }
+            }
+            predicate = compile(test);
         }
         @Override
         public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
