@@ -297,8 +297,19 @@ public class CompilerTest {
                 {"(->> 10 (- 1) (- 2))", 11, true, null, null, p},
                 {"(->  10 (- 1) (- 2))", 7, true, null, null, p},
                 {"(->  10 (- 1) (- 2))", 7, true, null, null, p},
+                {"(->  (LIST 1 2 3 4 5) ((LAMBDA (X Y) (TAKE Y X)) 3))", list(1,2,3), true, null, null, p},
+                {"(PROGN (DEFUN FFF (X Y) (TAKE Y X)) (->  (LIST 1 2 3 4 5) (FFF 3)))", list(1,2,3), true, null, null, p},
+                
                 {"(LET ((%% 100)) (->  10 (- 1) (- 2)) %%)", 100, true, null, null, p},
                 {"(LET ((%% 100)) (->> 10 (- 1) (- 2)) %%)", 100, true, null, null, p},
+
+                {"(@->  (LIST 1 2 3 4 5) (TAKE 3) (SUBSEQ 1))", list(2,3), true, null, null, p},
+                //{"(PROGN (DEFUN FFF (X &PIPE Y) (TAKE X Y)) (@-> (LIST 1 2 3 4 5) (FFF 3)))", list(1,2,3), true, null, null, p},
+                // FIXME: does not work when DEFUN is defined in smae expr:
+                //        because of the funcall hack
+                //(PROGN (DEFUN FFF (X &PIPE Y) (TAKE X Y)) (@-> (LIST 1 2 3 4 5) (FFF 3)))
+                // FIXME: support lambda inline
+                //{"(@->  (LIST 1 2 3 4 5) ((LAMBDA (X &PIPE Y) (TAKE X Y)) 3))", list(1,2,3), true, null, null, p},
                 
                 // RANGE
                 {"(APPEND ()  (RANGE 0 0))",list(), false, null,null,p},
@@ -1005,7 +1016,7 @@ public class CompilerTest {
                 {"(LET ((a (MAKE-ARRAY 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1 \"start()\") (. t1 \"join()\") (AREF a 0))",
                  2, true, null, null, p},
                  {"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
-                        2, true, null, null, p}
+                         2, true, null, null, p}
             });
     }
 
