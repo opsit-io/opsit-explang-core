@@ -924,7 +924,7 @@ public class Funcs {
                "If seq has 1 item, return it without calling func;\n"+
                "If value is supplied, apply func on value and the first seq element, then "+ 
                "on the result and the second element, etc. If there is no elements - return val;")
-    @Arguments(spec={"func",ArgSpec.ARG_OPTIONAL, "val",ArgSpec.ARG_MANDATORY, "seq"})
+    @Arguments(spec={"func",ArgSpec.ARG_OPTIONAL, "val", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "seq"})
     public static  class REDUCE extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -966,7 +966,7 @@ public class Funcs {
 
     @Docstring(text="Filter operation. test is a function of one argument that returns boolean, seq is input sequence. "+
                "Return a sequence from which the elements that do not satisfy the test have been removed.")
-    @Arguments(spec={"test", "sequence"})
+    @Arguments(spec={"test",  ArgSpec.ARG_PIPE, "sequence"})
     public static  class FILTER extends FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1053,7 +1053,7 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"func", ArgSpec.ARG_REST,"lists"})
+    @Arguments(spec={"func",  ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"lists"})
     @Docstring(text="Apply function on elements of collections. "+
                "Returns a sequence consisting of the result of applying func to "+
                "the set of first items of each list, followed by applying func to the "+
@@ -1077,7 +1077,7 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"f", ArgSpec.ARG_REST,"lists"})
+    @Arguments(spec={"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "lists"})
     @Docstring(text="Apply function on cartesioan product of lists. Returns a sequence consisting of the result of applying func to "+
                "the cartesian product of the lists. Function func should accept number "+
                "arguments that is equal to number of lists.")
@@ -1108,7 +1108,7 @@ public class Funcs {
         }
     }
     /***** VARIABLE PROPERTIES HANDLING ******/
-    @Arguments(spec = {"symbol","property-key"})
+    @Arguments(spec = {"symbol", "property-key"})
     @Docstring(text = "Get Variable Property. Returns value of a property from variable property map")
     public static class GETPROP extends FuncExp {
         @Override
@@ -1820,7 +1820,7 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"pattern","char-seq"})
+    @Arguments(spec={"pattern",ArgSpec.ARG_PIPE, "char-seq"})
     @Docstring(text="Return Regexp Matcher. "+
                "Returns an instance of java.util.regex.Matcher, "+
                "for use, e.g. in RE-FIND.")
@@ -1833,7 +1833,7 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
+    @Arguments(spec={"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="Perform regexp match. When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
                "When called with one arguments it uses given Matcher. \n "+
                "Returns the match, if any, of string to pattern, using Matcher.matches(). \n "+
@@ -1853,7 +1853,7 @@ public class Funcs {
     }
 
     
-    @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
+    @Arguments(spec={"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="Perform Regexp Find. "+
                "When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
                "When called with one arguments it uses given Matcher. \n "+
@@ -1874,7 +1874,7 @@ public class Funcs {
     }
 
     
-    @Arguments(spec={"arg0",ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
+    @Arguments(spec={"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
     @Docstring(text="Return Results of Regexp Find as a Lazy Sequence. "+
                "When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
                "Returns lazy iterable sequence (instance of Iterable) of matches of string to pattern, using Matcher.find(). \n "+
@@ -1914,7 +1914,7 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"elt", "sequence"})
+    @Arguments(spec={"elt",  ArgSpec.ARG_PIPE, "sequence"})
     @Docstring(text = "Check if an element is contained in a sequence. ")
     public static  class IN extends FuncExp {
         @Override
@@ -2210,7 +2210,8 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec={"item", "sequence"})
+    // FIXME: implementation not finished
+    @Arguments(spec={"item", ArgSpec.ARG_PIPE, "sequence"})
     @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
     public static  class SEARCH extends FuncExp {
         @Override
@@ -2379,7 +2380,7 @@ public class Funcs {
         }
     }
 
-    @Arguments(spec = {"n", "seq"})
+    @Arguments(spec = {"n",  ArgSpec.ARG_PIPE, "seq"})
     @Docstring(text = "Return  first n elements of a sequence. "
             + "take creates new sequence with first n elements of seq. "
             + "If n is bigger than length of the sequence all the elements"
@@ -2608,7 +2609,7 @@ public class Funcs {
 
 
     
-    @Arguments(spec={"n","sequence"})
+    @Arguments(spec={"n", ArgSpec.ARG_PIPE, "sequence"})
     @Docstring(text="Locates the nth element of a sequence. n may be any non-negative number. Returns NIL when sequence is NIL or n is out of bounds")
     public static class NTH extends FuncExp {
         @Override
@@ -2722,14 +2723,15 @@ public class Funcs {
         }
     }
 
-    
+    @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
+    @Docstring(text="Sort a sequence (non destructively).")
     public static class SORT extends NSORT {
         protected Object doSort(Object seq, ICode lambda, Backtrace bt, ICtx ctx) {
             return super.doSort(Utils.copySeq(seq), lambda, bt, ctx);
         }
     }
 
-    @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_MANDATORY, "sequence"})
+    @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f",  ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
     @Docstring(text="Sort a sequence (destructively).")
     public static class NSORT extends FuncExp {
         @Override
