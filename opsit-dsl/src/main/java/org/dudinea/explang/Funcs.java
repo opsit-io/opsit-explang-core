@@ -2209,29 +2209,6 @@ public class Funcs {
             }
         }
     }
-
-    // FIXME: implementation not finished
-    @Arguments(spec={"item", ArgSpec.ARG_PIPE, "sequence"})
-    @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
-    public static  class SEARCH extends FuncExp {
-        @Override
-        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-            if (2 != eargs.size()) {
-                throw new ExecutionException(backtrace,
-                                             "Unexpected number of arguments: expected 2 but got "
-                                             +eargs.size());
-            }
-            Object elt = eargs.get(0, backtrace);
-            Object seq = eargs.get(1, backtrace);
-            final boolean[] holder = new boolean[1];
-            Operation op = null;
-            Seq.forEach(seq, op, false);
-            return holder[0];
-        }
-    }
-
-
-    
     
     @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
     @Docstring(text="Format String. "+

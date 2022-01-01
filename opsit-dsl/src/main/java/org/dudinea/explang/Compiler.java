@@ -15,6 +15,7 @@ import org.dudinea.explang.Funcs.READ_FROM_STRING;
 
 import static org.dudinea.explang.Funcs.*;
 import static org.dudinea.explang.DWIM.*;
+import static org.dudinea.explang.Seq.*;
 
 public class Compiler {
     protected static Threads threads = new Threads();
@@ -301,6 +302,7 @@ public class Compiler {
         addBuiltIn("RE-FIND", RE_FIND.class);
         addBuiltIn("RE-SEQ", RE_SEQ.class);
         addBuiltIn("DWIM-MATCHES", DWIM_MATCHES.class);
+        addBuiltIn("DWIM-SEARCH", DWIM_SEARCH.class);
         addBuiltIn("STR", STR.class);
         addBuiltIn("FORMAT", FORMAT.class);
         addBuiltIn("SEQ", SEQ.class);
@@ -1327,6 +1329,60 @@ public class Compiler {
             return evalBlocks(backtrace, blocks, localCtx);
         }        
     }
+
+    // FIXME: implementation not finished
+    // TODO: support lambda with normal arguments (like filter)
+    //       make useful beans of basic types like  numbers, strings
+    //       handle errors (how?)
+    //       return same type of sequence
+    //       let user name variable
+    //       allow search on several sequences (JOIN)
+    @Arguments(spec={ "sequence","test"})
+    @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
+    public class DWIM_SEARCH extends AbstractForm {
+        ICompiled input;
+        ICompiled predicate;
+        @Override
+        public void setRawParams(ASTNList params)
+            throws InvalidParametersException {
+            if (params.size() != 2) {
+                throw new InvalidParametersException(debugInfo, "SEARCH expects 2 parameters: sequence, test");
+            }
+            input = compile(params.get(0));
+            predicate = compile(params.get(1));
+        }
+        @Override
+        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+            final ICtx localCtx = new Ctx(ctx);
+            final Object val = input.evaluate(backtrace, localCtx);
+            // FIXME: same sequence
+            List<Object> result = Utils.list();
+            //if (!isSequence(val)) {
+            //    // FIXME: what do we do with it?
+            //    return val;
+            //}
+            forEach (val, new Operation() {
+                    @Override
+                    public boolean perform(Object obj) {
+                        Map objMap = (obj instanceof Map) ? (Map)obj : new Funcs.BeanMap(obj);
+                        final ICtx checkCtx = new Ctx(ctx, objMap);
+                        checkCtx.getMappings().put("_", obj);
+                        Object chkResult = null;
+                        //try {
+                        chkResult = predicate.evaluate(backtrace, checkCtx);
+                        //} catch (Exception ex) {
+                        // ???
+                        //}
+                        if (Utils.asBoolean(chkResult)) {
+                            result.add(obj);
+                        }
+                        return false;
+                    }
+                }, true);
+            return result;
+        }
+    }
+
 
     /**** Context *****/
     public interface ICtx {
