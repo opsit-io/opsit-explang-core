@@ -88,6 +88,21 @@ public class Compiler {
         public String getDefLocation() {
             return cls.toString();
         }
+
+        @Override
+        public ArgSpec getArgSpec() {
+            final Arguments ann = (Arguments)cls.getAnnotation(Arguments.class);
+            final String [] spec = ann.spec();
+            if (null != spec) {
+                try {
+                    final ArgSpec argSpec = new ArgSpec(spec);
+                    return argSpec;
+                } catch (InvalidParametersException ex) {
+                    throw new CompilationException("Invalid argument specification for "+this);
+                }
+            }
+            return null;
+        }
 	
     }
     
@@ -219,6 +234,7 @@ public class Compiler {
         addBuiltIn("AS->", TH_AS.class);
         addBuiltIn("->", TH_1ST.class);
         addBuiltIn("->>", TH_LAST.class);
+        addBuiltIn("@->", TH_PIPE.class);
         
         // functional programming
         addBuiltIn("LAMBDA", LAMBDA.class);
@@ -756,11 +772,48 @@ public class Compiler {
         }
     }
 
+    @Docstring(text = "Threading form on &PIPE or first argument")
+    public class TH_PIPE extends TH_X {
+        protected ASTNList insertVar(ASTNList expr) {
+            //this.getDebugInfo().
+            int idx = 1;
+            final List<ASTN> lst = Utils.list();
+            lst.addAll(expr.getList());
+            final ASTN cASTN = lst.get(0);
+            // FIXME: ugly and must not be here
+            if (cASTN instanceof ASTNLeaf) {
+                Object cObj = cASTN.getObject();
+                if (cObj instanceof Symbol) {
+                    String cName = ((Symbol) cObj).getName();
+                    ICode code = getFun(cName);
+                    if (null != code) {
+                        ArgSpec argspec = code.getArgSpec();
+                        if (null != argspec && null!=argspec.getArgs() ) {
+                            int i = 0;
+                            for (ArgSpec.Arg arg : argspec.getArgs()) {
+                                if (arg.isPipe()) {
+                                    // list contains function itself
+                                    if (i + 1 <= lst.size()) {
+                                        idx = i + 1;
+                                    }
+                                    break;
+                                }
+                                i++;
+                            }
+                        }
+                    }
+                }
+            }
+            lst.add(idx, new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
+            final ASTNList result = new ASTNList(lst, expr.getPctx());
+            return result;
+        }
+    }
 
     @Docstring(text = "Threading form on first argument")
     public class TH_LAST extends TH_X {
         protected ASTNList insertVar(ASTNList expr) {
-            List lst = Utils.list();
+            List<ASTN> lst = Utils.list();
             lst.addAll(expr.getList());
             lst.add(new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
             ASTNList result = new ASTNList(lst, expr.getPctx());
@@ -771,7 +824,7 @@ public class Compiler {
     @Docstring(text = "Threading form on last argument")
     public class TH_1ST extends TH_X {
         protected ASTNList insertVar(ASTNList expr) {
-            List lst = Utils.list();
+            List<ASTN> lst = Utils.list();
             lst.addAll(expr.getList());
             lst.add(1,new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
             ASTNList result = new ASTNList(lst, expr.getPctx());
@@ -1007,6 +1060,11 @@ public class Compiler {
                 @Override
                 public String getDefLocation() {
                     return ""+LAMBDA.this.getDebugInfo();
+                }
+
+                @Override
+                public ArgSpec getArgSpec() {
+                    return argSpec;
                 }
 		
             };

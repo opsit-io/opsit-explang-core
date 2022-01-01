@@ -8,6 +8,7 @@ public interface ICode {
     public boolean isBuiltIn();
     public String getDocstring();
     public String getArgDescr();
+    public ArgSpec getArgSpec();
     public String getCodeType();
     public String getDefLocation();
     //public void setDebugInfo(ParseCtx pctx);
