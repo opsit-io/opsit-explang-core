@@ -833,6 +833,13 @@ public class CompilerTest {
                 {"(DWIM-MATCHES 1 1)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1 1.0)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1.0 1)", list(1.0), true, null,null,p},
+
+                {"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") (EQUAL _ \"foo\"))", list("foo"), true, null,null,p},
+                {"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true, null,null,p},
+                // FIXME: no common regex syntax for sexp and lisp reader
+                {"(DWIM-SEARCH (LIST (HASHMAP \"foo\" \"bar\" \"baz\" \"boog\") (HASHMAP \"foo\" \"bar2\" \"baz\" \"boog2\")) (EQUAL foo \"bar\") )", list(map("foo","bar","baz","boog")), true, null,null,p},
+                //{"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true, null,null,p},
+                
                 {"(GET-IN  NIL        NIL)", null, false, null,null,p},
                 {"(GET-IN  NIL        NIL \"Nope\")", null, false, null,null,p},
                 {"(GET-IN  (LIST 1 2) NIL \"Nope\")", list(1,2), true, null,null,p},
