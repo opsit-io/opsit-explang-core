@@ -1011,10 +1011,10 @@ public class Funcs {
             }
             final List<ICompiled> callParams = new ArrayList<ICompiled>(numLists);
             // evaluated lists that were given as parameters
-            List<Object> lists[] = new List[numLists];
-            for (int i=0; i < lists.length; i++) {
-                final List<Object> list = (List<Object>) rest.get(i);
-                lists[i] = null == list ? new ArrayList() : list;
+            Object seqs[] = new Object[numLists];
+            for (int i=0; i < seqs.length; i++) {
+                final Object seq =  rest.get(i);
+                seqs[i] = null == seq ? new ArrayList() : seq;
                 callParams.add(new VarExp("arg#"+i));
             }
             try {
@@ -1028,22 +1028,26 @@ public class Funcs {
         
 
             List results = new ArrayList();
-            callfuncs(backtrace, results, lists, instance, callParams, eargs);
+            callfuncs(backtrace, results, seqs, instance, callParams, eargs);
             return results;
         }
 
-        abstract protected void callfuncs(Backtrace backtrace, List results, List lists[], 
+        abstract protected void callfuncs(Backtrace backtrace, List results, Object seqs[], 
                                           IExpr instance, List<ICompiled> callParams, ICtx ctx);
         
-        protected int callfunc(Backtrace backtrace, List results, List lists[], int indices[],
+        protected int callfunc(Backtrace backtrace, List results,
+                               Object seqs[], int indices[],
                                IExpr instance, List<ICompiled> callParams, ICtx ctx) {
             ICtx loopCtx = ctx.getCompiler().newCtx(ctx);
-            for (int listNo = 0; listNo < lists.length; listNo++) {
-                List list = lists[listNo];
-                if (indices[listNo] < list.size()) {
-                    loopCtx.put(((VarExp)callParams.get(listNo)).getName(), list.get(indices[listNo]));
+            for (int seqNo = 0; seqNo < seqs.length; seqNo++) {
+                Object seq = seqs[seqNo];
+                int seqSize = Seq.getLength(seq, false);
+                if (indices[seqNo] < seqSize) {
+                    loopCtx.put(((VarExp)callParams.get(seqNo)).getName(),
+                                // seq.get(indices[seqNo])
+                                Seq.getElement(seq, indices[seqNo]));
                 } else {
-                    return listNo;
+                    return seqNo;
                 }
             }
 
@@ -1061,12 +1065,12 @@ public class Funcs {
                "exhausted.  Any remaining items in other lists are ignored. Function "+
                "func should accept number arguments that is equal to number of lists.")
     public static class MAP extends ABSTRACTMAPOP {
-        protected void callfuncs(Backtrace backtrace, List results, List lists[], 
+        protected void callfuncs(Backtrace backtrace, List results, Object seqs[], 
                                  IExpr instance, List<ICompiled> callParams, ICtx ctx) {
-            int indices[] = new int[lists.length];
+            int indices[] = new int[seqs.length];
             int overflow=-1;
             while (true) {
-                overflow = callfunc(backtrace, results, lists, indices, instance, callParams, ctx);
+                overflow = callfunc(backtrace, results, seqs, indices, instance, callParams, ctx);
                 if (overflow >=0) {
                     break;
                 }
@@ -1082,12 +1086,12 @@ public class Funcs {
                "the cartesian product of the lists. Function func should accept number "+
                "arguments that is equal to number of lists.")
     public static class MAPPROD extends ABSTRACTMAPOP {
-        protected void callfuncs(Backtrace backtrace, List results, List lists[], 
+        protected void callfuncs(Backtrace backtrace, List results, Object seqs[], 
                                  IExpr instance, List<ICompiled> callParams, ICtx ctx) {
-            int indices[] = new int[lists.length];
+            int indices[] = new int[seqs.length];
             int overflow=-1;
             while (true) {
-                overflow = callfunc(backtrace, results, lists, indices, instance, callParams, ctx);
+                overflow = callfunc(backtrace, results, seqs, indices, instance, callParams, ctx);
                 if (overflow < 0) {
                     indices[0]++;
                     continue;
@@ -1096,7 +1100,7 @@ public class Funcs {
                     //overflow in eldest list, END
                     return;
                 }
-                if (lists[overflow].size() == 0) {
+                if (Seq.getLength(seqs[overflow],false) == 0) {
                     // one of lists is empty
                     return;
                 }
