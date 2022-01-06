@@ -1,5 +1,6 @@
 package org.dudinea.explang;
 
+
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.function.Consumer;
 
 
 public class Seq {
@@ -62,6 +64,15 @@ public class Seq {
             final Enumeration en = (Enumeration) seq;
             while (en.hasMoreElements()) {
                 if (op.perform(en.nextElement())) {
+                    break;
+                }
+            }
+        } else if (seq instanceof Map) {
+            final Map map = (Map) seq;
+            Iterable col = map.values();
+            Iterator iter = col.iterator();
+            while(iter.hasNext()) {
+                if (op.perform(iter.next())) {
                     break;
                 }
             }
@@ -168,14 +179,30 @@ public class Seq {
 
     public static Set asSet(Object obj) {
         final Set result = new HashSet();
-        forEach(obj, new Operation () {
-                @Override
-                public boolean perform(Object obj) {
-                    result.add(obj);
-                    return false;
-                }
+        if (null!=obj) {
+            forEach(obj, new Operation () {
+                    @Override
+                    public boolean perform(Object obj) {
+                        result.add(obj);
+                        return false;
+                    }
                 
             }, false);
+        }
+        return result;
+    }
+
+    public static List valuesList(Object seq) {
+        final List result = Utils.list();
+        if (null != seq) {
+            forEach(seq, new Operation () {
+                    @Override
+                    public boolean perform(Object obj) {
+                        result.add(obj);
+                        return false;
+                    }
+                }, false);
+        }
         return result;
     }
 }

@@ -1013,7 +1013,10 @@ public class Funcs {
             // evaluated lists that were given as parameters
             Object seqs[] = new Object[numLists];
             for (int i=0; i < seqs.length; i++) {
-                final Object seq =  rest.get(i);
+                Object seq =  rest.get(i);
+                if (seq instanceof Map) {
+                    seq = Seq.valuesList(seq);
+                }
                 seqs[i] = null == seq ? new ArrayList() : seq;
                 callParams.add(new VarExp("arg#"+i));
             }
@@ -1113,7 +1116,8 @@ public class Funcs {
     }
     /***** VARIABLE PROPERTIES HANDLING ******/
     @Arguments(spec = {"symbol", "property-key"})
-    @Docstring(text = "Get Variable Property. Returns value of a property from variable property map")
+    @Docstring(text = "Get Variable Property. "+
+               "Returns value of a property from variable property map")
     public static class GETPROP extends FuncExp {
         @Override
         public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
