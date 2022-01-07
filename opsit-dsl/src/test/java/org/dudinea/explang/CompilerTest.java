@@ -1028,6 +1028,7 @@ public class CompilerTest {
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY,"a","b","c"})
+    @Package(name="tests")
     public  static class LAZYAND extends Funcs.FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1050,6 +1051,8 @@ public class CompilerTest {
             System.out.println("\n\n TEST #: "+testNum);
             Compiler compiler =new Compiler();
             compiler.setParser(this.parser);
+            compiler.usePackages(Package.DWIM, Package.FFI, Package.IO, Package.LOOPS, Package.THREADS, "tests");
+            compiler.setEnforcePackages(true);
             compiler.addBuiltIn("LAZYAND", LAZYAND.class);
             String inputName = "TEST #"+testNum;
             testNum++;

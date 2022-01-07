@@ -51,6 +51,14 @@ public class Utils {
         return set;
     }
 
+    public  static <T> Set<T> roset(T ... objs) {
+        Set <T>set = new HashSet<T>(objs.length);
+        for (T obj: objs) {
+            set.add(obj);
+        }
+        return Collections.unmodifiableSet(set);
+    }
+
     public static Symbol symbol(String name) {
         return null == name ? null : new Symbol(name);
     }

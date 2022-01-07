@@ -4,12 +4,15 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.Collection;
 
 import org.dudinea.explang.Funcs.ObjectExp;
 import org.dudinea.explang.Funcs.READ_FROM_STRING;
@@ -19,21 +22,76 @@ import static org.dudinea.explang.DWIM.*;
 import static org.dudinea.explang.Seq.*;
 
 
+
 public class Compiler {
     protected static Threads threads = new Threads();
     protected IParser parser = new SexpParser();
     //protected IParser parser = new LispReader();
     protected boolean failOnMissingVariables = true;
     protected IStringConverter funcNameConverter;
+    protected Set<String> packages =
+            Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    protected boolean enforcePackages = true;
 
-    public Compiler() {
-        this(new NOPConverter());
+    // FIXME: globbing?
+    public static Set<String> getDefaultPackages() {
+        return Utils.roset(Package.BASE_ARITHMENTICS,
+                           Package.BASE_LOGIC,
+                           Package.BASE_COERCION,
+                           Package.BASE_MATH,
+                           Package.BASE_TYPES,
+                           Package.BASE_BINDINGS,
+                           Package.BASE_SEQ,
+                           Package.BASE_FUNCS,
+                           Package.BASE_BEANS,
+                           Package.BASE_CONTROL,
+                           Package.BASE_REGEX,
+                           Package.BASE_TEXT,
+                           Package.BASE_DOCS,
+                           Package.BASE_LANG);
+    };
+
+    public static Set<String> getAllPackages() {
+        return Utils.roset(Package.BASE_ARITHMENTICS,
+                           Package.BASE_LOGIC,
+                           Package.BASE_COERCION,
+                           Package.BASE_MATH,
+                           Package.BASE_TYPES,
+                           Package.BASE_BINDINGS,
+                           Package.BASE_SEQ,
+                           Package.BASE_FUNCS,
+                           Package.BASE_BEANS,
+                           Package.BASE_CONTROL,
+                           Package.BASE_REGEX,
+                           Package.BASE_TEXT,
+                           Package.BASE_DOCS,
+                           Package.BASE_LANG,
+                           Package.DWIM,
+                           Package.FFI,
+                           Package.IO,
+                           Package.LOOPS,
+                           Package.THREADS);
     }
     
+    public Compiler() {
+        this(new NOPConverter(), getDefaultPackages());
+    }
+
+    public Compiler(Set<String> packages) {
+        this(new NOPConverter(), packages);
+    }
+
+
     public Compiler(IStringConverter fnameConverter) {
+        this(fnameConverter, getDefaultPackages());
+    }
+
+    
+    public Compiler(IStringConverter fnameConverter, Set<String> packages) {
         super();
-        setFnameConverter(fnameConverter);
-        initBuiltins();
+        this.setFnameConverter(fnameConverter);
+        this.usePackages(packages);
+        initBuiltins(this.getPackages());
     }
 
     public void setFnameConverter(IStringConverter converter) {
@@ -43,7 +101,7 @@ public class Compiler {
     public void setFailOnMissingVariables(boolean val) {
         this.failOnMissingVariables = val;
     }
-    
+
     public IParser getParser() {
         return parser;
     }
@@ -52,19 +110,80 @@ public class Compiler {
         this.parser = parser;
     }
 
+    public boolean isEnforcePackages() {
+        return this.enforcePackages;
+    }
+
+    public void setEnforcePackages(boolean val) {
+        this.enforcePackages = val;
+    }
+
+    
+    public void usePackages(String ... pkgSpecs) {
+        Set<String> pkgSet = new HashSet<String>();
+        if (null != pkgSpecs) {
+            for (String pkgSpec : pkgSpecs) {
+                packages.add(pkgSpec);
+                pkgSet.add(pkgSpec);
+            }
+        }
+        initBuiltins(pkgSet);
+    }
+
+    public void usePackages(Collection<String> pkgSpecs) {
+        if (null != pkgSpecs) {
+            for (String pkgSpec : pkgSpecs) {
+                packages.add(pkgSpec);
+            }
+        }
+        Set<String> pkgSet = new HashSet<String>();
+        pkgSet.addAll(pkgSpecs);
+        initBuiltins(pkgSet);
+    }
+
+    public Set<String> getPackages() {
+        return this.packages;
+    }
+    
+    public void setPackages(Set<String> packages) {
+        this.packages = packages;
+    }
+
+    public boolean checkBuiltinPackage(Class cls, Set<String> pkgs) {
+        final String name = this.getBuiltinPackage(cls);
+        if (null != name) {
+            return pkgs.contains(name);
+        } else {
+            return false;
+        }
+    }
+    
+    public String getBuiltinPackage(Class cls) {
+        final Package pkg = (Package) cls.getAnnotation(Package.class);
+        if (null != pkg) {
+            return pkg.name();
+        } else {
+            return null;
+        }
+    }
+
+    
     public void addBuiltIn(String name, Class cls) {
-        final Builtin builtin = IForm.class.isAssignableFrom(cls) ?
-            new BuiltinForm(cls) : new BuiltinFunc(cls);
-        functab.put(this.funcNameConverter.convert(name),builtin);
-        // FIXME: kluge!, breaks FUNCTIONS_NAMES
-        //String name2 = name.replaceAll("-", "_");
-        //if (!name2.equals(name)) {
-        //    functab.put(name2,builtin);
-        //}
+        if ((! isEnforcePackages()) ||  checkBuiltinPackage(cls, this.getPackages())) {
+            final Builtin builtin =
+                    IForm.class.isAssignableFrom(cls) ? new BuiltinForm(cls) : new BuiltinFunc(cls);
+            functab.put(this.funcNameConverter.convert(name), builtin);
+        } else {
+            throw new RuntimeException("Won't add builtin with "+cls +
+                                       ": class package '" + getBuiltinPackage(cls) + "' does not belong to any of "+
+                                       "enabled packages");
+        }
+
     }
 
     public abstract class Builtin implements ICode {
         protected Class cls;
+
         public Builtin(Class cls) {
             this.cls = cls;
         }
@@ -73,18 +192,20 @@ public class Compiler {
         public boolean isBuiltIn() {
             return true;
         }
+
         @Override
         public String getDocstring() {
-            Docstring ann = (Docstring)cls.getAnnotation(Docstring.class);
+            Docstring ann = (Docstring) cls.getAnnotation(Docstring.class);
             return null == ann ? "Not provided." : ann.text();
         }
 
         @Override
         public String getArgDescr() {
-            Arguments ann = (Arguments)cls.getAnnotation(Arguments.class);
-            return null == ann ? "args" :
-                Utils.asStringOrEmpty(null == ann.text() || ann.text().trim().isEmpty() ?
-                                      Utils.arrayAsString(ann.spec()) :  ann.text());
+            Arguments ann = (Arguments) cls.getAnnotation(Arguments.class);
+            return null == ann ? "args"
+                    : Utils.asStringOrEmpty(null == ann.text() || ann.text().trim().isEmpty()
+                            ? Utils.arrayAsString(ann.spec())
+                            : ann.text());
         }
 
         @Override
@@ -94,31 +215,31 @@ public class Compiler {
 
         @Override
         public ArgSpec getArgSpec() {
-            final Arguments ann = (Arguments)cls.getAnnotation(Arguments.class);
-            final String [] spec = ann.spec();
+            final Arguments ann = (Arguments) cls.getAnnotation(Arguments.class);
+            final String[] spec = ann.spec();
             if (null != spec) {
                 try {
                     final ArgSpec argSpec = new ArgSpec(spec);
                     return argSpec;
                 } catch (InvalidParametersException ex) {
-                    throw new CompilationException("Invalid argument specification for "+this);
+                    throw new CompilationException("Invalid argument specification for " + this);
                 }
             }
             return null;
         }
-	
+
     }
-    
+
     public class BuiltinForm extends Builtin {
         public BuiltinForm(Class cls) {
             super(cls);
         }
-	
+
         @Override
         public ICompiled getInstance() {
             try {
                 Constructor<?> constructor = cls.getConstructor(Compiler.this.getClass());
-                ICompiled compiled = (ICompiled)constructor.newInstance(Compiler.this);
+                ICompiled compiled = (ICompiled) constructor.newInstance(Compiler.this);
                 return compiled;
             } catch (InstantiationException ex) {
                 throw new RuntimeException(ex.getMessage());
@@ -126,7 +247,7 @@ public class Compiler {
                 throw new RuntimeException(ex.getMessage());
             } catch (NoSuchMethodException ex) {
                 throw new RuntimeException(ex.getMessage());
-            } catch (IllegalAccessException  ex) {
+            } catch (IllegalAccessException ex) {
                 throw new RuntimeException(ex.getMessage());
             }
         }
@@ -146,7 +267,7 @@ public class Compiler {
         public ICompiled getInstance() {
             try {
                 Constructor<?> constructor = cls.getConstructor();
-                ICompiled compiled = (ICompiled)constructor.newInstance();
+                ICompiled compiled = (ICompiled) constructor.newInstance();
                 return compiled;
             } catch (InstantiationException ex) {
                 throw new RuntimeException(ex.getMessage());
@@ -154,7 +275,7 @@ public class Compiler {
                 throw new RuntimeException(ex.getMessage());
             } catch (NoSuchMethodException ex) {
                 throw new RuntimeException(ex.getMessage());
-            } catch (IllegalAccessException  ex) {
+            } catch (IllegalAccessException ex) {
                 throw new RuntimeException(ex.getMessage());
             }
         }
@@ -163,7 +284,7 @@ public class Compiler {
         public String getCodeType() {
             return "function";
         }
-	
+
     }
 
     public ICode getFun(String name) {
@@ -173,200 +294,208 @@ public class Compiler {
     public Set<String> getFunKeys() {
         return functab.keySet();
     }
-    
-    private  final Map <String, ICode>functab = new ConcurrentHashMap <String,ICode>();
-    
-    private void initBuiltins()  {
-        // arithmetics
-        addBuiltIn("+", ADDOP.class); 
-        addBuiltIn("-", SUBOP.class); 
-        addBuiltIn("*", MULOP.class);
-        addBuiltIn("/", DIVOP.class);
-        addBuiltIn("%", REMOP.class);
-        addBuiltIn("MOD", MODOP.class);
-        addBuiltIn("REM", REMOP.class);
-        // boolean algrebra
-        addBuiltIn("NOT", NOT.class);
-        addBuiltIn("AND", AND.class);
-        addBuiltIn("OR", OR.class);
 
-        // numeric comparisons
-        addBuiltIn("=", NUMEQ.class);
-        addBuiltIn(">", NUMGT.class);
-        addBuiltIn(">=", NUMGE.class);
-        addBuiltIn("<=", NUMLE.class);
-        addBuiltIn("<", NUMLT.class);
-        // coercion
-        addBuiltIn("INT", INT.class);
-        addBuiltIn("SHORT", SHORT.class);
-        addBuiltIn("BYTE", BYTE.class);
-        addBuiltIn("LONG", LONG.class);
-        addBuiltIn("DOUBLE", DOUBLE.class);	
-        addBuiltIn("FLOAT", FLOAT.class);
-        addBuiltIn("CHAR", CHAR.class);
-        addBuiltIn("BOOL", BOOL.class);
-        addBuiltIn("STRING", STRING.class);
-        // math
-        addBuiltIn("SIGNUM", SIGNUM.class);
-        addBuiltIn("RANDOM", RANDOM.class);
-        // object comparisons
-        // java .equals()
-        addBuiltIn("EQUAL", EQUAL.class);
-        // variables
-        addBuiltIn("SETQ", SETQ.class);	
-        addBuiltIn("SETV", SETV.class);
-        addBuiltIn("SET", SET.class);
-        addBuiltIn("LET", LET.class);
-        addBuiltIn("DLET", DLET.class);
-        addBuiltIn("MAKUNBOUND", MAKUNBOUND.class);
-        addBuiltIn("BOUNDP", BOUNDP.class);
-        addBuiltIn("NEW-CTX", NEW_CTX.class);
-        addBuiltIn("WITH-CTX", WITH_CTX.class);
-        addBuiltIn("GETPROPS", GETPROPS.class);
-        addBuiltIn("SETPROPS", SETPROPS.class);
-        addBuiltIn("GETPROP",  GETPROP.class);	
-        addBuiltIn("SETPROP",  SETPROP.class);
-	
-        // execution control
-        addBuiltIn("IF", IF.class);
-        addBuiltIn("COND", COND.class); 
-        addBuiltIn("WHILE", WHILE.class);
-        addBuiltIn("FOREACH", FOREACH.class);	
-        addBuiltIn("PROGN", PROGN.class);
-        addBuiltIn("TRY", TRY.class);
-        addBuiltIn("AS->", TH_AS.class);
-        addBuiltIn("->", TH_1ST.class);
-        addBuiltIn("->>", TH_LAST.class);
-        addBuiltIn("@->", TH_PIPE.class);
-        
-        // functional programming
-        addBuiltIn("LAMBDA", LAMBDA.class);
-        addBuiltIn("FUNCALL", FUNCALL.class);
-        addBuiltIn("DEFUN", DEFUN.class);
-        addBuiltIn("FUNCTION", FUNCTION.class);
-        addBuiltIn("SYMBOL-FUNCTION", SYMBOL_FUNCTION.class);
-        addBuiltIn("APPLY", APPLY.class);
-        addBuiltIn("EVAL", EVAL.class);
-        addBuiltIn("READ-FROM-STRING", READ_FROM_STRING.class);
-        addBuiltIn("FUNCTIONP", FUNCTIONP.class);
-        addBuiltIn("FUNCTIONS-NAMES", FUNCTIONS_NAMES.class);
-        // compilation and evaluation
-        addBuiltIn("LOAD", LOAD.class);
-        addBuiltIn("LOADR", LOADR.class);
-        addBuiltIn("QUOTE", QUOTE.class);
-        // threads
-        addBuiltIn("NEW-THREAD", NEW_THREAD.class);
-        // I/O
-        addBuiltIn("PRINT", PRINT.class);
-        // sequences operations
-        addBuiltIn("LIST", LIST.class);
-        addBuiltIn("NTH", NTH.class);  
-        addBuiltIn("CONS", CONS.class);
-        addBuiltIn("APPEND", APPEND.class);
-        addBuiltIn("APPEND!", NAPPEND.class);
-        addBuiltIn("FIRST", FIRST.class);
-        addBuiltIn("REST", REST.class);
-        addBuiltIn("LENGTH", LENGTH.class);
-        addBuiltIn("SORT", SORT.class);
-        addBuiltIn("SORT!", NSORT.class);
-        addBuiltIn("REVERSE", REVERSE.class);
-        addBuiltIn("REVERSE!", NREVERSE.class);
-        addBuiltIn("SEQUENCEP", SEQUENCEP.class);
-        addBuiltIn("RANGE", RANGE.class);
-        addBuiltIn("SUBSEQ", SUBSEQ.class);
-        addBuiltIn("TAKE", TAKE.class);
-        addBuiltIn("IN", IN.class);
-        addBuiltIn("GET-IN", GET_IN.class);
-        addBuiltIn("GET", GET.class);
-        addBuiltIn("ASSOC", ASSOC.class);
-        addBuiltIn("ASSOC!", NASSOC.class);
-        
-        // java FFI
-        addBuiltIn(".", DOT.class);
-        addBuiltIn(".S", DOTS.class);
-        addBuiltIn(".N", DOTN.class);
-        addBuiltIn("CLASS", CLASS.class);
-        addBuiltIn("TYPE-OF", TYPE_OF.class);
-        addBuiltIn("BEAN", BEAN.class);
-        addBuiltIn("SELECT-KEYS", SELECT_KEYS.class);
-        addBuiltIn("DWIM_FIELDS", DWIM_FIELDS.class);
-        addBuiltIn("TYPEP", TYPEP.class);
-        // mapping functions
-        addBuiltIn("MAP", MAP.class);
-        addBuiltIn("MAPPROD", MAPPROD.class);
-        addBuiltIn("FILTER", FILTER.class);
-        addBuiltIn("REDUCE", REDUCE.class);
-        // string handling
-        addBuiltIn("RE-PATTERN", RE_PATTERN.class);
-        addBuiltIn("RE-MATCHER", RE_MATCHER.class);
-        addBuiltIn("RE-MATCHES", RE_MATCHES.class);
-        addBuiltIn("RE-GROUPS", RE_GROUPS.class);
-        addBuiltIn("RE-FIND", RE_FIND.class);
-        addBuiltIn("RE-SEQ", RE_SEQ.class);
-        addBuiltIn("DWIM-MATCHES", DWIM_MATCHES.class);
-        addBuiltIn("DWIM-SEARCH", DWIM_SEARCH.class);
-        addBuiltIn("STR", STR.class);
-        addBuiltIn("FORMAT", FORMAT.class);
-        addBuiltIn("SEQ", SEQ.class);
-        addBuiltIn("SYMBOL", SYMBOL.class);
-        // hashtables
-        addBuiltIn("WITH-BINDINGS", WITH_BINDINGS.class);
-        addBuiltIn("HASHMAP", HASHMAP.class);
-        // exception handling
-        addBuiltIn("BACKTRACE", BACKTRACE.class);
-        addBuiltIn("THROW", THROW.class);
-        // arrays
-        addBuiltIn("ASET", ASET.class);
-        addBuiltIn("MAKE-ARRAY", MAKE_ARRAY.class);
-        addBuiltIn("AREF", AREF.class);
-        // help system
-        addBuiltIn("DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class);
-        addBuiltIn("DOCUMENTATION", Funcs.DOCUMENTATION.class);
+    private final Map<String, ICode> functab = new ConcurrentHashMap<String, ICode>();
+
+    private void initBuiltins(Set<String>  fromPackages) {
+        // arithmetics
+        final List builtinsInit =
+            Utils.list(
+                 "+", ADDOP.class,
+                 "-", SUBOP.class,
+                 "*", MULOP.class,
+                 "/", DIVOP.class,
+                 "%", REMOP.class,
+                 "MOD", MODOP.class,
+                 "REM", REMOP.class,
+                 // boolean algrebra
+                 "NOT", NOT.class,
+                 "AND", AND.class,
+                 "OR", OR.class,
+
+                 // numeric comparisons
+                 "=", NUMEQ.class,
+                 ">", NUMGT.class,
+                 ">=", NUMGE.class,
+                 "<=", NUMLE.class,
+                 "<", NUMLT.class,
+                 // coercion
+                 "INT", INT.class,
+                 "SHORT", SHORT.class,
+                 "BYTE", BYTE.class,
+                 "LONG", LONG.class,
+                 "DOUBLE", DOUBLE.class,
+                 "FLOAT", FLOAT.class,
+                 "CHAR", CHAR.class,
+                 "BOOL", BOOL.class,
+                 "STRING", STRING.class,
+                 // math
+                 "SIGNUM", SIGNUM.class,
+                 "RANDOM", RANDOM.class,
+                 // object comparisons
+                 // java .equals()
+                 "EQUAL", EQUAL.class,
+                 // variables
+                 "SETQ", SETQ.class,
+                 "SETV", SETV.class,
+                 "SET", SET.class,
+                 "LET", LET.class,
+                 "DLET", DLET.class,
+                 "MAKUNBOUND", MAKUNBOUND.class,
+                 "BOUNDP", BOUNDP.class,
+                 "NEW-CTX", NEW_CTX.class,
+                 "WITH-CTX", WITH_CTX.class,
+                 "GETPROPS", GETPROPS.class,
+                 "SETPROPS", SETPROPS.class,
+                 "GETPROP", GETPROP.class,
+                 "SETPROP", SETPROP.class,
+
+                 // execution control
+                 "IF", IF.class,
+                 "COND", COND.class,
+                 "WHILE", WHILE.class,
+                 "FOREACH", FOREACH.class,
+                 "PROGN", PROGN.class,
+                 "TRY", TRY.class,
+                 "AS->", TH_AS.class,
+                 "->", TH_1ST.class,
+                 "->>", TH_LAST.class,
+                 "@->", TH_PIPE.class,
+
+                 // functional programming
+                 "LAMBDA", LAMBDA.class,
+                 "FUNCALL", FUNCALL.class,
+                 "DEFUN", DEFUN.class,
+                 "FUNCTION", FUNCTION.class,
+                 "SYMBOL-FUNCTION", SYMBOL_FUNCTION.class,
+                 "APPLY", APPLY.class,
+                 "EVAL", EVAL.class,
+                 "READ-FROM-STRING", READ_FROM_STRING.class,
+                 "FUNCTIONP", FUNCTIONP.class,
+                 "FUNCTIONS-NAMES", FUNCTIONS_NAMES.class,
+                 // compilation and evaluation
+                 "LOAD", LOAD.class,
+                 "LOADR", LOADR.class,
+                 "QUOTE", QUOTE.class,
+                 // threads
+                 "NEW-THREAD", NEW_THREAD.class,
+                 // I/O
+                 "PRINT", PRINT.class,
+                 // sequences operations
+                 "LIST", LIST.class,
+                 "NTH", NTH.class,
+                 "CONS", CONS.class,
+                 "APPEND", APPEND.class,
+                 "APPEND!", NAPPEND.class,
+                 "FIRST", FIRST.class,
+                 "REST", REST.class,
+                 "LENGTH", LENGTH.class,
+                 "SORT", SORT.class,
+                 "SORT!", NSORT.class,
+                 "REVERSE", REVERSE.class,
+                 "REVERSE!", NREVERSE.class,
+                 "SEQUENCEP", SEQUENCEP.class,
+                 "RANGE", RANGE.class,
+                 "SUBSEQ", SUBSEQ.class,
+                 "TAKE", TAKE.class,
+                 "IN", IN.class,
+                 "GET-IN", GET_IN.class,
+                 "GET", GET.class,
+                 "ASSOC", ASSOC.class,
+                 "ASSOC!", NASSOC.class,
+
+                 // java FFI
+                 ".", DOT.class,
+                 ".S", DOTS.class,
+                 ".N", DOTN.class,
+                 "CLASS", CLASS.class,
+                 "TYPE-OF", TYPE_OF.class,
+                 "BEAN", BEAN.class,
+                 "SELECT-KEYS", SELECT_KEYS.class,
+                 "DWIM_FIELDS", DWIM_FIELDS.class,
+                 "TYPEP", TYPEP.class,
+                 // mapping functions
+                 "MAP", MAP.class,
+                 "MAPPROD", MAPPROD.class,
+                 "FILTER", FILTER.class,
+                 "REDUCE", REDUCE.class,
+                 // string handling
+                 "RE-PATTERN", RE_PATTERN.class,
+                 "RE-MATCHER", RE_MATCHER.class,
+                 "RE-MATCHES", RE_MATCHES.class,
+                 "RE-GROUPS", RE_GROUPS.class,
+                 "RE-FIND", RE_FIND.class,
+                 "RE-SEQ", RE_SEQ.class,
+                 "DWIM-MATCHES", DWIM_MATCHES.class,
+                 "DWIM-SEARCH", DWIM_SEARCH.class,
+                 "STR", STR.class,
+                 "FORMAT", FORMAT.class,
+                 "SEQ", SEQ.class,
+                 "SYMBOL", SYMBOL.class,
+                 // hashtables
+                 "WITH-BINDINGS", WITH_BINDINGS.class,
+                 "HASHMAP", HASHMAP.class,
+                 // exception handling
+                 "BACKTRACE", BACKTRACE.class,
+                 "THROW", THROW.class,
+                 // arrays
+                 "ASET", ASET.class,
+                 "MAKE-ARRAY", MAKE_ARRAY.class,
+                 "AREF", AREF.class,
+                 // help system
+                 "DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class,
+                 "DOCUMENTATION", Funcs.DOCUMENTATION.class);
+        for (int i = 0; i < builtinsInit.size(); i+=2) {
+            final Class builtinClass = (Class) builtinsInit.get(i + 1);
+            if (this.checkBuiltinPackage(builtinClass, fromPackages)) {
+                addBuiltIn((String) builtinsInit.get(i), builtinClass);
+            }
+        }
     }
-    
-    public  ICompiled compile(ASTN ast) {
+
+    public ICompiled compile(ASTN ast) {
         if (ast.isList()) {
             //@SuppressWarnings("unchecked")
-            ASTNList astList = ((ASTNList)ast);
+            ASTNList astList = ((ASTNList) ast);
 
             if (astList.size() == 0) {
                 return new EmptyListExp();
             }
 
-            ASTN firstASTN = astList.get(0); 
-            ParseCtx pctx  = firstASTN.getPctx();
+            ASTN firstASTN = astList.get(0);
+            ParseCtx pctx = firstASTN.getPctx();
             ASTNList restASTN = astList.subList(1, astList.size());
             if (firstASTN.isList()) {
                 // inline lambda expr
-                LAMBDA compiledLambda  =  (LAMBDA)compile(firstASTN);
-                ICompiled compiled  = compiledLambda.getICode().getInstance();
+                LAMBDA compiledLambda = (LAMBDA) compile(firstASTN);
+                ICompiled compiled = compiledLambda.getICode().getInstance();
                 compiled.setDebugInfo(firstASTN.getPctx());
                 try {
                     if (compiled instanceof IForm) {
-                        ((IForm)compiled).setRawParams(restASTN);
+                        ((IForm) compiled).setRawParams(restASTN);
                     } else {
                         List<ICompiled> compiledParams = compileParams(restASTN);
                         // FIXME???
                         //compiled = compiled.getInstance();
                         compiled.setDebugInfo(firstASTN.getPctx());
-                        ((IExpr)compiled).setParams(compiledParams);
+                        ((IExpr) compiled).setParams(compiledParams);
                     }
                 } catch (InvalidParametersException ipex) {
-                    throw new CompilationException(ipex.getParseCtx(),ipex.getMessage());
+                    throw new CompilationException(ipex.getParseCtx(), ipex.getMessage());
                 }
                 return compiled;
             } else if (firstASTN.getObject() instanceof Symbol) {
-                Object first   = firstASTN.getObject();
-                final String fName = ((Symbol)first).toString();
+                Object first = firstASTN.getObject();
+                final String fName = ((Symbol) first).toString();
                 ICode codeObj = getFun(fName);
                 if (null != codeObj && codeObj.isBuiltIn()) {
                     try {
                         ICompiled compiled = codeObj.getInstance();
                         if (compiled instanceof IForm) {
-                            ((IForm)compiled).setRawParams(restASTN);
+                            ((IForm) compiled).setRawParams(restASTN);
                         } else {
                             List<ICompiled> compiledParams = compileParams(restASTN);
-                            ((IExpr)compiled).setParams(compiledParams);
+                            ((IExpr) compiled).setParams(compiledParams);
                         }
                         compiled.setName(fName);
                         compiled.setDebugInfo(firstASTN.getPctx());
@@ -376,16 +505,14 @@ public class Compiler {
                     } catch (RuntimeException rex) {
                         // FIXME: specific exception for instantiation troubles?
                         throw new CompilationException(pctx,
-                                                       "failed to compile list "+
-                                                       astList+":"+
-                                                       rex.getMessage());
-						   
+                                "failed to compile list " + astList + ":" + rex.getMessage());
+
                     }
                 } else {
                     // FIXME: must call it dynamycally, otherwise
                     // we won't be able to perform recursive defun
                     // so we rewrite expression to use function call
-                    
+
                     // // defun 
                     // final ICompiled compiled = (ICompiled)fobj;
                     // if (fobj instanceof IForm) {
@@ -395,34 +522,36 @@ public class Compiler {
                     //  ((IExpr)compiled).setParams(compiledParams);
                     // }
                     // return compiled;
-                
+
                     ASTNList callfunc =
-                        new ASTNList(Utils.list(new ASTNLeaf(new Symbol("FUNCALL"), pctx),
-                                                new ASTNList(Utils.list(new ASTNLeaf(new Symbol("FUNCTION"), pctx),
-                                                                        new ASTNLeaf(first, pctx)), pctx)), pctx);
+                            new ASTNList(Utils.list(new ASTNLeaf(new Symbol("FUNCALL"), pctx),
+                                    new ASTNList(
+                                            Utils.list(new ASTNLeaf(new Symbol("FUNCTION"), pctx),
+                                                    new ASTNLeaf(first, pctx)),
+                                            pctx)),
+                                    pctx);
                     callfunc.addAll(restASTN);
-                    IExpr func = (IExpr)compile(callfunc);
+                    IExpr func = (IExpr) compile(callfunc);
                     func.setDebugInfo(pctx);
                     return func;
                 }
             } else {
-                throw new CompilationException(pctx, String.format("failed to compile list "+
-                                                                   astList+
-                                                                   ": first element is of unsupported type"));
+                throw new CompilationException(pctx, String.format("failed to compile list "
+                        + astList + ": first element is of unsupported type"));
             }
         } else {
             IExpr expr = null;
             final Object astObj = ast.getObject();
             if (astObj instanceof String) {
-                expr = new StringExp((String)astObj);
+                expr = new StringExp((String) astObj);
             } else if (astObj instanceof Number) {
-                expr = new NumberExp((Number)astObj);
+                expr = new NumberExp((Number) astObj);
             } else if (astObj instanceof Boolean) {
-                expr = new BooleanExp((Boolean)astObj);
+                expr = new BooleanExp((Boolean) astObj);
             } else if (astObj instanceof Keyword) {
                 expr = new ObjectExp(astObj);
             } else if (astObj instanceof Symbol) {
-                expr = new VarExp(((Symbol)astObj).toString());
+                expr = new VarExp(((Symbol) astObj).toString());
             } else {
                 expr = new ObjectExp(astObj);
             }
@@ -432,7 +561,7 @@ public class Compiler {
         //throw new CompilationException(ast.getPctx(), "This cannot happen: reached end of compile for AST "+ast);
     }
 
-    
+
     public abstract class AbstractForm implements IForm, Runnable {
         protected ParseCtx debugInfo;
         protected String name;
@@ -454,12 +583,10 @@ public class Compiler {
             return debugInfo;
         }
 
-        public void run () {
-            final Compiler.ICtx ctx =
-                Threads.contexts.get(Thread.currentThread());
-            final Object result =
-                this.evaluate(new Backtrace(), ctx);
-            Threads.results.put(Thread.currentThread(),result);
+        public void run() {
+            final Compiler.ICtx ctx = Threads.contexts.get(Thread.currentThread());
+            final Object result = this.evaluate(new Backtrace(), ctx);
+            Threads.results.put(Thread.currentThread(), result);
         }
 
         protected abstract Object doEvaluate(Backtrace backtrace, ICtx ctx);
@@ -482,31 +609,29 @@ public class Compiler {
     }
 
     @Docstring(text = "Get Function Given it's symbol.")
+    @Package(name = Package.BASE_BINDINGS)
     public class FUNCTION extends AbstractForm {
         // FIXME: checks
         protected Symbol fsym;
 
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
-            if (params.size()!=1) {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
+            if (params.size() != 1) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "FUNCTION expects one parameter, but got "
-                                                     +params.size());
+                        "FUNCTION expects one parameter, but got " + params.size());
             }
             Object sym = params.get(0).getObject();
             if (!(sym instanceof Symbol)) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "FUNCTION expects Symbol parameter, but got "
-                                                     +sym);
+                        "FUNCTION expects Symbol parameter, but got " + sym);
             }
-            fsym = (Symbol)params.get(0).getObject();
+            fsym = (Symbol) params.get(0).getObject();
         }
 
         @Override
-        public ICode doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            ICode code  = getFun(fsym.toString());
-            if  (null == code) {
-                throw new RuntimeException("Symbol "+fsym+" function value is NULL");
+        public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
+            ICode code = getFun(fsym.toString());
+            if (null == code) {
+                throw new RuntimeException("Symbol " + fsym + " function value is NULL");
             }
             //final ICompiled result = code.getInstance();
             return code;
@@ -514,67 +639,66 @@ public class Compiler {
     }
 
     @Docstring(text = "Evaluate sequence of expressions.")
-    public  class PROGN extends AbstractForm {
+    @Package(name = Package.BASE_CONTROL)
+    public class PROGN extends AbstractForm {
         private List<ICompiled> blocks = null;
+
         public void setRawParams(ASTNList params) {
             this.blocks = compileParams(params);
         }
-        
+
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             return evalBlocks(backtrace, blocks, ctx);
         }
     }
 
 
     @Docstring(text = "Try-Catch-Final construction.")
-    public  class TRY extends AbstractForm {
+    @Package(name = Package.BASE_BINDINGS)
+    public class TRY extends AbstractForm {
         private List<ICompiled> blocks = null;
         private List<CatchEntry> catches = null;
         private List<ICompiled> finalBlocks = null;
+
         private class CatchEntry {
             Class exception;
             String varName;
             List<ICompiled> blocks;
         }
 
-        public CatchEntry compileCatchBlock(ASTNList list) throws
-            InvalidParametersException {
+        public CatchEntry compileCatchBlock(ASTNList list) throws InvalidParametersException {
             CatchEntry result = new CatchEntry();
             ASTN exception = list.get(0);
 
             ASTN astnVar = list.get(1);
             if (!(astnVar.getObject() instanceof Symbol)) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "second catch parameter must be a variable name" );
+                        "second catch parameter must be a variable name");
             }
 
             if (!(exception.getObject() instanceof Symbol)) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "first catch parameter must be name of exception class");
+                        "first catch parameter must be name of exception class");
             }
-            Symbol excSym = (Symbol)exception.getObject();
+            Symbol excSym = (Symbol) exception.getObject();
             try {
-                result.exception = this.getClass()
-                    .getClassLoader()
-                    .loadClass(excSym.getName());
+                result.exception = this.getClass().getClassLoader().loadClass(excSym.getName());
             } catch (ClassNotFoundException clnf) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "catch: invalid exception class specified: '" + excSym.getName() +"'");
+                        "catch: invalid exception class specified: '" + excSym.getName() + "'");
             }
-            result.varName=((Symbol)astnVar.getObject()).getName();
+            result.varName = ((Symbol) astnVar.getObject()).getName();
             result.blocks = compileParams(list.subList(2, list.size()));
-            return  result;
+            return result;
         }
 
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             for (int i = 0; i < params.size(); i++) {
                 ASTN param = params.get(i);
-                ASTNList  pList;
+                ASTNList pList;
                 ASTN first;
-                if (param.isList() &&
-                    ((pList = ((ASTNList)param)).size() > 0)) {
+                if (param.isList() && ((pList = ((ASTNList) param)).size() > 0)) {
                     first = pList.get(0);
                     if (first.getObject() instanceof Symbol) {
                         Symbol s = (Symbol) first.getObject();
@@ -582,15 +706,13 @@ public class Compiler {
                             if (null == catches) {
                                 catches = new ArrayList();
                             }
-                            catches.add(compileCatchBlock(pList
-                                                          .subList(1,pList.size())));
+                            catches.add(compileCatchBlock(pList.subList(1, pList.size())));
                             continue;
                         } else if ("FINALLY".equals(s.getName())) {
                             if (null == finalBlocks) {
-                                finalBlocks =  new ArrayList();
+                                finalBlocks = new ArrayList();
                             }
-                            finalBlocks.
-                                addAll(compileParams(pList.subList(1, pList.size())));
+                            finalBlocks.addAll(compileParams(pList.subList(1, pList.size())));
                             continue;
                         }
                     }
@@ -604,26 +726,25 @@ public class Compiler {
 
 
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            if (null ==  blocks || blocks.size() == 0) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
+            if (null == blocks || blocks.size() == 0) {
                 return null;
             }
             if (null == catches || catches.size() == 0) {
                 try {
                     return evalBlocks(backtrace, blocks, ctx);
-                }  finally {
+                } finally {
                     if (null != finalBlocks) {
                         evalBlocks(backtrace, finalBlocks, ctx);
                     }
                 }
             }
-	    
+
             try {
                 return evalBlocks(backtrace, blocks, ctx);
             } catch (Throwable t) {
                 Throwable realT = t;
-                if ((t instanceof ExecutionException) &&
-                    t.getCause()!=null) {
+                if ((t instanceof ExecutionException) && t.getCause() != null) {
                     // should always happen
                     realT = t.getCause();
                 }
@@ -635,7 +756,7 @@ public class Compiler {
                         return evalBlocks(backtrace, ce.blocks, cCtx);
                     }
                 }
-		
+
                 if (t instanceof ExecutionException) {
                     throw t;
                 } else {
@@ -650,21 +771,24 @@ public class Compiler {
         }
     }
 
-    @Docstring(text = "While loop construction. Execute sequnce of expressions while the consition is true")
-    public  class WHILE extends AbstractForm {
+    @Docstring(
+            text = "While loop construction. Execute sequnce of expressions while the consition is true")
+    @Package(name = Package.LOOPS)
+    public class WHILE extends AbstractForm {
         private List<ICompiled> blocks = null;
         private ICompiled condition = null;
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
-                throw new InvalidParametersException(debugInfo, "WHILE expects at least 2 parameters");
+                throw new InvalidParametersException(debugInfo,
+                        "WHILE expects at least 2 parameters");
             }
             this.condition = compile(params.get(0));
             this.blocks = compileParams(params.subList(1, params.size()));
         }
-    
+
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             Object rc = null;
             while (Utils.asBoolean(condition.evaluate(backtrace, ctx))) {
                 rc = evalBlocks(backtrace, blocks, ctx);
@@ -673,103 +797,110 @@ public class Compiler {
         }
     }
 
-    @Arguments(spec={"(", "VAR", "SEQUENCE", ArgSpec.ARG_OPTIONAL,"RESULT",")" ,ArgSpec.ARG_REST,"body"})
-    @Docstring(text="Foreach Loop over a sequence. \n" +
-               "Evaluate body with VAR bound to each element from SEQUENCE, in turn.\n" +
-               "Then evaluate RESULT to get return value, default NIL.")
-    public  class FOREACH extends AbstractForm {
+    @Arguments(spec = {"(", "VAR", "SEQUENCE", ArgSpec.ARG_OPTIONAL, "RESULT", ")",
+            ArgSpec.ARG_REST, "body"})
+    @Docstring(text = "Foreach Loop over a sequence. \n"
+            + "Evaluate body with VAR bound to each element from SEQUENCE, in turn.\n"
+            + "Then evaluate RESULT to get return value, default NIL.")
+    @Package(name = Package.BASE_SEQ)
+    public class FOREACH extends AbstractForm {
         private Symbol loopVar = null;
         private List<ICompiled> blocks = null;
         private ICompiled seqexpr = null;
         private ICompiled resultExpr = null;
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
-                throw new InvalidParametersException(debugInfo, "FOREACH expects at least 2 parameters: loop-args and one execution block at least");
+                throw new InvalidParametersException(debugInfo,
+                        "FOREACH expects at least 2 parameters: loop-args and one execution block at least");
             }
-            final ASTNList loopPars = ((ASTNList)params.get(0));
+            final ASTNList loopPars = ((ASTNList) params.get(0));
             final ASTN loopVarASTN = loopPars.get(0);
             if (loopVarASTN.isList()) {
-                throw new InvalidParametersException(debugInfo, "FOREACH expects first loop argument cannot be list");
+                throw new InvalidParametersException(debugInfo,
+                        "FOREACH expects first loop argument cannot be list");
             }
             final Object loopVarObj = loopVarASTN.getObject();
             if (!(loopVarObj instanceof Symbol)) {
-                throw new InvalidParametersException(debugInfo, "FOREACH expects first loop argument must be loop variable");
+                throw new InvalidParametersException(debugInfo,
+                        "FOREACH expects first loop argument must be loop variable");
             }
             this.loopVar = (Symbol) loopVarObj;
-            this.seqexpr = compile((ASTN)loopPars.get(1));
-            this.resultExpr = (loopPars.size() > 2) ? compile((ASTN)loopPars.get(2)) : null;
+            this.seqexpr = compile((ASTN) loopPars.get(1));
+            this.resultExpr = (loopPars.size() > 2) ? compile((ASTN) loopPars.get(2)) : null;
             this.blocks = compileParams(params.subList(1, params.size()));
         }
 
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             final Object seq = seqexpr.evaluate(backtrace, ctx);
             final ICtx loopCtx = ctx.getCompiler().newCtx(ctx);
             final String loopVarName = loopVar.getName();
             loopCtx.replace(loopVarName, null);
             Seq.forEach(seq, new Seq.Operation() {
-                    @Override
-                    public boolean perform(Object item) {
-                        loopCtx.replace(loopVarName, item);
-                        evalBlocks(backtrace, blocks, loopCtx);
-                        return false;
-                    }
-                }, false);
+                @Override
+                public boolean perform(Object item) {
+                    loopCtx.replace(loopVarName, item);
+                    evalBlocks(backtrace, blocks, loopCtx);
+                    return false;
+                }
+            }, false);
             loopCtx.replace(loopVarName, null);
-            final Object result = null == resultExpr ? null :
-                resultExpr.evaluate(backtrace, loopCtx);
+            final Object result =
+                    null == resultExpr ? null : resultExpr.evaluate(backtrace, loopCtx);
             return result;
         }
     }
 
-    @Docstring(text="Conditional switch construct. "+
-               "COND allows the execution of forms to be dependent on test-form.\n"+
-               "Test-forms are evaluated one at a time in the order in\n"+
-               "which they are given in the argument list until a\n"+
-               "test-form is found that evaluates to true.  If there\n"+
-               "are no forms in that clause, the value of the test-form\n"+
-               "is returned by the COND form.  Otherwise, the forms\n"+
-               "associated with this test-form are evaluated in order,\n"+
-               "left to right and the value returned by the last form\n"+
-               "is returned by the COND form.  Once one test-form has\n"+
-               "yielded true, no additional test-forms are\n"+
-               "evaluated. If no test-form yields true, nil is\n"+
-               "returned." ) 
-    @Arguments(text="{test-form form*}*")
+    @Docstring(text = "Conditional switch construct. "
+            + "COND allows the execution of forms to be dependent on test-form.\n"
+            + "Test-forms are evaluated one at a time in the order in\n"
+            + "which they are given in the argument list until a\n"
+            + "test-form is found that evaluates to true.  If there\n"
+            + "are no forms in that clause, the value of the test-form\n"
+            + "is returned by the COND form.  Otherwise, the forms\n"
+            + "associated with this test-form are evaluated in order,\n"
+            + "left to right and the value returned by the last form\n"
+            + "is returned by the COND form.  Once one test-form has\n"
+            + "yielded true, no additional test-forms are\n"
+            + "evaluated. If no test-form yields true, nil is\n" + "returned.")
+    @Package(name = Package.BASE_CONTROL)
+    @Arguments(text = "{test-form form*}*")
     public class COND extends AbstractForm {
         private List<List<ICompiled>> forms = null;
         private List<ICompiled> testForms = null;
 
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             final int numParms = params.size();
             this.forms = new ArrayList<List<ICompiled>>(numParms);
             this.testForms = new ArrayList<ICompiled>(numParms);
             for (final ASTN clause : params) {
                 if (!clause.isList()) {
-                    throw new InvalidParametersException(debugInfo, "COND expects clauses to be lists.");
+                    throw new InvalidParametersException(debugInfo,
+                            "COND expects clauses to be lists.");
                 }
-                ASTNList entryClauses = ((ASTNList)clause);
+                ASTNList entryClauses = ((ASTNList) clause);
                 if (null == entryClauses || entryClauses.isEmpty()) {
-                    throw new InvalidParametersException(debugInfo, "COND expects non-empty clauses that contain at least test-form.");
+                    throw new InvalidParametersException(debugInfo,
+                            "COND expects non-empty clauses that contain at least test-form.");
                 }
                 final ICompiled testClause = compile(entryClauses.get(0));
                 this.testForms.add(testClause);
-                List <ICompiled> clauseForms = new ArrayList<ICompiled>(entryClauses.size()-1);
-                for (int i = 1; i < entryClauses.size() ; i++) {
+                List<ICompiled> clauseForms = new ArrayList<ICompiled>(entryClauses.size() - 1);
+                for (int i = 1; i < entryClauses.size(); i++) {
                     clauseForms.add(compile(entryClauses.get(i)));
                 }
                 this.forms.add(clauseForms);
             }
         }
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             final int numClauses = testForms.size();
             for (int i = 0; i < numClauses; i++) {
                 final Object testObj = testForms.get(i).evaluate(backtrace, ctx);
                 if (Utils.asBoolean(testObj)) {
                     final List<ICompiled> blocks = forms.get(i);
-                    return blocks.isEmpty() ? testObj :  evalBlocks(backtrace, blocks, ctx);
+                    return blocks.isEmpty() ? testObj : evalBlocks(backtrace, blocks, ctx);
                 }
             }
             return null;
@@ -777,6 +908,7 @@ public class Compiler {
     }
 
     @Docstring(text = "Threading form on &PIPE or first argument")
+    @Package(name = Package.BASE_CONTROL)
     public class TH_PIPE extends TH_X {
         protected ASTNList insertVar(ASTNList expr) {
             //this.getDebugInfo().
@@ -792,7 +924,7 @@ public class Compiler {
                     ICode code = getFun(cName);
                     if (null != code) {
                         ArgSpec argspec = code.getArgSpec();
-                        if (null != argspec && null!=argspec.getArgs() ) {
+                        if (null != argspec && null != argspec.getArgs()) {
                             int i = 0;
                             for (ArgSpec.Arg arg : argspec.getArgs()) {
                                 if (arg.isPipe()) {
@@ -814,7 +946,8 @@ public class Compiler {
         }
     }
 
-    @Docstring(text = "Threading form on first argument")
+    @Docstring(text = "Threading form on last argument.")
+    @Package(name = Package.BASE_CONTROL)
     public class TH_LAST extends TH_X {
         protected ASTNList insertVar(ASTNList expr) {
             List<ASTN> lst = Utils.list();
@@ -825,23 +958,26 @@ public class Compiler {
         }
     }
 
-    @Docstring(text = "Threading form on last argument")
+    @Docstring(text = "Threading form on first argument")
+    @Package(name = Package.BASE_SEQ)
     public class TH_1ST extends TH_X {
         protected ASTNList insertVar(ASTNList expr) {
             List<ASTN> lst = Utils.list();
             lst.addAll(expr.getList());
-            lst.add(1,new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
+            lst.add(1, new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
             ASTNList result = new ASTNList(lst, expr.getPctx());
             return result;
         }
     }
 
-    public abstract class TH_BASE  extends AbstractForm {
+    public abstract class TH_BASE extends AbstractForm {
         protected List<ICompiled> blocks = new ArrayList<ICompiled>();
         protected ICompiled startExpr = null;
+
         protected abstract String getVarName();
+
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             ICtx localCtx = new Ctx(ctx);
             Object result = startExpr.evaluate(backtrace, localCtx);
             for (ICompiled block : blocks) {
@@ -851,37 +987,39 @@ public class Compiler {
             return result;
         }
     }
-    
-    public abstract class TH_X  extends TH_BASE {
+
+    public abstract class TH_X extends TH_BASE {
         // ( -> expr  (expr)*)
         @Override
         protected String getVarName() {
             return "%%";
         }
-        
+
         @Override
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 1) {
-                throw new InvalidParametersException(debugInfo, "Threading Form:  expects at least 1 parameters");
+                throw new InvalidParametersException(debugInfo,
+                        "Threading Form:  expects at least 1 parameters");
             }
             this.startExpr = compile(params.get(0));
             for (int i = 1; i < params.size(); i++) {
                 ASTN expr = params.get(i);
                 if (expr instanceof ASTNList) {
-                    ASTNList blockExpr = insertVar((ASTNList)expr);
+                    ASTNList blockExpr = insertVar((ASTNList) expr);
                     blocks.add(compile(blockExpr));
                 } else {
-                    throw new InvalidParametersException("Threading form: argument "+i+
-                                                   " must be a function call, but got "+expr);
+                    throw new InvalidParametersException("Threading form: argument " + i
+                            + " must be a function call, but got " + expr);
                 }
             }
         }
+
         protected abstract ASTNList insertVar(ASTNList expr);
     }
-    
+
     @Docstring(text = "Threading form on named argument")
-    public class TH_AS  extends TH_BASE {
+    @Package(name = Package.BASE_CONTROL)
+    public class TH_AS extends TH_BASE {
         // ( as-> expr name  (expr)*)
         protected String varName;
 
@@ -889,19 +1027,19 @@ public class Compiler {
         protected String getVarName() {
             return varName;
         }
-        
+
         @Override
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
-                throw new InvalidParametersException(debugInfo, "Threading Form: expect at least 2 parameters");
+                throw new InvalidParametersException(debugInfo,
+                        "Threading Form: expect at least 2 parameters");
             }
             this.startExpr = compile(params.get(0));
 
             final ICompiled varExp = compile(params.get(1));
             if (!(varExp instanceof VarExp)) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "Threading Form: Invalid 2nd parameter, must be a variable name");
+                        "Threading Form: Invalid 2nd parameter, must be a variable name");
             }
             this.varName = ((VarExp) varExp).getName();
             for (int i = 2; i < params.size(); i++) {
@@ -909,7 +1047,8 @@ public class Compiler {
             }
         }
     }
-    
+
+    @Package(name = Package.BASE_CONTROL)
     @Docstring(text = "If-else conditional construct.")
     public class IF extends AbstractForm {
         private List<ICompiled> elseBlocks = null;
@@ -917,8 +1056,7 @@ public class Compiler {
         private ICompiled thenBlock = null;
 
         @Override
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
                 throw new InvalidParametersException(debugInfo, "IF expects at least 2 parameters");
             }
@@ -926,7 +1064,7 @@ public class Compiler {
             this.thenBlock = compile(params.get(1));
             this.elseBlocks = compileParams(params.subList(2, params.size()));
         }
-    
+
         public Object evalWithArgs(Backtrace backtrace, List eargs, ICtx ctx) {
             Object condVal = eargs.get(0);
             if (Utils.asBoolean(condVal)) {
@@ -941,22 +1079,24 @@ public class Compiler {
             eargs.add(condition.evaluate(backtrace, ctx));
             return eargs;
         }
-        
+
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
-            return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx),ctx);
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
+            return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx), ctx);
         }
     }
 
     /**
      * (DEFUN FOO (arg1 arg2...) block block...)
      */
+    @Package(name = Package.BASE_FUNCS)
     @Docstring(text = "Define named function")
     public class DEFUN extends LAMBDA {
         // FIXME: this field is needed/ WHY?
         private String name;
+
         @Override
-        public ICode doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
             final ICode obj = super.doEvaluate(backtrace, ctx);
             // FIXME!
             //obj.setName(name);
@@ -964,23 +1104,21 @@ public class Compiler {
             functab.put(Compiler.this.funcNameConverter.convert(name), obj);
             return obj;
         }
-    
+
         @Override
         public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "DEFUN expects at least 2 parameters, but got "+
-                                                     params.size());
+                        "DEFUN expects at least 2 parameters, but got " + params.size());
             }
-            final ASTNLeaf first = (ASTNLeaf)params.get(0);
+            final ASTNLeaf first = (ASTNLeaf) params.get(0);
             final Object sym = first.getObject();
             if (!(sym instanceof Symbol)) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "DEFUN expects Symbol as first parameter, but got "
-                                                     +sym);
+                        "DEFUN expects Symbol as first parameter, but got " + sym);
             }
-            this.name = sym.toString();	    
-            final ASTNList second = (ASTNList)params.get(1);
+            this.name = sym.toString();
+            final ASTNList second = (ASTNList) params.get(1);
             this.argSpec = new ArgSpec(second, Compiler.this);
             this.blocks = compileParams(params.subList(2, params.size()));
         }
@@ -988,27 +1126,27 @@ public class Compiler {
 
 
     @Docstring(text = "Define anonymous function")
-    public  class LAMBDA extends AbstractForm  {
+    @Package(name = Package.BASE_CONTROL)
+    public class LAMBDA extends AbstractForm {
         protected ArgSpec argSpec;
         protected List<ICompiled> blocks;
 
-        public void setRawParams(ASTNList params)  throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 1) {
-                throw new  InvalidParametersException(debugInfo,
-                                                      "LAMBDA expects at least 1 parameter, but got "+
-                                                      params.size());
+                throw new InvalidParametersException(debugInfo,
+                        "LAMBDA expects at least 1 parameter, but got " + params.size());
             }
-            final ASTN first = params.get(0); 
-            if (! first.isList()) {
-                throw new  InvalidParametersException(debugInfo,
-                                                      "LAMBDA expects first parameter to be a list");
+            final ASTN first = params.get(0);
+            if (!first.isList()) {
+                throw new InvalidParametersException(debugInfo,
+                        "LAMBDA expects first parameter to be a list");
             }
-            this.argSpec = new ArgSpec((ASTNList)first, Compiler.this);
+            this.argSpec = new ArgSpec((ASTNList) first, Compiler.this);
             this.blocks = compileParams(params.subList(1, params.size()));
         }
 
         @Override
-        public ICode doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
             return getICode();
         }
 
@@ -1019,23 +1157,25 @@ public class Compiler {
                 public Funcs.AbstractExpr getInstance() {
                     return new Funcs.AbstractExpr() {
                         protected ArgList argList;
+
                         @Override
-                        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+                        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
                             Eargs localCtx = argList.evaluateArguments(backtrace, ctx);
                             return evalBlocks(backtrace, blocks, localCtx);
                         }
 
                         @Override
-                        public void setParams(List<ICompiled> params) throws
-                            InvalidParametersException {
+                        public void setParams(List<ICompiled> params)
+                                throws InvalidParametersException {
                             if (null != this.argList) {
-                                throw new RuntimeException("internal error: parameters already set");
+                                throw new RuntimeException(
+                                        "internal error: parameters already set");
                             }
                             this.argList = new ArgList(argSpec, params);
                         }
                     };
                 }
-		
+
                 @Override
                 public boolean isBuiltIn() {
                     return false;
@@ -1043,17 +1183,15 @@ public class Compiler {
 
                 @Override
                 public String getDocstring() {
-                    return (null!=blocks
-                            && blocks.size() > 0
+                    return (null != blocks && blocks.size() > 0
                             && (blocks.get(0) instanceof Funcs.StringExp))
-                        ? (String)((Funcs.StringExp) blocks.get(0)).getValue()
-                        : "N/A";
+                                    ? (String) ((Funcs.StringExp) blocks.get(0)).getValue()
+                                    : "N/A";
                 }
 
                 @Override
                 public String getArgDescr() {
-                    return null == argSpec ? "args"
-                        : argSpec.asSpecList().toString();
+                    return null == argSpec ? "args" : argSpec.asSpecList().toString();
                 }
 
                 @Override
@@ -1063,42 +1201,44 @@ public class Compiler {
 
                 @Override
                 public String getDefLocation() {
-                    return ""+LAMBDA.this.getDebugInfo();
+                    return "" + LAMBDA.this.getDebugInfo();
                 }
 
                 @Override
                 public ArgSpec getArgSpec() {
                     return argSpec;
                 }
-		
+
             };
         }
     }
 
     @Docstring(text = "Destructuring LET construct.")
-    public  class DLET extends AbstractForm {
+    @Package(name = Package.BASE_BINDINGS)
+    public class DLET extends AbstractForm {
         protected List<ICompiled> blocks = null;
         protected ICompiled listExpr = null;
         protected List<String> varNames = new ArrayList<String>();
-    
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
-                throw new InvalidParametersException(debugInfo, getName() + " expects at least 2 parameters");
+                throw new InvalidParametersException(debugInfo,
+                        getName() + " expects at least 2 parameters");
             }
             if (!(params.get(0).isList())) {
-                throw new InvalidParametersException(debugInfo, getName() + " expects first parameter" + "to be list of var names");
+                throw new InvalidParametersException(debugInfo,
+                        getName() + " expects first parameter" + "to be list of var names");
             }
             // handle variable mappings
             //@SuppressWarnings("unchecked")
-            ASTNList varDefs = (ASTNList)params.get(0);
-	    
+            ASTNList varDefs = (ASTNList) params.get(0);
+
             for (int i = 0; i < varDefs.size(); i++) {
                 ASTN varDef = varDefs.get(i);
                 ICompiled varExp = compile(varDef);
                 if (!(varExp instanceof VarExp)) {
-                    throw new InvalidParametersException(debugInfo,
-                                                         getName()+": Invalid #" + (i + 1) + "parameter, must be a variable name");
+                    throw new InvalidParametersException(debugInfo, getName() + ": Invalid #"
+                            + (i + 1) + "parameter, must be a variable name");
                 }
                 //locals = new Ctx();
                 VarExp var = (VarExp) varExp;
@@ -1107,39 +1247,42 @@ public class Compiler {
                 listExpr = compile(params.get(1));
             }
             // handle executable blocks
-            this.blocks  = compileParams(params.subList(2, params.size()));
+            this.blocks = compileParams(params.subList(2, params.size()));
         }
 
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             ICtx localCtx = new Ctx(ctx);
             Object listVals = listExpr.evaluate(backtrace, localCtx);
-            if (! (listVals instanceof List)) {
-                throw new RuntimeException(getName() +
-                                           " second parameter was expected to evaluate to list, but got "+
-                                           listVals);
+            if (!(listVals instanceof List)) {
+                throw new RuntimeException(
+                        getName() + " second parameter was expected to evaluate to list, but got "
+                                + listVals);
             }
-            for(int i=0; i<varNames.size();i++) {
+            for (int i = 0; i < varNames.size(); i++) {
                 String varName = varNames.get(i);
-                localCtx.put(varName, ((List)listVals).get(i));
+                localCtx.put(varName, ((List) listVals).get(i));
             }
             return evalBlocks(backtrace, blocks, localCtx);
         }
-    
+
 
     }
 
     @Docstring(text = "Return its argument without evaluation.")
+    @Package(name = Package.BASE_LANG)
     public class QUOTE extends AbstractForm {
         Object value = null;
+
         @Override
         public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() != 1) {
-                throw new InvalidParametersException(debugInfo, this.getName() +" expects exactly one parameter");
+                throw new InvalidParametersException(debugInfo,
+                        this.getName() + " expects exactly one parameter");
             }
             this.value = Utils.unASTN(params.get(0));
         }
-        
+
 
         @Override
         protected Object doEvaluate(Backtrace backtrace, ICtx ctx) {
@@ -1148,91 +1291,88 @@ public class Compiler {
     }
 
     @Docstring(text = "Evaluate code with bindings from a Java Map.")
-    public class WITH_BINDINGS extends AbstractForm  {
+    @Package(name = Package.BASE_BINDINGS)
+    public class WITH_BINDINGS extends AbstractForm {
         protected List<ICompiled> blocks = null;
         ICompiled bindExpr = null;
 
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 1) {
                 throw new InvalidParametersException(debugInfo,
-                                                     getName() + " expects at least 2 parameters");
+                        getName() + " expects at least 2 parameters");
             }
             this.bindExpr = compile(params.get(0));
-            this.blocks  = compileParams(params.subList(1, params.size()));
+            this.blocks = compileParams(params.subList(1, params.size()));
         }
 
         @Override
         public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             final Object bindObj = bindExpr.evaluate(backtrace, ctx);
-            if (! (bindObj instanceof Map)) {
-                throw new ExecutionException(backtrace, getName() +
-                                             " expects a java.lang.Map instance as first parameter, but got " +
-                                             bindObj);
+            if (!(bindObj instanceof Map)) {
+                throw new ExecutionException(backtrace,
+                        getName() + " expects a java.lang.Map instance as first parameter, but got "
+                                + bindObj);
             }
-            final ICtx localCtx = new Ctx(ctx, (Map)bindObj);
+            final ICtx localCtx = new Ctx(ctx, (Map) bindObj);
             return evalBlocks(backtrace, blocks, localCtx);
         }
     }
 
     @Docstring(text = "Evaluate code in given context.")
-    public class WITH_CTX extends AbstractForm  {
+    @Package(name = Package.BASE_BINDINGS)
+    public class WITH_CTX extends AbstractForm {
         protected List<ICompiled> blocks = null;
         ICompiled bindExpr = null;
 
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 1) {
                 throw new InvalidParametersException(debugInfo,
-                                                     getName() + " expects at least 2 parameters");
+                        getName() + " expects at least 2 parameters");
             }
             this.bindExpr = compile(params.get(0));
-            this.blocks  = compileParams(params.subList(1, params.size()));
+            this.blocks = compileParams(params.subList(1, params.size()));
         }
 
         @Override
         public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             final Object bindObj = bindExpr.evaluate(backtrace, ctx);
-            if (! (bindObj instanceof ICtx)) {
-                throw new ExecutionException(backtrace, getName() +
-                                             " expects a ICtx instance as first parameter, but got " +
-                                             bindObj);
+            if (!(bindObj instanceof ICtx)) {
+                throw new ExecutionException(backtrace, getName()
+                        + " expects a ICtx instance as first parameter, but got " + bindObj);
             }
-            final ICtx localCtx = (ICtx)bindObj;
+            final ICtx localCtx = (ICtx) bindObj;
             return evalBlocks(backtrace, blocks, localCtx);
         }
     }
 
-    public  abstract class ABSTRACT_SET_OP extends AbstractForm {
-        VarExp[]  variables;
+    public abstract class ABSTRACT_SET_OP extends AbstractForm {
+        VarExp[] variables;
         ICompiled[] values;
-        public void setRawParams(ASTNList params)
-	    	throws InvalidParametersException {
+
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             final int numParams = params.size();
             if ((numParams & 0x1) == 1) {
                 throw new InvalidParametersException(debugInfo,
-                                                     "expected even number of parameters, but got "
-                                                     + numParams);
+                        "expected even number of parameters, but got " + numParams);
             }
             final int numPairs = numParams >> 1;
             this.variables = new VarExp[numPairs];
             this.values = new ICompiled[numPairs];
-            for (int i = 0; i < numParams; i+=2) {
+            for (int i = 0; i < numParams; i += 2) {
                 final ASTN varDef = params.get(i);
                 final ICompiled varExp = compile(varDef);
                 if (!(varExp instanceof VarExp)) {
                     throw new InvalidParametersException(debugInfo,
-                                                         "SETV: Invalid parameter["+ i +
-                                                         "], must be a variable name");
+                            "SETV: Invalid parameter[" + i + "], must be a variable name");
                 }
                 final int pairPos = i >> 1;
                 this.variables[pairPos] = (VarExp) varExp;
-                this.values[pairPos] = compile(params.get(i+1));
+                this.values[pairPos] = compile(params.get(i + 1));
             }
         }
 
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             final int numVars = this.variables.length;
             Object val = null;
             for (int i = 0; i < numVars; i++) {
@@ -1242,70 +1382,78 @@ public class Compiler {
             }
             return val;
         }
-        protected abstract void  setvar(String name, Object val, ICtx ctx);
+
+        protected abstract void setvar(String name, Object val, ICtx ctx);
     }
 
-    @Arguments(text="{var form}*")
-    @Docstring(text="Varianle assignmentm, global if not exists. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"+
-               "var - a symbol naming a variable.\n"+
-               "form - an expression, which evaluation result will be assigned to var\n"+
-               "Returns: value of the last form, or nil if no pairs were supplied.") 
-    public  class SETV extends ABSTRACT_SET_OP {
+    @Arguments(text = "{var form}*")
+    @Package(name = Package.BASE_BINDINGS)
+    @Docstring(
+            text = "Varianle assignmentm, global if not exists. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"
+                    + "var - a symbol naming a variable.\n"
+                    + "form - an expression, which evaluation result will be assigned to var\n"
+                    + "Returns: value of the last form, or nil if no pairs were supplied.")
+    public class SETV extends ABSTRACT_SET_OP {
         @Override
-        protected  void  setvar(String name, Object val, ICtx ctx) {
+        protected void setvar(String name, Object val, ICtx ctx) {
             ctx.replace(name, val);
         }
     }
 
 
-    @Arguments(text="{var form}*")
-    @Docstring(text="Varianle assignmentm, local if not exists. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"+
-               "var - a symbol naming a variable.\n"+
-               "form - an expression, which evaluation result will be assigned to var\n"+
-               "Returns: value of the last form, or nil if no pairs were supplied.") 
-    public  class SETQ extends ABSTRACT_SET_OP {
+    @Arguments(text = "{var form}*")
+    @Package(name = Package.BASE_BINDINGS)
+    @Docstring(
+            text = "Varianle assignmentm, local if not exists. If variable is already assigned it's value will be replaced by result of form evaluation. If not new global binding will be created in the global scope\n"
+                    + "var - a symbol naming a variable.\n"
+                    + "form - an expression, which evaluation result will be assigned to var\n"
+                    + "Returns: value of the last form, or nil if no pairs were supplied.")
+    public class SETQ extends ABSTRACT_SET_OP {
         @Override
-        protected  void  setvar(String name, Object val, ICtx ctx) {
+        protected void setvar(String name, Object val, ICtx ctx) {
             ctx.greplace(name, val);
         }
     }
 
-    @Docstring(text="Evaluate code with given var. bindings.")
-    public  class LET extends AbstractForm  {
+    @Docstring(text = "Evaluate code with given var. bindings.")
+    @Package(name = Package.BASE_BINDINGS)
+    public class LET extends AbstractForm {
         protected List<ICompiled> blocks = null;
         protected List<ICompiled> varExprs = new ArrayList<ICompiled>();
         protected List<String> varNames = new ArrayList<String>();
-        
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() < 2) {
-                throw new InvalidParametersException(debugInfo, "LET expects at least 2 parameters");
+                throw new InvalidParametersException(debugInfo,
+                        "LET expects at least 2 parameters");
             }
             if (!(params.get(0).isList())) {
-                throw new InvalidParametersException(debugInfo, "LET expects first parameter" + "to be list of (var value) pairs");
+                throw new InvalidParametersException(debugInfo,
+                        "LET expects first parameter" + "to be list of (var value) pairs");
             }
             // handle variable mappings
             //@SuppressWarnings("unchecked")
-            ASTNList varDefs = (ASTNList)params.get(0);
+            ASTNList varDefs = (ASTNList) params.get(0);
             for (int i = 0; i < varDefs.size(); i++) {
                 if (!(varDefs.get(i).isList())) {
-                    throw new InvalidParametersException(debugInfo, "LET: Invalid " + (i + 1) + " parameter, expected list");
+                    throw new InvalidParametersException(debugInfo,
+                            "LET: Invalid " + (i + 1) + " parameter, expected list");
                 }
                 //@SuppressWarnings("unchecked")
-                ASTNList pair = ((ASTNList)varDefs.get(i));
-                if (pair.size()<1) {
-                    throw new InvalidParametersException(debugInfo,
-                                                         "LET: Invalid " + (i + 1) + " parameter, expected at least one value in list");
+                ASTNList pair = ((ASTNList) varDefs.get(i));
+                if (pair.size() < 1) {
+                    throw new InvalidParametersException(debugInfo, "LET: Invalid " + (i + 1)
+                            + " parameter, expected at least one value in list");
                 }
                 ICompiled varExp = compile(pair.get(0));
                 if (!(varExp instanceof VarExp)) {
-                    throw new InvalidParametersException(debugInfo,
-                                                         "LET: Invalid " + (i + 1) + " parameter, first value must be a variable name");
+                    throw new InvalidParametersException(debugInfo, "LET: Invalid " + (i + 1)
+                            + " parameter, first value must be a variable name");
                 }
                 //locals = new Ctx();
                 VarExp var = (VarExp) varExp;
                 ICompiled expr;
-                if (pair.size()>1) {
+                if (pair.size() > 1) {
                     expr = compile(pair.get(1));
                 } else {
                     expr = new ObjectExp(null);
@@ -1316,20 +1464,20 @@ public class Compiler {
                 varExprs.add(expr);
             }
             // handle executable blocks
-            this.blocks  = compileParams(params.subList(1, params.size()));
+            this.blocks = compileParams(params.subList(1, params.size()));
         }
 
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             ICtx localCtx = new Ctx(ctx);
-            for(int i=0; i<varNames.size();i++) {
+            for (int i = 0; i < varNames.size(); i++) {
                 String varName = varNames.get(i);
                 ICompiled varExpr = varExprs.get(i);
                 Object val = varExpr.evaluate(backtrace, localCtx);
                 localCtx.put(varName, val);
             }
             return evalBlocks(backtrace, blocks, localCtx);
-        }        
+        }
     }
 
     // FIXME: implementation not finished
@@ -1339,37 +1487,37 @@ public class Compiler {
     //       return same type of sequence
     //       let user name variable
     //       allow search on several sequences (JOIN)
-    @Arguments(spec={ "sequence","test"})
+    @Arguments(spec = {"sequence", "test"})
+    @Package(name = Package.DWIM)
     @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
     public class DWIM_SEARCH extends AbstractForm {
         protected ICompiled input;
         protected ICompiled predicate;
         protected ASTN testASTN;
-        
+
         @Override
-        public void setRawParams(ASTNList params)
-            throws InvalidParametersException {
+        public void setRawParams(ASTNList params) throws InvalidParametersException {
             if (params.size() != 2) {
-                throw new InvalidParametersException(debugInfo, "DWIM-SEARCH expects 2 parameters: sequence, test");
+                throw new InvalidParametersException(debugInfo,
+                        "DWIM-SEARCH expects 2 parameters: sequence, test");
             }
             input = compile(params.get(0));
             ASTN test = params.get(1);
             testASTN = test;
             if (test instanceof ASTNLeaf) {
                 Object testObj = test.getObject();
-                if ((testObj instanceof CharSequence) ||
-                    (testObj instanceof Pattern) ||
-                    (testObj instanceof Number)) {
+                if ((testObj instanceof CharSequence) || (testObj instanceof Pattern)
+                        || (testObj instanceof Number)) {
                     ParseCtx pctx = test.getPctx();
-                    test = new ASTNList(Utils.list(new ASTNLeaf(new Symbol("DWIM-MATCHES"),pctx),
-                                             new ASTNLeaf(new Symbol("_"),pctx),
-                                             test), pctx);
+                    test = new ASTNList(Utils.list(new ASTNLeaf(new Symbol("DWIM-MATCHES"), pctx),
+                            new ASTNLeaf(new Symbol("_"), pctx), test), pctx);
                 }
             }
             predicate = compile(test);
         }
+
         @Override
-        public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+        public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
             final ICtx localCtx = new Ctx(ctx);
             final Object val = input.evaluate(backtrace, localCtx);
             // FIXME: same sequence
@@ -1378,24 +1526,24 @@ public class Compiler {
             //    // FIXME: what do we do with it?
             //    return val;
             //}
-            forEach (val, new Operation() {
-                    @Override
-                    public boolean perform(Object obj) {
-                        Map objMap = (obj instanceof Map) ? (Map)obj : new Funcs.BeanMap(obj);
-                        final ICtx checkCtx = new Ctx(ctx, objMap);
-                        checkCtx.getMappings().put("_", obj);
-                        Object chkResult = null;
-                        //try {
-                        chkResult = predicate.evaluate(backtrace, checkCtx);
-                        //} catch (Exception ex) {
-                        // ???
-                        //}
-                        if (Utils.asBoolean(chkResult)) {
-                            result.add(obj);
-                        }
-                        return false;
+            forEach(val, new Operation() {
+                @Override
+                public boolean perform(Object obj) {
+                    Map objMap = (obj instanceof Map) ? (Map) obj : new Funcs.BeanMap(obj);
+                    final ICtx checkCtx = new Ctx(ctx, objMap);
+                    checkCtx.getMappings().put("_", obj);
+                    Object chkResult = null;
+                    //try {
+                    chkResult = predicate.evaluate(backtrace, checkCtx);
+                    //} catch (Exception ex) {
+                    // ???
+                    //}
+                    if (Utils.asBoolean(chkResult)) {
+                        result.add(obj);
                     }
-                }, true);
+                    return false;
+                }
+            }, true);
             return result;
         }
     }
@@ -1404,38 +1552,51 @@ public class Compiler {
     /**** Context *****/
     public interface ICtx {
         public ICtx getPrev();
+
         public ICtx getLevel0();
 
         public void onMissingVar(String varname);
+
         //public Object get(String name);
         public Object get(String name, Backtrace bt);
-        public Map <Object,Object> getProps(String name, Backtrace bt);
+
+        public Map<Object, Object> getProps(String name, Backtrace bt);
+
         public Object getProp(String name, Object prop, Backtrace bt);
 
         public boolean contains(String name);
+
         // put value in the outer context
         public void put(String name, Object expr);
+
         // replace value if found at some depth, otherwise
         // perform put()
-        public void  putProp(String name, Object pkey, Object pval);
-        public void  putProps(String name, Object ... pobjs);
-        public void  putProps(String name, Map<Object,Object> props);
+        public void putProp(String name, Object pkey, Object pval);
+
+        public void putProps(String name, Object... pobjs);
+
+        public void putProps(String name, Map<Object, Object> props);
+
         public void replace(String name, Object expr);
+
         // replace value if found at some depth, otherwise
         // place it in global scope
         public void greplace(String name, Object expr);
 
         public Compiler getCompiler();
 
-        public String  toStringSelf();
+        public String toStringSelf();
+
         public String toStringShort();
-	
+
         public Map<String, Object> getMappings();
+
         public Map<String, Map<Object, Object>> getPropsMap();
 
         public Map<String, Object> findMatches(String pattern);
-        public void addMatches(Map<String, Object> matches,
-                               String pattern);
+
+        public void addMatches(Map<String, Object> matches, String pattern);
+
         public void remove(String name);
     }
 
@@ -1450,14 +1611,14 @@ public class Compiler {
     }
     public static class ErrorMissHandler implements IMissHandler {
         public Object handleMiss(ICtx ctx, String key) {
-            throw new RuntimeException("variable '"+key+"' does not exist in this context");
+            throw new RuntimeException("variable '" + key + "' does not exist in this context");
         }
     }
 
     public class Ctx implements ICtx {
         final Map<String, Object> mappings = new HashMap<String, Object>();
-        final Map<String, Map<Object,Object>> propsMap =
-            new HashMap<String, Map<Object,Object>>();
+        final Map<String, Map<Object, Object>> propsMap =
+                new HashMap<String, Map<Object, Object>>();
         ICtx prev;
         IMissHandler missHandler = new NilMissHandler();
 
@@ -1468,8 +1629,7 @@ public class Compiler {
         @Override
         public Map<Object, Object> getProps(String name, Backtrace bt) {
             ICtx ctx = this.findCtxFor(name);
-            return  (null == ctx) ?  null:
-                ctx.getPropsMap().get(name);
+            return (null == ctx) ? null : ctx.getPropsMap().get(name);
         }
 
         @Override
@@ -1490,8 +1650,8 @@ public class Compiler {
 
         public void putProps(String name, Object... pobjs) {
             Map<Object, Object> pmap = getPropsMapForPut(name);
-            for (int i = 0; i < pobjs.length; i+=2) {
-                pmap.put(pobjs[i], pobjs[i+1]);
+            for (int i = 0; i < pobjs.length; i += 2) {
+                pmap.put(pobjs[i], pobjs[i + 1]);
             }
         }
 
@@ -1502,7 +1662,8 @@ public class Compiler {
         protected Map<Object, Object> getPropsMapForPut(String name) {
             ICtx ctx = this.findCtxFor(name);
             if (null == ctx) {
-                throw new RuntimeException("Failed to put properties: there is no variable mapping for "+name);
+                throw new RuntimeException(
+                        "Failed to put properties: there is no variable mapping for " + name);
             }
             Map<Object, Object> props = ctx.getPropsMap().get(name);
             if (null == props) {
@@ -1520,6 +1681,7 @@ public class Compiler {
         public void setMissHandler(IMissHandler handler) {
             this.missHandler = handler;
         }
+
         public IMissHandler getMissHandler() {
             return this.missHandler;
         }
@@ -1542,8 +1704,8 @@ public class Compiler {
 
         public Ctx() {
             super();
-            setMissHandler(Compiler.this.failOnMissingVariables ?
-                           new ErrorMissHandler() : new NilMissHandler());
+            setMissHandler(Compiler.this.failOnMissingVariables ? new ErrorMissHandler()
+                    : new NilMissHandler());
         }
 
         public Ctx(ICtx prev) {
@@ -1560,8 +1722,8 @@ public class Compiler {
         public Object get(String name, Backtrace bt) {
             Object val;
             if (null == (val = mappings.get(name))) {
-                return mappings.containsKey(name) ? null :
-                    (null == prev ? null : prev.get(name, bt));
+                return mappings.containsKey(name) ? null
+                        : (null == prev ? null : prev.get(name, bt));
             } else {
                 return val;
             }
@@ -1569,8 +1731,7 @@ public class Compiler {
 
         protected ICtx findCtxFor(String name) {
             ICtx ctx = this;
-            while (null!=ctx &&
-                   (! ctx.getMappings().containsKey(name))) {
+            while (null != ctx && (!ctx.getMappings().containsKey(name))) {
                 ctx = ctx.getPrev();
             }
             return ctx;
@@ -1580,12 +1741,12 @@ public class Compiler {
             ICtx ctx = findCtxFor(name);
             return null == ctx ? this : ctx;
         }
-        
+
         protected ICtx findCtxOrGlobal(String name) {
             ICtx ctx = findCtxFor(name);
             return null == ctx ? this.getLevel0() : ctx;
         }
-        
+
         protected Map getMappingsOrLocal(String name) {
             return findCtxOrLocal(name).getMappings();
         }
@@ -1594,7 +1755,7 @@ public class Compiler {
             return findCtxOrGlobal(name).getMappings();
         }
 
-	
+
         public boolean contains(String name) {
             if (mappings.containsKey(name)) {
                 return true;
@@ -1608,17 +1769,17 @@ public class Compiler {
         public void put(String name, Object expr) {
             Object prev = mappings.put(name, expr);
             // FIXME: bug - if var was spreviously set to null
-            if (null!=prev) {
-                throw new RuntimeException("trying to overwrite variable "
-                                           +name+" in context " +this);
+            if (null != prev) {
+                throw new RuntimeException(
+                        "trying to overwrite variable " + name + " in context " + this);
             }
         }
 
         public Compiler getCompiler() {
             return Compiler.this;
         }
-	
-        public String  toString() {
+
+        public String toString() {
             StringBuffer buf = new StringBuffer();
             buf.append("Ctx<").append(this.hashCode()).append("[");
             for (String var : mappings.keySet()) {
@@ -1628,22 +1789,22 @@ public class Compiler {
                 }
             }
             buf.append(mappings).append("] \n");
-            if (null!=prev) {
+            if (null != prev) {
                 buf.append("\n -->").append(prev.toString());
             }
             return buf.toString();
         }
 
-        public String  toStringSelf() {
+        public String toStringSelf() {
             StringBuffer buf = new StringBuffer();
             buf.append("Ctx<").append(this.hashCode()).append(">");
             return buf.toString();
         }
-        
-        public String  toStringShort() {
+
+        public String toStringShort() {
             StringBuffer buf = new StringBuffer();
             buf.append(this.toStringSelf()).append("=").append(mappings);
-            if (null!=prev) {
+            if (null != prev) {
                 buf.append("->").append(prev.toStringSelf());
             }
             return buf.toString();
@@ -1656,7 +1817,7 @@ public class Compiler {
 
         public ICtx getLevel0() {
             final ICtx prev = getPrev();
-            return null ==  prev ? this :  prev.getLevel0();
+            return null == prev ? this : prev.getLevel0();
         }
 
         @Override
@@ -1666,12 +1827,12 @@ public class Compiler {
 
         @Override
         public void replace(String name, Object value) {
-            this.getMappingsOrLocal(name).put(name,  value);
+            this.getMappingsOrLocal(name).put(name, value);
         }
 
         @Override
         public void greplace(String name, Object value) {
-            this.getMappingsOrGlobal(name).put(name,  value);
+            this.getMappingsOrGlobal(name).put(name, value);
         }
 
         public List<ICtx> getParentContexts() {
@@ -1693,13 +1854,12 @@ public class Compiler {
 
         // FIXME: should not be part of interface?
         @Override
-        public void addMatches(Map<String, Object> matches,
-                               String pattern) {
+        public void addMatches(Map<String, Object> matches, String pattern) {
             Set<Entry<String, Object>> eset = this.getMappings().entrySet();
             for (Entry<String, Object> e : eset) {
                 final String key = e.getKey();
                 if (e.getKey().startsWith(pattern)) {
-                    if (! eset.contains(key)) {
+                    if (!eset.contains(key)) {
                         matches.put(e.getKey(), e.getValue());
                     }
                 }
@@ -1709,6 +1869,7 @@ public class Compiler {
             }
 
         }
+
         @Override
         public void remove(String name) {
             final Map mappings = getMappings();
@@ -1721,7 +1882,7 @@ public class Compiler {
             }
         }
     }
-    
+
     public ICtx newCtx() {
         final Ctx ctx = new Ctx();
         return ctx;
@@ -1740,7 +1901,7 @@ public class Compiler {
     }
 
     /***** Utility functions ****/
-    public  Object evalBlocks(Backtrace backtrace, List<ICompiled> blocks, ICtx ctx) {
+    public Object evalBlocks(Backtrace backtrace, List<ICompiled> blocks, ICtx ctx) {
         Object result = null;
         for (ICompiled block : blocks) {
             result = block.evaluate(backtrace, ctx);
@@ -1748,17 +1909,17 @@ public class Compiler {
         return result;
     }
 
-    public  List<ICompiled> compileExpList(ASTNList nodes) {
-        List<ICompiled> exprs= new ArrayList<ICompiled>(nodes.size());
-        for(ASTN node : nodes) {
+    public List<ICompiled> compileExpList(ASTNList nodes) {
+        List<ICompiled> exprs = new ArrayList<ICompiled>(nodes.size());
+        for (ASTN node : nodes) {
             exprs.add(compile(node));
         }
         return exprs;
     }
-    
-    public  List<ICompiled> compileParams(ASTNList params) {
+
+    public List<ICompiled> compileParams(ASTNList params) {
         List<ICompiled> compiledParams = new ArrayList<ICompiled>(params.size());
-        for (ASTN param: params) {
+        for (ASTN param : params) {
             compiledParams.add(compile(param));
         }
         return compiledParams;
@@ -1766,16 +1927,16 @@ public class Compiler {
 
     public class Eargs extends Ctx {
         private Object[] eargs;
-        private ArgList  argList;
-	
+        private ArgList argList;
+
         // FIXME: not elegant!
-        public Eargs(Object [] eargs, boolean needEval[], ArgList argList, ICtx ctx) {
+        public Eargs(Object[] eargs, boolean needEval[], ArgList argList, ICtx ctx) {
             super(ctx);
-            if ((null == argList) ||
-                (null == eargs)  ||
-                //(null == needEval) ||
-                (null == ctx)) {
-                throw new RuntimeException("Internal error: null constructor parameter when creating Earg");
+            if ((null == argList) || (null == eargs) ||
+            //(null == needEval) ||
+                    (null == ctx)) {
+                throw new RuntimeException(
+                        "Internal error: null constructor parameter when creating Earg");
             }
             this.eargs = eargs;
             //this.needEval = needEval;
@@ -1788,9 +1949,9 @@ public class Compiler {
             // 	eargs[i] = expr.evaluate(backtrace, this.getPrev());
             // 	needEval[i] = false;
             // }
-            final Object val =  eargs[i];
+            final Object val = eargs[i];
             if (val instanceof LazyEval) {
-                return ((LazyEval)val).getValue(backtrace);
+                return ((LazyEval) val).getValue(backtrace);
             } else {
                 return val;
             }
@@ -1807,18 +1968,16 @@ public class Compiler {
 
         protected boolean isParameterVar(String name) {
             final ArgSpec spec = argList.getSpec();
-            return (spec.nameToIdx(name) >= 0) ||
-                (spec.svarNameToIdx(name) >=0);
+            return (spec.nameToIdx(name) >= 0) || (spec.svarNameToIdx(name) >= 0);
         }
 
         @Override
         public boolean contains(String name) {
             final ArgSpec spec = argList.getSpec();
-            return (spec.nameToIdx(name) >= 0) ||
-                (spec.svarNameToIdx(name) >=0) ||
-                super.contains(name);
+            return (spec.nameToIdx(name) >= 0) || (spec.svarNameToIdx(name) >= 0)
+                    || super.contains(name);
         }
-	
+
         @Override
         public Object get(String name, Backtrace bt) {
             // first hash map (function args may be overridden)
@@ -1840,7 +1999,7 @@ public class Compiler {
             return (null == prev ? null : prev.get(name, bt));
             //return super.get(name, bt);
         }
-    
+
         public int size() {
             return eargs.length;
         }
@@ -1856,7 +2015,7 @@ public class Compiler {
         String convert(String in);
     }
 
-    public static class NOPConverter implements IStringConverter{
+    public static class NOPConverter implements IStringConverter {
         public String convert(String in) {
             return in;
         }
