@@ -753,7 +753,7 @@ public class CompilerTest {
                   list(), false, null , null, p},
                 { "(MAPPROD (LAMBDA (x y) (+ x y))  (LIST 1) (LIST 1))" ,
                   list(2), true, null , null, p},
-
+                { "(MAPPROD (LAMBDA (X Y Z) (STR X Y Z)) \"ABC\"  (LIST 1 2 3) (APPEND (MAKE-ARRAY 0) (LIST \"X\" \"Y\" \"Z\")))", list("A1X", "B1X", "C1X", "A2X", "B2X", "C2X", "A3X", "B3X", "C3X", "A1Y", "B1Y", "C1Y", "A2Y", "B2Y", "C2Y", "A3Y", "B3Y", "C3Y", "A1Z", "B1Z", "C1Z", "A2Z", "B2Z", "C2Z", "A3Z", "B3Z", "C3Z"), true, null,null,p},
                 { "(FILTER (LAMBDA (x) (> x 0))  (LIST -2 -1 0 1 2))" ,
                   list(1,2), true, null , null, p},
                 
@@ -1028,6 +1028,7 @@ public class CompilerTest {
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY,"a","b","c"})
+    @Package(name="tests")
     public  static class LAZYAND extends Funcs.FuncExp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -1050,6 +1051,8 @@ public class CompilerTest {
             System.out.println("\n\n TEST #: "+testNum);
             Compiler compiler =new Compiler();
             compiler.setParser(this.parser);
+            compiler.usePackages(Package.DWIM, Package.FFI, Package.IO, Package.LOOPS, Package.THREADS, "tests");
+            compiler.setEnforcePackages(true);
             compiler.addBuiltIn("LAZYAND", LAZYAND.class);
             String inputName = "TEST #"+testNum;
             testNum++;
