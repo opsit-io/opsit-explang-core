@@ -120,3 +120,4 @@ opsit-frontend/node
 
 opsit-dsl-core/target
 opsit-dsl-repl/target
+runrepl.sh
