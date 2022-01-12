@@ -101,6 +101,16 @@ nb-configuration.xml
 @jsumanadas
 
 ##############################
+## OS X
+##############################
+.projectile
+*~
+\#*\#
+
+
+
+
+##############################
 ## Data folder for local dev
 ##############################
 data/
@@ -121,3 +131,4 @@ opsit-frontend/node
 opsit-dsl-core/target
 opsit-dsl-repl/target
 runrepl.sh
+
