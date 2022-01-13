@@ -12,7 +12,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class SexpParserTest {
+public class SexpParserTest extends AbstractTest {
     static int testNum = 0;
     
     public static List<Object> list(Object ... objs) {
@@ -40,71 +40,72 @@ public class SexpParserTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 { "()", list(), null},
-                 { "foo", sym("foo"), null},
-                 { "1", new Integer(1), null},
-                 { "111", new Integer(111), null},
-                 { "+1", new Integer(1), null},
-                 { "-1", new Integer(-1), null},
-                 { "1.1", new Double(1.1), null},
-                 { "1.0", new Double(1.0), null},
-                 { "1.0f", new Float(1.0), null},
-                 { "1.0F", new Float(1.0), null},
-                 { "1.0d", new Double(1.0), null},
-                 { "1.0D", new Double(1.0), null},
-                 { "-1.0D", new Double(-1.0), null},
-                 { "1L", new Long(1), null},
-                 { "1i", new Integer(1), null},
-                 { "1I", new Integer(1), null},
-                 { "1s", new Short((short)1), null},
-                 { "1S", new Short((short)1), null},
-                 { "1b", new Byte((byte)1), null},
-                 { "1B", new Byte((byte)1), null},
-                 { "null", null, null},
-                 { "Null", null, null},
-                 { "NULL", null, null},
-                 { "NIL", null, null},
-                 { "TRUE", Boolean.TRUE, null},
-                 { "true", Boolean.TRUE, null},
-                 { "True", Boolean.TRUE,  null},                                 
-                 { "False", Boolean.FALSE, null},
-                 { "false", Boolean.FALSE, null},
-                 { "FALSE", Boolean.FALSE,  null},                               
-                 { "\"foo\"", "foo", null},
+                { "foo", sym("foo"), null},
+                { "1", new Integer(1), null},
+                { "111", new Integer(111), null},
+                { "+1", new Integer(1), null},
+                { "-1", new Integer(-1), null},
+                { "1.1", new Double(1.1), null},
+                { "1.0", new Double(1.0), null},
+                { "1.0f", new Float(1.0), null},
+                { "1.0F", new Float(1.0), null},
+                { "1.0d", new Double(1.0), null},
+                { "1.0D", new Double(1.0), null},
+                { "-1.0D", new Double(-1.0), null},
+                { "1L", new Long(1), null},
+                { "1i", new Integer(1), null},
+                { "1I", new Integer(1), null},
+                { "1s", new Short((short)1), null},
+                { "1S", new Short((short)1), null},
+                { "1b", new Byte((byte)1), null},
+                { "1B", new Byte((byte)1), null},
+                { "null", null, null},
+                { "Null", null, null},
+                { "NULL", null, null},
+                { "NIL", null, null},
+                { "TRUE", Boolean.TRUE, null},
+                { "true", Boolean.TRUE, null},
+                { "True", Boolean.TRUE,  null},                                 
+                { "False", Boolean.FALSE, null},
+                { "false", Boolean.FALSE, null},
+                { "FALSE", Boolean.FALSE,  null},                               
+                { "\"foo\"", "foo", null},
                  
-                 { "(foo)", list(sym("foo")), null},
-		 { "(foo bar (baz))",
-                   list(sym("foo"),sym("bar"),list(sym("baz"))), null},
-                 { "( \"(foo bar (baz)\" is a string)",
-                   list("(foo bar (baz)",sym("is"),sym("a"),sym("string")), null},
+                { "(foo)", list(sym("foo")), null},
+                { "(foo bar (baz))",
+                  list(sym("foo"),sym("bar"),list(sym("baz"))), null},
+                { "( \"(foo bar (baz)\" is a string)",
+                  list("(foo bar (baz)",sym("is"),sym("a"),sym("string")), null},
 
-		{ "(:a)", list(keyword(":a")), null},
-		{ "(:)", list(sym(":")), null},
+                { "(:a)", list(keyword(":a")), null},
+                { "(:)", list(sym(":")), null},
 
-                 { "((()))", list(list(list())), null},
+                { "((()))", list(list(list())), null},
                  
-                 { "(\"a\" a)", list("a",sym("a")), null},
-		//{ "aaaa bbbb", null, "Too many expressions"},
-		{ "aaaa bbbb", sym("aaaa"), null}
+                { "(\"a\" a)", list("a",sym("a")), null},
+                //{ "aaaa bbbb", null, "Too many expressions"},
+                { "aaaa bbbb", sym("aaaa"), null}
                 //                 { "(aaa \"bbb)", null, "unclosed '\"'"}
             });
     }
 
     @Test
     public void testExprParse() {
-        System.out.println("\n\n TEST #: "+(testNum++));
+        clearLog();
+        log("\n\n TEST #: "+(testNum++));
         SexpParser parser = new SexpParser();
         try {
-            System.out.println("\n\nIN:  "+in);
-	    ParseCtx pctx = new ParseCtx("test");
+            log("\n\nIN:  "+in);
+            ParseCtx pctx = new ParseCtx("test");
             Object output = stripAST(parser.parse(pctx, in, 1));
 	    
-            System.out.println("OUT: " + output);
-            System.out.println("ExP: " + expOut);
-            System.out.println("STR: " + parser.sexpToString(output));
-	    Assert.assertTrue(output instanceof List);
-	    List <Object>outList = (List<Object>) output;
-	    Assert.assertEquals(1, outList.size());
-	    Object outExpr = outList.get(0);
+            log("OUT: " + output);
+            log("ExP: " + expOut);
+            log("STR: " + parser.sexpToString(output));
+            Assert.assertTrue(output instanceof List);
+            List <Object>outList = (List<Object>) output;
+            Assert.assertEquals(1, outList.size());
+            Object outExpr = outList.get(0);
             if (null != expExc) {
                 Assert.fail("expected exception containing " + expExc);
             } else {
@@ -115,6 +116,7 @@ public class SexpParserTest {
             if (null != expExc && ex.getMessage().contains(expExc)) {
                 System.err.println("Got expected exception: " + ex);
             } else {
+                flushLog();
                 Assert.fail("expected exception containing: " + expExc + " but got: " + ex);
             }
         }

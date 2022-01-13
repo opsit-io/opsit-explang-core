@@ -20,7 +20,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class ArgSpecTest {
+public class ArgSpecTest extends  AbstractTest {
     Compiler comp = new Compiler();
     protected List<Object> specs;
     protected Throwable exception;
@@ -264,8 +264,9 @@ public class ArgSpecTest {
 
     @Test
     public void testArgs() throws Throwable {
-        System.err.println("\nTEST " + (testNo++));
-        System.err.println("INPUT: " + specs);
+        clearLog();
+        log("\nTEST " + (testNo++));
+        log("INPUT: " + specs);
         try {
             IParser parser = comp.getParser();
             ParseCtx pctx = new ParseCtx(this.getClass().getSimpleName());
@@ -274,12 +275,12 @@ public class ArgSpecTest {
             ArgSpec spec = new ArgSpec(astnSpec, comp);
             List<Arg> specArgs = Arrays.asList(spec.getArgs());
 	    
-            System.err.println("OUT_ARGS: " + specArgs);
-            System.err.println("EXP_ARGS: " + this.args);
+            log("OUT_ARGS: " + specArgs);
+            log("EXP_ARGS: " + this.args);
             Assert.assertEquals(this.args, specArgs);
 	    
 
-            // System.err.println("EXP_INITFORMS: " + Arrays.toString(this.initForms));
+            // log("EXP_INITFORMS: " + Arrays.toString(this.initForms));
             // Assert.assertEquals(this.flags, spec.paramFlags);
             // Assert.assertEquals(this.names, spec.paramNames);
             // if (null != spec.initForms) {
@@ -303,13 +304,14 @@ public class ArgSpecTest {
             // }
 
         } catch (Exception ex) {
-            System.err.println("OUT_Exc: " + ex);
-            System.err.println("EXP_Exc: " + exception);
+            log("OUT_Exc: " + ex);
+            log("EXP_Exc: " + exception);
             try {
                 Assert.assertNotNull("Unexpected exception: " + ex, exception);
                 Assert.assertEquals(exception.getClass(), ex.getClass());
                 Assert.assertEquals(exception.getMessage(), ex.getMessage());
             } catch (Exception ae) {
+                flushLog();
                 ae.printStackTrace();
                 throw ae;
             }
