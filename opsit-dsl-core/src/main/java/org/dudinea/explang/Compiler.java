@@ -421,6 +421,7 @@ public class Compiler {
                  "REDUCE", REDUCE.class,
                  // string handling
                  "RE-PATTERN", RE_PATTERN.class,
+                 "RE-GLOB", RE_GLOB.class,
                  "RE-MATCHER", RE_MATCHER.class,
                  "RE-MATCHES", RE_MATCHES.class,
                  "RE-GROUPS", RE_GROUPS.class,

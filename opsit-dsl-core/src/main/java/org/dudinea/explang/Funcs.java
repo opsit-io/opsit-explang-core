@@ -1842,6 +1842,21 @@ public class Funcs {
         }
     }
 
+    @Arguments(spec={"pattern"})
+    @Docstring(text="Compile a Globbing Pattern. "+
+               "On success returns a java.util.regex.Pattern object. "+
+               "On error raises exception.")
+    @Package(name=Package.BASE_REGEX)
+    public static  class RE_GLOB extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final String patternStr = Utils.asString(eargs.get(0, backtrace));
+            final Pattern pattern = GlobPattern.compile(patternStr);
+            return pattern;
+        }
+    }
+
+    
     public static Matcher getMatcher(Eargs eargs, Backtrace backtrace) {
         final Object obj0 = eargs.get(0, backtrace);
         final Object obj1 = eargs.get(1, backtrace);

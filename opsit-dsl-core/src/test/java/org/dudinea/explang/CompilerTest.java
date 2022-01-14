@@ -818,6 +818,7 @@ public class CompilerTest extends AbstractTest {
                 {"(PROGN (DEFUN fact (x) (IF x (* x (fact (- x 1))) 1)) (fact 5))", 120, true, null, null, p},
 
                 {"(RE-PATTERN \"^F[0-9]$\")", Pattern.compile("^F[0-9]$"), true, null,null,p},
+                {"(RE-GLOB \"g*b\")", Pattern.compile("g.*b"), true, null,null,p},
                 {"(RE-MATCHER (RE-PATTERN \"^F[0-9]$\") \"BLA\")", Pattern.compile("^F[0-9]$").matcher("BLA"), true, null,null,p},
                 {"(RE-MATCHES (RE-MATCHER (RE-PATTERN \"^F[0-9]$\") \"F1\"))", "F1", true, null,null,p},
                 {"(RE-MATCHES (RE-MATCHER (RE-PATTERN \"^(F)([0-9])$\") \"F1\"))", list("F1","F","1"), true, null,null,p},

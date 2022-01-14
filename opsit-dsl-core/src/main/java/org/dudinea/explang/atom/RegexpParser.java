@@ -2,11 +2,19 @@ package org.dudinea.explang.atom;
 
 import org.dudinea.explang.ParseCtx;
 import java.util.regex.Pattern;
+import org.dudinea.explang.GlobPattern;
 
 public  class RegexpParser implements AtomParser {
     public boolean parse(String str, Object[]holder, ParseCtx pctx) {
-        if ((str.length() < 3) ||
-            (!str.startsWith("r\""))) {
+        boolean isGlob;
+        if (str.length() < 3) {
+            return false;
+        }
+        if (str.startsWith("r\"")) {
+            isGlob = false;
+        } else if (str.startsWith("g\"")) {
+            isGlob = true;
+        } else {
             return false;
         }
         StringBuilder sb = new StringBuilder();
@@ -75,8 +83,12 @@ public  class RegexpParser implements AtomParser {
         if (inQuote) {
             return false;
         }
-        //System.out.println("RegexpParser: str='" + sb.toString() + "', flags=" + flags); 
-        holder[0] = Pattern.compile(sb.toString(), flags);
+        //System.out.println("RegexpParser: str='" + sb.toString() + "', flags=" + flags);
+        if (isGlob) {
+            holder[0] = GlobPattern.compile(sb.toString(), flags);
+        } else {
+            holder[0] = Pattern.compile(sb.toString(), flags);
+        }
         return true;
     }
 }
