@@ -540,4 +540,12 @@ public class Utils {
         }
         return result;
     }
+
+    public static boolean isRoundNumber(Number val) {
+        if (null == val) {
+            return false;
+        }
+        final double d = val.doubleValue();
+        return d % 1 == 0;
+    }
 }
