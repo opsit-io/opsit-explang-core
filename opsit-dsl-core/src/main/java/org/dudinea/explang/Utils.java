@@ -548,4 +548,11 @@ public class Utils {
         final double d = val.doubleValue();
         return d % 1 == 0;
     }
+
+    public static boolean equal(Object a, Object b) {
+        if (null == a) {
+            return null == b;
+        }
+        return a.equals(b);
+    }
 }
