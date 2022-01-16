@@ -47,6 +47,7 @@ public class Compiler {
                            Package.BASE_CONTROL,
                            Package.BASE_REGEX,
                            Package.BASE_TEXT,
+                           Package.BASE_VERSION,
                            Package.BASE_DOCS,
                            Package.BASE_LANG);
     };
@@ -64,6 +65,7 @@ public class Compiler {
                            Package.BASE_CONTROL,
                            Package.BASE_REGEX,
                            Package.BASE_TEXT,
+                           Package.BASE_VERSION,
                            Package.BASE_DOCS,
                            Package.BASE_LANG,
                            Package.DWIM,
@@ -445,7 +447,11 @@ public class Compiler {
                  "AREF", AREF.class,
                  // help system
                  "DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class,
-                 "DOCUMENTATION", Funcs.DOCUMENTATION.class);
+                 "DOCUMENTATION", Funcs.DOCUMENTATION.class,
+                 // versions
+                 "VERSION", Funcs.VERSION.class
+                       );
+        
         for (int i = 0; i < builtinsInit.size(); i+=2) {
             final Class builtinClass = (Class) builtinsInit.get(i + 1);
             if (this.checkBuiltinPackage(builtinClass, fromPackages)) {

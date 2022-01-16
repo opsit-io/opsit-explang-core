@@ -3213,6 +3213,23 @@ public class Funcs {
         }
         return null;
     }
+
+    @Arguments(spec={"spec"})
+    @Docstring(text="Create Version from text specification. ")
+    @Package(name=Package.BASE_VERSION)
+    public static class VERSION  extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final String spec  =  Utils.asString(eargs.get(0, backtrace));
+            try {
+                return Version.parseVersion(spec);
+            } catch (InvalidParametersException ex) {
+                throw new ExecutionException(backtrace,
+                        "Failed to parse version spec: " + ex);
+            }
+        }
+    }
+
     
     
     @Arguments(spec={"function"})
