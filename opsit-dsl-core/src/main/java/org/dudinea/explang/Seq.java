@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.function.Consumer;
 
 
@@ -205,4 +206,49 @@ public class Seq {
         }
         return result;
     }
+
+    public static int maxLength(Object... seqs) {
+        int result = 0;
+        for (int i = 0; i < seqs.length; i++) {
+            int len = getLength(seqs[i], false);
+            if (len > result) {
+                result = len;
+            }
+        }
+        return result;
+    }
+
+    public static int minLength(Object... seqs) {
+        if (seqs.length > 0) {
+            int result = Integer.MAX_VALUE;
+            for (int i = 0; i < seqs.length; i++) {
+                int len = getLength(seqs[i], false);
+                if (len < result) {
+                    result = len;
+                }
+            }
+            return result;
+        } else {
+            return 0;
+        }
+    }
+
+    
+    public static interface Multiop{
+        public Object perform(Object... objs);
+    }
+
+    public static List mapall(Multiop op, Object... seqs) {
+        int maxlen = maxLength(seqs);
+        List result = new ArrayList<Object>(maxlen);
+        Object[] args = new Object[seqs.length];
+        for (int i = 0; i < maxlen; i++) {
+            for (int j = 0; j < seqs.length; j++) {
+                args[j] = getElement(seqs[j], i);
+            }
+            result.add(i, op.perform(args));
+        }
+        return result;
+    }
+    
 }

@@ -142,6 +142,7 @@ public class Funcs {
         Number doIntOp(Number arg1, Number arg2);
         Number doDoubleOp(Number arg1, Number arg2);
         Number doFloatOp(Number arg1, Number arg2);
+        Number doVersionOp( Number arg1, Number arg2);
     }    
 
     @Arguments(spec={ArgSpec.ARG_REST,"args"})
@@ -187,6 +188,10 @@ public class Funcs {
         public Double doDoubleOp(Number result, Number arg) {
             return result.doubleValue() + arg.doubleValue();
         }
+        @Override
+        public Double doVersionOp(Number result, Number arg) {
+            return result.doubleValue() + arg.doubleValue();
+        }
     }
 
     @Docstring(text="Compute Product. "+
@@ -210,6 +215,9 @@ public class Funcs {
         @Override
         public Float doFloatOp(Number result, Number arg) {
             return result.floatValue() * arg.floatValue();
+        }
+        public Double doVersionOp(Number result, Number arg) {
+            return result.doubleValue() * arg.doubleValue();
         }
     }
     
@@ -258,7 +266,11 @@ public class Funcs {
         public Double doDoubleOp(Number arg1, Number arg2) {
             return arg1.doubleValue() - arg2.doubleValue();
         }
-        
+
+        @Override
+        public Double doVersionOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() - arg2.doubleValue();
+        }
         @Override
         protected Number getNeutral() {
             return new Integer(0);
@@ -282,6 +294,11 @@ public class Funcs {
 
         @Override
         public Double doDoubleOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() / arg2.doubleValue();
+        }
+
+        @Override
+        public Double doVersionOp(Number arg1, Number arg2) {
             return arg1.doubleValue() / arg2.doubleValue();
         }
 
@@ -327,6 +344,11 @@ public class Funcs {
         }
 
         @Override
+        public Double doVersionOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() % arg2.doubleValue();
+        }
+        
+        @Override
         public  Float doFloatOp(Number arg1, Number arg2) {
             return arg1.floatValue() % arg2.floatValue();
         }
@@ -359,6 +381,10 @@ public class Funcs {
             return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
         }
 
+        public  Double doVersionOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
+        }
+        
         @Override
         public Float doFloatOp(Number arg1, Number arg2) {
             return arg1.floatValue() - ((float)Math.floor(arg1.doubleValue() / arg2.doubleValue())) * arg2.floatValue();
@@ -473,6 +499,13 @@ public class Funcs {
             final Double compRes = arg1.doubleValue() - arg2.doubleValue();
             return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
         }
+
+        @Override
+        public Number doVersionOp(Number arg1, Number arg2) {
+            final Double compRes = arg1.doubleValue() - arg2.doubleValue();
+            return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
+        }
+        
         @Override
         public Number doFloatOp(Number arg1, Number arg2) {
             final float compRes = arg1.floatValue() - arg2.floatValue();
