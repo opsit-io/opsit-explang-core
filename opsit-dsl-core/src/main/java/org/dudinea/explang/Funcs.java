@@ -189,8 +189,18 @@ public class Funcs {
             return result.doubleValue() + arg.doubleValue();
         }
         @Override
-        public Double doVersionOp(Number result, Number arg) {
-            return result.doubleValue() + arg.doubleValue();
+        public Version doVersionOp(Number result, Number arg) {
+            if (result instanceof Version) {
+                Version vResult = (Version)result;
+                if (arg instanceof Version) {
+                    return vResult.add((Version) arg);
+                }
+                return vResult.add(arg);
+            } else if (arg instanceof Version) {
+                return ((Version)arg).add(result);
+            } else {
+                return Version.fromDouble(result.doubleValue() + arg.doubleValue());
+            }
         }
     }
 
@@ -268,8 +278,19 @@ public class Funcs {
         }
 
         @Override
-        public Double doVersionOp(Number arg1, Number arg2) {
-            return arg1.doubleValue() - arg2.doubleValue();
+        public Version doVersionOp(Number arg1, Number arg2) {
+            if (arg1 instanceof Version) {
+                Version vResult = (Version)arg1;
+                if (arg2 instanceof Version) {
+                    return vResult.sub((Version) arg2);
+                }
+                return vResult.sub(arg2);
+            } else if (arg2 instanceof Version) {
+                return Version.fromDouble(arg1.doubleValue()).sub((Version)arg2);
+            } else {
+                return Version.fromDouble(arg1.doubleValue() -
+                                          arg2.doubleValue());
+            }
         }
         @Override
         protected Number getNeutral() {

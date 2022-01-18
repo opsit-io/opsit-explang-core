@@ -1025,7 +1025,11 @@ public class CompilerTest extends AbstractTest {
                 {"(LET ((a (MAKE-ARRAY 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1 \"start()\") (. t1 \"join()\") (AREF a 0))",
                  2, true, null, null, p},
                  {"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
-                         2, true, null, null, p}
+                  2, true, null, null, p},
+                 {"(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null) , true, null, null, p},
+                {"(+ (VERSION \"1.2.3\") (VERSION \"2.3.4\")) ", Version.mkSemVersion(3L, 5L, 7L, null, null) , true, null, null, p},
+                {"(- (VERSION \"1.2.3\") (VERSION \"1.2.3\")) ", Version.mkSemVersion(0L, 0L, 0L, null, null) , false, null, null, p}
+                
             });
     }
 
