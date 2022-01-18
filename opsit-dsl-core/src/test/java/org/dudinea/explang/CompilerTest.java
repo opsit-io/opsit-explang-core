@@ -1028,8 +1028,22 @@ public class CompilerTest extends AbstractTest {
                   2, true, null, null, p},
                  {"(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null) , true, null, null, p},
                 {"(+ (VERSION \"1.2.3\") (VERSION \"2.3.4\")) ", Version.mkSemVersion(3L, 5L, 7L, null, null) , true, null, null, p},
-                {"(- (VERSION \"1.2.3\") (VERSION \"1.2.3\")) ", Version.mkSemVersion(0L, 0L, 0L, null, null) , false, null, null, p}
-                
+                {"(- (VERSION \"1.2.3\") (VERSION \"1.2.3\")) ",
+                 Version.mkSemVersion(0L, 0L, 0L, null, null), false, null, null, p},
+
+                {"(>  (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", true, true, null, null, p},
+                {"(>= (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", true, true, null, null, p},
+                {"(<  (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", false, false, null, null, p},
+                {"(<= (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", false, false, null, null, p},
+                {"(=  (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", false, false, null, null, p},
+
+                {"(<  (VERSION \"1.2.2\") (VERSION \"1.2.3\")) ", true, true, null, null, p},
+                {"(<= (VERSION \"1.2.2\") (VERSION \"1.2.3\")) ", true, true, null, null, p},
+                {"(=  (VERSION \"1.2.2\")  (VERSION \"1.2.3\")) ", false, false, null, null, p},
+                {"(>= (VERSION \"1.2.2\")  (VERSION \"1.2.3\")) ", false, false, null, null, p},
+                {"(>  (VERSION \"1.2.2\")  (VERSION \"1.2.3\")) ", false, false, null, null, p}
+                // FIXME: complex cases according to semver: releases builds
+                //        big version numbers that break the double based comparisons
             });
     }
 
