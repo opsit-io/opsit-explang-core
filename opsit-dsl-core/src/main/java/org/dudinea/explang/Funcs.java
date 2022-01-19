@@ -523,8 +523,14 @@ public class Funcs {
 
         @Override
         public Number doVersionOp(Number arg1, Number arg2) {
-            final Double compRes = arg1.doubleValue() - arg2.doubleValue();
-            return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
+            if (arg1 instanceof Version) {
+                return ((Version) arg1).compareTo(Version.fromNumber(arg2));
+            } else if (arg2 instanceof Version) {
+                return - ((Version) arg2).compareTo(Version.fromNumber(arg1));
+            } else {
+                final Double compRes = arg1.doubleValue() - arg2.doubleValue();
+                return compRes < 0.0 ? -1 : (compRes > 0.0 ? 1 : 0);
+            }
         }
         
         @Override

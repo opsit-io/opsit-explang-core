@@ -1051,12 +1051,57 @@ public class CompilerTest extends AbstractTest {
                  Version.mkSemVersion(1L,2L,3L,list("2"), list("3")), true, null, null, p} ,
 
                 {"(+  (VERSION \"1.2.3-1+2\")  (VERSION \"0.0.0-1.8+1.9\")) ",
-                 Version.mkSemVersion(1L,2L,3L,list("2","8"), list("3","9")), true, null, null, p}
+                 Version.mkSemVersion(1L,2L,3L,list("2","8"), list("3","9")), true, null, null, p},
                 
+                {"(< (VERSION \"0.0.8\" ) "+
+                 "   (VERSION \"0.0.9\") "+
+                 "   (VERSION \"0.1.0\") "+
+                 "   (VERSION \"0.1.1\") "+
+                 "   (VERSION \"0.1.1a\") "+
+                 "   (VERSION \"1.0.0-alpha\") "+
+                 "   (VERSION \"1.0.0-alpha.1\") "+
+                 "   (VERSION \"1.0.0-alpha.beta\") "+
+                 "   (VERSION \"1.0.0-beta\") " +
+                 "   (VERSION \"1.0.0-beta.2\") "+
+                 "   (VERSION \"1.0.0-beta.11\") "+
+                 "   (VERSION \"1.0.0-rc.1\" ) "+
+                 "   (VERSION \"1.0.0\"))", true, true, null,null,p},
+
+                {"(<= (VERSION \"0.0.8\" ) "+
+                 "   (VERSION \"0.0.9\") "+
+                 "   (VERSION \"0.1.0\") "+
+                 "   (VERSION \"0.1.0+2\") "+
+                 "   (VERSION \"0.1.1\") "+
+                 "   (VERSION \"0.1.1a\") "+
+                 "   (VERSION \"1.0.0-alpha\") "+
+                 "   (VERSION \"1.0.0-alpha.1\") "+
+                 "   (VERSION \"1.0.0-alpha.beta\") "+
+                 "   (VERSION \"1.0.0-beta\") " +
+                 "   (VERSION \"1.0.0-beta+1\") " +
+                 "   (VERSION \"1.0.0-beta+2.2\") " +
+                 "   (VERSION \"1.0.0-beta.2\") "+
+                 "   (VERSION \"1.0.0-beta.11\") "+
+                 "   (VERSION \"1.0.0-rc.1\" ) "+
+                 "   (VERSION \"1.0.0\"))", true, true, null,null,p},
 
                 
-                // FIXME: complex cases according to semver: releases builds
-                //        big version numbers that break the double based comparisons
+                {"(>= (VERSION \"1.0.0\")"+
+                 "   (VERSION \"1.0.0-rc.1\" ) "+
+                 "   (VERSION \"1.0.0-beta.11\") "+
+                 "   (VERSION \"1.0.0-beta.2\") "+
+                 "   (VERSION \"1.0.0-beta+2.2\") " +
+                 "   (VERSION \"1.0.0-beta+1\") " +
+                 "   (VERSION \"1.0.0-beta\") " +
+                 "   (VERSION \"1.0.0-alpha.beta\") "+
+                 "   (VERSION \"1.0.0-alpha.1\") "+
+                 "   (VERSION \"1.0.0-alpha\") "+
+                 "   (VERSION \"0.1.1a\") "+
+                 "   (VERSION \"0.1.1\") "+
+                 "   (VERSION \"0.1.0+2\") "+
+                 "   (VERSION \"0.1.0\") "+
+                 "   (VERSION \"0.0.9\") "+
+                 "  (VERSION \"0.0.8\" )) ", true, true, null,null,p}
+
             });
     }
 
