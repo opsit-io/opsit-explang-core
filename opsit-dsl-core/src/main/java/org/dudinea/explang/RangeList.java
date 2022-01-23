@@ -24,8 +24,18 @@ public class RangeList  implements List {
                 return result.doubleValue() + arg.doubleValue();
             }
             @Override
-            public Double doVersionOp(Number result, Number arg) {
-                return result.doubleValue() + arg.doubleValue();
+            public Version doVersionOp(Number result, Number arg) {
+                if (result instanceof Version) {
+                    Version vResult = (Version)result;
+                    if (arg instanceof Version) {
+                        return vResult.add((Version) arg);
+                    }
+                    return vResult.add(arg);
+                } else if (arg instanceof Version) {
+                    return ((Version)arg).add(result);
+                } else {
+                    return Version.fromDouble(result.doubleValue() + arg.doubleValue());
+                }
             }
         };
 

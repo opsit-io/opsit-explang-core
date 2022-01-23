@@ -2827,7 +2827,7 @@ public class Funcs {
             final Number start = Utils.asNumber(eargs.get(0, bt));
             //prom.promote(start);
 
-            final Number to =  Utils.asNumber((Number)eargs.get(1, bt));
+            final Number to =  Utils.asNumber(eargs.get(1, bt));
 
             // 1 is default
             final Number step = (null == eargs.get(2, bt)) ?
