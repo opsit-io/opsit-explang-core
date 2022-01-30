@@ -540,4 +540,19 @@ public class Utils {
         }
         return result;
     }
+
+    public static boolean isRoundNumber(Number val) {
+        if (null == val) {
+            return false;
+        }
+        final double d = val.doubleValue();
+        return d % 1 == 0;
+    }
+
+    public static boolean equal(Object a, Object b) {
+        if (null == a) {
+            return null == b;
+        }
+        return a.equals(b);
+    }
 }

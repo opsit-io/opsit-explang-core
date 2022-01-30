@@ -26,9 +26,11 @@ public @interface Package {
     public static String BASE_TEXT = "base.text";
     public static String BASE_DOCS = "base.docs";
     public static String BASE_LANG = "base.lang";
+    public static String BASE_VERSION = "base.version";
     public static String FFI = "ffi";
     public static String DWIM = "dwim";
     public static String IO = "io";
     public static String THREADS = "threads";
     public static String LOOPS = "loops";
+
 }

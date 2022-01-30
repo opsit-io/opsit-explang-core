@@ -142,6 +142,7 @@ public class Funcs {
         Number doIntOp(Number arg1, Number arg2);
         Number doDoubleOp(Number arg1, Number arg2);
         Number doFloatOp(Number arg1, Number arg2);
+        Number doVersionOp( Number arg1, Number arg2);
     }    
 
     @Arguments(spec={ArgSpec.ARG_REST,"args"})
@@ -187,6 +188,20 @@ public class Funcs {
         public Double doDoubleOp(Number result, Number arg) {
             return result.doubleValue() + arg.doubleValue();
         }
+        @Override
+        public Version doVersionOp(Number result, Number arg) {
+            if (result instanceof Version) {
+                Version vResult = (Version)result;
+                if (arg instanceof Version) {
+                    return vResult.add((Version) arg);
+                }
+                return vResult.add(arg);
+            } else if (arg instanceof Version) {
+                return ((Version)arg).add(result);
+            } else {
+                return Version.fromDouble(result.doubleValue() + arg.doubleValue());
+            }
+        }
     }
 
     @Docstring(text="Compute Product. "+
@@ -210,6 +225,9 @@ public class Funcs {
         @Override
         public Float doFloatOp(Number result, Number arg) {
             return result.floatValue() * arg.floatValue();
+        }
+        public Double doVersionOp(Number result, Number arg) {
+            return result.doubleValue() * arg.doubleValue();
         }
     }
     
@@ -258,7 +276,22 @@ public class Funcs {
         public Double doDoubleOp(Number arg1, Number arg2) {
             return arg1.doubleValue() - arg2.doubleValue();
         }
-        
+
+        @Override
+        public Version doVersionOp(Number arg1, Number arg2) {
+            if (arg1 instanceof Version) {
+                Version vResult = (Version)arg1;
+                if (arg2 instanceof Version) {
+                    return vResult.sub((Version) arg2);
+                }
+                return vResult.sub(arg2);
+            } else if (arg2 instanceof Version) {
+                return Version.fromDouble(arg1.doubleValue()).sub((Version)arg2);
+            } else {
+                return Version.fromDouble(arg1.doubleValue() -
+                                          arg2.doubleValue());
+            }
+        }
         @Override
         protected Number getNeutral() {
             return new Integer(0);
@@ -282,6 +315,11 @@ public class Funcs {
 
         @Override
         public Double doDoubleOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() / arg2.doubleValue();
+        }
+
+        @Override
+        public Double doVersionOp(Number arg1, Number arg2) {
             return arg1.doubleValue() / arg2.doubleValue();
         }
 
@@ -327,6 +365,11 @@ public class Funcs {
         }
 
         @Override
+        public Double doVersionOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() % arg2.doubleValue();
+        }
+        
+        @Override
         public  Float doFloatOp(Number arg1, Number arg2) {
             return arg1.floatValue() % arg2.floatValue();
         }
@@ -359,6 +402,10 @@ public class Funcs {
             return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
         }
 
+        public  Double doVersionOp(Number arg1, Number arg2) {
+            return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
+        }
+        
         @Override
         public Float doFloatOp(Number arg1, Number arg2) {
             return arg1.floatValue() - ((float)Math.floor(arg1.doubleValue() / arg2.doubleValue())) * arg2.floatValue();
@@ -473,6 +520,19 @@ public class Funcs {
             final Double compRes = arg1.doubleValue() - arg2.doubleValue();
             return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
         }
+
+        @Override
+        public Number doVersionOp(Number arg1, Number arg2) {
+            if (arg1 instanceof Version) {
+                return ((Version) arg1).compareTo(Version.fromNumber(arg2));
+            } else if (arg2 instanceof Version) {
+                return - ((Version) arg2).compareTo(Version.fromNumber(arg1));
+            } else {
+                final Double compRes = arg1.doubleValue() - arg2.doubleValue();
+                return compRes < 0.0 ? -1 : (compRes > 0.0 ? 1 : 0);
+            }
+        }
+        
         @Override
         public Number doFloatOp(Number arg1, Number arg2) {
             final float compRes = arg1.floatValue() - arg2.floatValue();
@@ -1842,6 +1902,21 @@ public class Funcs {
         }
     }
 
+    @Arguments(spec={"pattern"})
+    @Docstring(text="Compile a Globbing Pattern. "+
+               "On success returns a java.util.regex.Pattern object. "+
+               "On error raises exception.")
+    @Package(name=Package.BASE_REGEX)
+    public static  class RE_GLOB extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final String patternStr = Utils.asString(eargs.get(0, backtrace));
+            final Pattern pattern = GlobPattern.compile(patternStr);
+            return pattern;
+        }
+    }
+
+    
     public static Matcher getMatcher(Eargs eargs, Backtrace backtrace) {
         final Object obj0 = eargs.get(0, backtrace);
         final Object obj1 = eargs.get(1, backtrace);
@@ -2752,7 +2827,7 @@ public class Funcs {
             final Number start = Utils.asNumber(eargs.get(0, bt));
             //prom.promote(start);
 
-            final Number to =  Utils.asNumber((Number)eargs.get(1, bt));
+            final Number to =  Utils.asNumber(eargs.get(1, bt));
 
             // 1 is default
             final Number step = (null == eargs.get(2, bt)) ?
@@ -3198,6 +3273,23 @@ public class Funcs {
         }
         return null;
     }
+
+    @Arguments(spec={"spec"})
+    @Docstring(text="Create Version from text specification. ")
+    @Package(name=Package.BASE_VERSION)
+    public static class VERSION  extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final String spec  =  Utils.asString(eargs.get(0, backtrace));
+            try {
+                return Version.parseVersion(spec);
+            } catch (InvalidParametersException ex) {
+                throw new ExecutionException(backtrace,
+                        "Failed to parse version spec: " + ex);
+            }
+        }
+    }
+
     
     
     @Arguments(spec={"function"})

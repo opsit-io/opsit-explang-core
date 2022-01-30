@@ -47,6 +47,7 @@ public class Compiler {
                            Package.BASE_CONTROL,
                            Package.BASE_REGEX,
                            Package.BASE_TEXT,
+                           Package.BASE_VERSION,
                            Package.BASE_DOCS,
                            Package.BASE_LANG);
     };
@@ -64,6 +65,7 @@ public class Compiler {
                            Package.BASE_CONTROL,
                            Package.BASE_REGEX,
                            Package.BASE_TEXT,
+                           Package.BASE_VERSION,
                            Package.BASE_DOCS,
                            Package.BASE_LANG,
                            Package.DWIM,
@@ -421,6 +423,7 @@ public class Compiler {
                  "REDUCE", REDUCE.class,
                  // string handling
                  "RE-PATTERN", RE_PATTERN.class,
+                 "RE-GLOB", RE_GLOB.class,
                  "RE-MATCHER", RE_MATCHER.class,
                  "RE-MATCHES", RE_MATCHES.class,
                  "RE-GROUPS", RE_GROUPS.class,
@@ -444,7 +447,11 @@ public class Compiler {
                  "AREF", AREF.class,
                  // help system
                  "DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class,
-                 "DOCUMENTATION", Funcs.DOCUMENTATION.class);
+                 "DOCUMENTATION", Funcs.DOCUMENTATION.class,
+                 // versions
+                 "VERSION", Funcs.VERSION.class
+                       );
+        
         for (int i = 0; i < builtinsInit.size(); i+=2) {
             final Class builtinClass = (Class) builtinsInit.get(i + 1);
             if (this.checkBuiltinPackage(builtinClass, fromPackages)) {

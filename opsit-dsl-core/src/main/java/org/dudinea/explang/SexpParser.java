@@ -147,6 +147,8 @@ public class SexpParser implements IParser {
 	new BooleanParser(),
 	new NumberParser(),
 	new EscStringParser(),
+    new RegexpParser(),
+    new VersionParser(),
 	new KeywordParser(),
 	new SymbolParser()
     };

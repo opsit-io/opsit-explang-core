@@ -12,7 +12,7 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
-public class ParserPosTest {
+public class ParserPosTest extends AbstractTest {
     static int testNum = 0;
     static final String INAME = "@";
     
@@ -36,39 +36,39 @@ public class ParserPosTest {
     }
 
     protected static ASTNList alist(List obj, int line, int pos, int offset, int len) {
-	ParseCtx pctx = new ParseCtx(INAME, line, pos, offset, len);
-	return new ASTNList(obj, pctx, false);
+        ParseCtx pctx = new ParseCtx(INAME, line, pos, offset, len);
+        return new ASTNList(obj, pctx, false);
     }
     
     @Parameters
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 { "()", alist(list(), 0, 0, 0, 0), null},
-		{ "HELLO", alist(list(), 0, 0, 0, 0), null},
-		{ "  HELLO", alist(list(), 0, 0, 0, 0), null},
-		{ "123", alist(list(), 0, 0, 0, 0), null},
-		{ "  123", alist(list(), 0, 0, 0, 0), null},
-		{ "\"str\"", alist(list(), 0, 0, 0, 0), null},
-		{ "  \"str\"  ", alist(list(), 0, 0, 0, 0), null},
-		{ "  \"str\"\"str2\"  ", alist(list(), 0, 0, 0, 0), null},
-		{ "  ( \"str\" \"str2\" )  ", alist(list(), 0, 0, 0, 0), null},
-		{ "  ((  123 )    456   )  ", alist(list(), 0, 0, 0, 0), null},
-		{ "(IF (> a b )\n"+
-		  "    a\n"+
-		  "    b))", alist(list(), 0, 0, 0, 0), null},		
-	    });
+                { "HELLO", alist(list(), 0, 0, 0, 0), null},
+                { "  HELLO", alist(list(), 0, 0, 0, 0), null},
+                { "123", alist(list(), 0, 0, 0, 0), null},
+                { "  123", alist(list(), 0, 0, 0, 0), null},
+                { "\"str\"", alist(list(), 0, 0, 0, 0), null},
+                { "  \"str\"  ", alist(list(), 0, 0, 0, 0), null},
+                { "  \"str\"\"str2\"  ", alist(list(), 0, 0, 0, 0), null},
+                { "  ( \"str\" \"str2\" )  ", alist(list(), 0, 0, 0, 0), null},
+                { "  ((  123 )    456   )  ", alist(list(), 0, 0, 0, 0), null},
+                { "(IF (> a b )\n"+
+                  "    a\n"+
+                  "    b))", alist(list(), 0, 0, 0, 0), null},		
+            });
     }
 
     @Test
     public void testExprParse() {
-        System.out.println("\n\n TEST #: "+(testNum++));
+        log("\n\n TEST #: "+(testNum++));
         SexpParser parser = new SexpParser();
         
-	System.out.println("\n\nIN:  "+in);
-	ParseCtx pctx = new ParseCtx(INAME);
-	ASTNList astnl = parser.parse(pctx, in, 1);
-	ASTN astn = astnl.get(0);
-	System.out.println("OUT: " + astn.toStringWithPos());
+        log("\n\nIN:  "+in);
+        ParseCtx pctx = new ParseCtx(INAME);
+        ASTNList astnl = parser.parse(pctx, in, 1);
+        ASTN astn = astnl.get(0);
+        log("OUT: " + astn.toStringWithPos());
 	
     }
 

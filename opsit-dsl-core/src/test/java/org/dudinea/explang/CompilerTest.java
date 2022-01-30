@@ -21,7 +21,7 @@ import static org.dudinea.explang.Utils.list;
 import static org.dudinea.explang.Utils.map;
 
 @RunWith(Parameterized.class)
-public class CompilerTest {
+public class CompilerTest extends AbstractTest {
     static int testNum = 0;
     
     Object result;
@@ -43,6 +43,7 @@ public class CompilerTest {
         this.logResult = logResult;
         this.vars = vars;
         this.parser = parser;
+        this.isVerbose = "true".equalsIgnoreCase(System.getenv("EXPLANG_VERBOSE_TEST"));
     }
 
     @Parameters
@@ -254,13 +255,13 @@ public class CompilerTest {
                 { "(IF  1 (IF 0 1 2 ))" , new Integer(2), true, null , null, p},
                 
                 { "(PROGN 0 1 2)" , new Integer(2), true, null , null, p},
-                { "(PROGN (PRINT \"HELLO\") (PRINT \"WORLD\") (PRINT \"!!!\"))","!!!", true, null , null, p},
+                { "(PROGN (STR \"HELLO\") (STR \"WORLD\") (STR \"!!!\"))","!!!", true, null , null, p},
                 { "(PROGN)",null, false, null , null, p},
                 
                 { "(TRY)", null, false, null, null, p},
                 { "(TRY 1 2 3)", 3, true, null, null, p},
-                { "(TRY (PRINT 1) (+ 1 2))", 3, true, null, null, p},
-                { "(TRY (PRINT 1) (+ 1 2) (FINALLY 4) )", 3, true, null, null, p},
+                { "(TRY (STR 1) (+ 1 2))", 3, true, null, null, p},
+                { "(TRY (STR 1) (+ 1 2) (FINALLY 4) )", 3, true, null, null, p},
                 { "(TRY (THROW \"Exception\") "+
                   "     (CATCH java.lang.Exception ex 3) "+
                   "     (FINALLY 4))",	  3, true, null, null, p},
@@ -817,6 +818,7 @@ public class CompilerTest {
                 {"(PROGN (DEFUN fact (x) (IF x (* x (fact (- x 1))) 1)) (fact 5))", 120, true, null, null, p},
 
                 {"(RE-PATTERN \"^F[0-9]$\")", Pattern.compile("^F[0-9]$"), true, null,null,p},
+                {"(RE-GLOB \"g*b\")", Pattern.compile("g.*b"), true, null,null,p},
                 {"(RE-MATCHER (RE-PATTERN \"^F[0-9]$\") \"BLA\")", Pattern.compile("^F[0-9]$").matcher("BLA"), true, null,null,p},
                 {"(RE-MATCHES (RE-MATCHER (RE-PATTERN \"^F[0-9]$\") \"F1\"))", "F1", true, null,null,p},
                 {"(RE-MATCHES (RE-MATCHER (RE-PATTERN \"^(F)([0-9])$\") \"F1\"))", list("F1","F","1"), true, null,null,p},
@@ -1023,7 +1025,83 @@ public class CompilerTest {
                 {"(LET ((a (MAKE-ARRAY 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1 \"start()\") (. t1 \"join()\") (AREF a 0))",
                  2, true, null, null, p},
                  {"(LET ((a 1) (t1 (NEW-THREAD (LAMBDA () (SETV a 2)))))  (. t1 \"start()\") (. t1 \"join()\") a)",
-                         2, true, null, null, p}
+                  2, true, null, null, p},
+                 {"(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null) , true, null, null, p},
+                {"(+ (VERSION \"1.2.3\") (VERSION \"2.3.4\")) ", Version.mkSemVersion(3L, 5L, 7L, null, null) , true, null, null, p},
+                {"(- (VERSION \"1.2.3\") (VERSION \"1.2.3\")) ",
+                 Version.mkSemVersion(0L, 0L, 0L, null, null), false, null, null, p},
+                {"(+  (VERSION \"1.2.3\")  (VERSION \"a.b.c\")) ",
+                 Version.parseVersion("1a.2b.3c"), false, null, null, p},
+                
+                
+                
+                {"(>  (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", true, true, null, null, p},
+                {"(>= (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", true, true, null, null, p},
+                {"(<  (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", false, false, null, null, p},
+                {"(<= (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", false, false, null, null, p},
+                {"(=  (VERSION \"1.2.3\") (VERSION \"1.2.2\")) ", false, false, null, null, p},
+
+                {"(<  (VERSION \"1.2.2\") (VERSION \"1.2.3\")) ", true, true, null, null, p},
+                {"(<= (VERSION \"1.2.2\") (VERSION \"1.2.3\")) ", true, true, null, null, p},
+                {"(=  (VERSION \"1.2.2\")  (VERSION \"1.2.3\")) ", false, false, null, null, p},
+                {"(>= (VERSION \"1.2.2\")  (VERSION \"1.2.3\")) ", false, false, null, null, p},
+                {"(>  (VERSION \"1.2.2\")  (VERSION \"1.2.3\")) ", false, false, null, null, p},
+
+                {"(+  (VERSION \"1.2.3-1+2\")  (VERSION \"0.0.0-1+1\")) ",
+                 Version.mkSemVersion(1L,2L,3L,list("2"), list("3")), true, null, null, p} ,
+
+                {"(+  (VERSION \"1.2.3-1+2\")  (VERSION \"0.0.0-1.8+1.9\")) ",
+                 Version.mkSemVersion(1L,2L,3L,list("2","8"), list("3","9")), true, null, null, p},
+                
+                {"(< (VERSION \"0.0.8\" ) "+
+                 "   (VERSION \"0.0.9\") "+
+                 "   (VERSION \"0.1.0\") "+
+                 "   (VERSION \"0.1.1\") "+
+                 "   (VERSION \"0.1.1a\") "+
+                 "   (VERSION \"1.0.0-alpha\") "+
+                 "   (VERSION \"1.0.0-alpha.1\") "+
+                 "   (VERSION \"1.0.0-alpha.beta\") "+
+                 "   (VERSION \"1.0.0-beta\") " +
+                 "   (VERSION \"1.0.0-beta.2\") "+
+                 "   (VERSION \"1.0.0-beta.11\") "+
+                 "   (VERSION \"1.0.0-rc.1\" ) "+
+                 "   (VERSION \"1.0.0\"))", true, true, null,null,p},
+
+                {"(<= (VERSION \"0.0.8\" ) "+
+                 "   (VERSION \"0.0.9\") "+
+                 "   (VERSION \"0.1.0\") "+
+                 "   (VERSION \"0.1.0+2\") "+
+                 "   (VERSION \"0.1.1\") "+
+                 "   (VERSION \"0.1.1a\") "+
+                 "   (VERSION \"1.0.0-alpha\") "+
+                 "   (VERSION \"1.0.0-alpha.1\") "+
+                 "   (VERSION \"1.0.0-alpha.beta\") "+
+                 "   (VERSION \"1.0.0-beta\") " +
+                 "   (VERSION \"1.0.0-beta+1\") " +
+                 "   (VERSION \"1.0.0-beta+2.2\") " +
+                 "   (VERSION \"1.0.0-beta.2\") "+
+                 "   (VERSION \"1.0.0-beta.11\") "+
+                 "   (VERSION \"1.0.0-rc.1\" ) "+
+                 "   (VERSION \"1.0.0\"))", true, true, null,null,p},
+
+                
+                {"(>= (VERSION \"1.0.0\")"+
+                 "   (VERSION \"1.0.0-rc.1\" ) "+
+                 "   (VERSION \"1.0.0-beta.11\") "+
+                 "   (VERSION \"1.0.0-beta.2\") "+
+                 "   (VERSION \"1.0.0-beta+2.2\") " +
+                 "   (VERSION \"1.0.0-beta+1\") " +
+                 "   (VERSION \"1.0.0-beta\") " +
+                 "   (VERSION \"1.0.0-alpha.beta\") "+
+                 "   (VERSION \"1.0.0-alpha.1\") "+
+                 "   (VERSION \"1.0.0-alpha\") "+
+                 "   (VERSION \"0.1.1a\") "+
+                 "   (VERSION \"0.1.1\") "+
+                 "   (VERSION \"0.1.0+2\") "+
+                 "   (VERSION \"0.1.0\") "+
+                 "   (VERSION \"0.0.9\") "+
+                 "  (VERSION \"0.0.8\" )) ", true, true, null,null,p}
+
             });
     }
 
@@ -1044,11 +1122,13 @@ public class CompilerTest {
     }
 
     
+
     
     @Test
     public void testExprs() throws Throwable {
+        clearLog();
         try {
-            System.out.println("\n\n TEST #: "+testNum);
+            log("\n\n TEST #: "+testNum);
             Compiler compiler =new Compiler();
             compiler.setParser(this.parser);
             compiler.usePackages(Package.DWIM, Package.FFI, Package.IO, Package.LOOPS, Package.THREADS, "tests");
@@ -1056,28 +1136,28 @@ public class CompilerTest {
             compiler.addBuiltIn("LAZYAND", LAZYAND.class);
             String inputName = "TEST #"+testNum;
             testNum++;
-            System.out.println("Parser: "+compiler.getParser());
-            System.out.println("IN:  "+in);
+            log("Parser: "+compiler.getParser());
+            log("IN:  "+in);
             ASTNList parsed = parser.parse(new ParseCtx(inputName),in);
-            System.out.println("AST: " + parsed);
+            log("AST: " + parsed);
 
             int i = 0;
             for (ASTN exprObj : parsed) {
                 i++;
-                System.out.println("EXPRESSION "+i+" OF "+parsed.size());
+                log("EXPRESSION "+i+" OF "+parsed.size());
                 Assert.assertEquals(1, parsed.size());
                 ICompiled exp = compiler.compile(exprObj);
                 Compiler.ICtx ctx = (null!=this.vars ? compiler.newCtx(this.vars)
                                      : compiler.newCtx());
                 Object expVal = exp.evaluate(compiler.newBacktrace(),ctx);
-                System.out.println("TYP: " + ((null == expVal) ? null :expVal.getClass()));
-                System.out.println("OUT: " + Utils.asString(expVal));
-                System.out.println("LOG: " + Utils.asBoolean(expVal));
+                log("TYP: " + ((null == expVal) ? null :expVal.getClass()));
+                log("OUT: " + Utils.asString(expVal));
+                log("LOG: " + Utils.asBoolean(expVal));
                 if (null!=expExc) {
                     Assert.fail("expected exception containing "+expExc);
                 }
-                System.out.println("XPC: " + Utils.asString(result));
-                System.out.println("LXPC:" + logResult);
+                log("XPC: " + Utils.asString(result));
+                log("LXPC:" + logResult);
                 if (i==parsed.size()) {
                     if ((result instanceof Double) && (expVal instanceof Double)) {
                         Assert.assertEquals((double)result, (double)expVal, 0.0000000000001);
@@ -1102,19 +1182,24 @@ public class CompilerTest {
                 }
             }
         } catch (ExecutionException ex) {
+
             if (null!= expExc) {
                 if (areEqual(ex,expExc)) {
-                    System.err.println("Got expected exception: "+ex);
+                    log("Got expected exception: "+ex);
                 } else {
-                    System.err.println("Expected exception: "+expExc+", but got "+ex);
-                    ex.printStackTrace(System.err);
+                    log("Expected exception: "+expExc+", but got "+ex);
+                    flushLog();
+                    ex.printStackTrace(System.out);
                     throw ex;
                 }
             } else {
-                ex.printStackTrace(System.err);
+                flushLog();
+                log("Got unexpected exception: "+ex);
+                ex.printStackTrace(System.out);
                 throw ex;
             }
         } catch (Throwable ex) {
+            flushLog();
             ex.printStackTrace(System.err);
             throw ex;
         }
