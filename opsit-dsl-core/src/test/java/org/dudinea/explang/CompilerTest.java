@@ -305,6 +305,8 @@ public class CompilerTest extends AbstractTest {
                 {"(LET ((%% 100)) (->> 10 (- 1) (- 2)) %%)", 100, true, null, null, p},
 
                 {"(@->  (LIST 1 2 3 4 5) (TAKE 3) (SUBSEQ 1))", list(2,3), true, null, null, p},
+                {"(@->  (LIST 1 2 3 4 5) (APPLY (FUNCTION *)))", 120, true, null, null, p},
+                {"(@->  (RANGE 1 6) (APPLY (FUNCTION *)))", 120, true, null, null, p},
                 //{"(PROGN (DEFUN FFF (X &PIPE Y) (TAKE X Y)) (@-> (LIST 1 2 3 4 5) (FFF 3)))", list(1,2,3), true, null, null, p},
                 // FIXME: does not work when DEFUN is defined in smae expr:
                 //        because of the funcall hack

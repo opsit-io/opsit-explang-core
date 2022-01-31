@@ -856,7 +856,7 @@ public class Funcs {
     
 
     // FIXME: allow function be symbol (or function name?)
-    @Arguments(spec={"function", ArgSpec.ARG_REST,"arguments"})
+    @Arguments(spec={"function", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
     @Docstring(text="Apply Arguments to a Function. Function must be a function object")
     @Package(name=Package.BASE_FUNCS)
     public static class FUNCALL extends AbstractExpr {
@@ -950,7 +950,7 @@ public class Funcs {
     
     /****** MAPPING OPERATIONS ******/
     // args is a spreadable list designator
-    @Arguments(spec={"f", ArgSpec.ARG_REST,"arguments"})
+    @Arguments(spec={"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
     @Docstring(text="Apply function to arguments. arguments must be a spreadable list designator, i.e. if the last argument is a list, it contents will be appended to the list of arguments.")
     @Package(name=Package.BASE_FUNCS)
     public static class APPLY extends FuncExp  {
