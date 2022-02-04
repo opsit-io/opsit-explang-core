@@ -185,6 +185,10 @@ public class CompilerTest extends AbstractTest {
                 //{ "(= 0.1 0.1F)", true, true, null, null, p},
                 { "(= 3.0 3.0F 3L 3 3S 3B)", true, true, null, null, p},
 
+                // object identity
+                { "(=== 12345678 12345678)", false, false, null, null, p},
+                { "(LET ((A 1) (B A)) (=== A B))", true , true, null,null,p},
+                { "(=== NIL  NIL)", true , true, null,null,p},
                 // java equal
                 { "(EQUAL 1 1)", true, true, null, null, p},
                 { "(EQUAL \"a\" \"a\" )", true, true, null, null, p},

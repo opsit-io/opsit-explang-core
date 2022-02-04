@@ -493,6 +493,21 @@ public class Funcs {
         }
     }
 
+    /**** COMPARISON ****/
+    @Arguments(spec={"x","y"})
+    @Docstring(text="Check Object Equality. "+
+               "Objects identity check: returns true if Object x is same as Object y. " +
+               "Uses java operator == to check objects identity")
+    @Package(name=Package.BASE_LOGIC)
+    public static class EQ extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object v1 = eargs.get(0, backtrace);
+            final Object v2 = eargs.get(1, backtrace);
+            return v1 == v2;
+        }
+    }
+
     @Arguments(spec={"x",ARG_REST,"args"})
     public static abstract class NUMCOMP extends FuncExp implements ABSTRACT_OP    {
         @Override
