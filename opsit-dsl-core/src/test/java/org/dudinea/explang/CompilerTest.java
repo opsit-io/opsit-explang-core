@@ -66,8 +66,9 @@ public class CompilerTest extends AbstractTest {
         List<Object> parsedQuine =(List<Object>)((List<Object>)Utils.unASTN((new SexpParser()).parse(new ParseCtx("quine"),quine))).get(0);
         List data ;
 
-	
-        return Arrays.asList(new Object[][] {
+        final Object[] ONLY = {"__ONLY__"};
+
+        Object[][] tests = (new Object[][] {
                 //empty list
                 { "()",         new ArrayList<Object>(0)  , false, null, null, p},
                 //atomic values
@@ -210,8 +211,14 @@ public class CompilerTest extends AbstractTest {
                 { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
                 { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2.1)))", false, false, null, null, p},
                 // FIXME: maps enum values set
-                //{ "(== (MAP 1 10.0) (MAP 1 10))", true, true, null, null, p},
                 
+                { "(== (HASHMAP 1 1000.0) (HASHMAP 1 1000.l))", true, true, null, null, p},
+                { "(== (HASHMAP 2 1000) (HASHMAP 2 1000.0))", true, true, null, null, p},
+                { "(== (HASHMAP 2 1000) (HASHMAP 2 11))", false, false, null, null, p},
+                { "(== (HASHMAP 2 1000) (HASHMAP 2 10.1))", false, false, null, null, p},
+                { "(== (HASHMAP 3 (LIST 1)) (HASHMAP 3 (LIST 1.0)))", true, true, null, null, p},
+                { "(LET ((A (MAKE-ARRAY 2))) (ASET A 0 1000) (ASET A 1 2000) (== (LIST 1000 2000) A))", true, true, null, null, p},
+                { "(LET ((A (MAKE-ARRAY 2))) (ASET A 0 1000.0) (ASET A 1 2000) (== (LIST 1000 2000.0) A))", true, true, null, null, p},
                 
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",
@@ -1128,6 +1135,18 @@ public class CompilerTest extends AbstractTest {
                  "  (VERSION \"0.0.8\" )) ", true, true, null,null,p}
 
             });
+        List<Object[]> result = new ArrayList<Object[]>();
+        for (int i = 0; i < tests.length; i++) {
+            Object []test = tests[i];
+            if (test[0].equals(ONLY[0])) {
+                result.clear();
+                result.add(tests[i+1]);
+                break;
+            } else {
+                result.add(test);
+            }
+        }
+        return result;
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY,"a","b","c"})

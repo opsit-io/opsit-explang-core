@@ -251,12 +251,41 @@ public class Seq {
         return result;
     }
 
+
+    public static boolean sequal(Map m1, Map m2) {
+        // not sure that this is right
+        // probably need to check keys according to the same rules?
+        // but it could get messy
+        // unless we use same equality rules for getting keys from maps
+        final Set k1 = m1.keySet();
+        final Set k2 = m2.keySet();
+        if (!k1.equals(k2)) {
+            return false;
+        }
+        for (Object k : m1.keySet()) {
+            final Object el1 = m1.get(k);
+            final Object el2 = m2.get(k);
+            if (Utils.sequal(el1, el2)) {
+                continue;
+            }
+            if (isSequence(el1) && isSequence(el2)) {
+                if (sequal(el1, el2)) {
+                    continue;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
     
     public static boolean sequal(Object o1, Object o2) {
         int l1 = Seq.getLength(o2, false);
         int l2 = Seq.getLength(o2, false);
         if (l1 != l2) {
             return false;
+        }
+        if ((o1 instanceof Map) && (o2 instanceof Map)) {
+            return sequal((Map) o1, (Map) o2);
         }
         for (int i = 0; i < l1; i++) {
             final Object el1 = getElement(o1, i);
