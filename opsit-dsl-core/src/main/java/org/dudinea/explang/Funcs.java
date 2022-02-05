@@ -493,6 +493,42 @@ public class Funcs {
         }
     }
 
+    @Arguments(spec={"x","y"})
+    @Docstring(text="Check Value Equality. "+
+               "Returns true if x equal to y according to call to Java method "+
+               "x.equals(y) or if both objects are NIL. If they are not, it  returns true if  thy are "+
+               "equal numerically or structurally.")
+    @Package(name=Package.BASE_LOGIC)
+    public static class SEQUAL extends NUMEQ {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object v1 = eargs.get(0, backtrace);
+            final Object v2 = eargs.get(1, backtrace);
+            if (v1==null) {
+                if (v2 == null) {
+                    return true;
+                }
+            }
+            if (v2 == null) {
+                return false;
+            }
+            if (v1.equals(v2)) {
+                return true;
+            }
+            if ((v1 instanceof Number) && (v2 instanceof Number)) {
+                final Promotion p = new Promotion();
+                final Number n1 = (Number) v1;
+                p.promote(n1);
+                final Number n2 = (Number) v2;
+                p.promote(n2);
+                final Integer dif = p.callOP(this, n1, n2).intValue();
+                return dif == 0;
+            }
+            
+            return false;
+        }
+    }
+
     /**** COMPARISON ****/
     @Arguments(spec={"x","y"})
     @Docstring(text="Check Object Equality. "+

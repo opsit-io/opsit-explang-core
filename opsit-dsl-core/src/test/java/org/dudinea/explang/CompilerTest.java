@@ -194,6 +194,10 @@ public class CompilerTest extends AbstractTest {
                 { "(EQUAL \"a\" \"a\" )", true, true, null, null, p},
                 { "(EQUAL NIL NULL )", true, true, null, null, p},
                 { "(EQUAL (SYMBOL \"A\") (QUOTE A))", true, true, null, null, p},
+
+                { "(== 1 1)", true, true, null, null, p},
+                { "(== 1 1.0)", true, true, null, null, p},
+
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",
                   list(true, "some-result"), true, null, null, p},

@@ -338,6 +338,7 @@ public class Compiler {
                  // java .equals()
                  "EQUAL", EQUAL.class,
                  "===", EQ.class,
+                 "==", SEQUAL.class,
                  // variables
                  "SETQ", SETQ.class,
                  "SETV", SETV.class,
