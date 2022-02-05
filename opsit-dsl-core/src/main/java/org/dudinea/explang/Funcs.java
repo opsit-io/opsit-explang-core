@@ -501,14 +501,16 @@ public class Funcs {
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final Object v1 = eargs.get(0, backtrace);
             final Object v2 = eargs.get(1, backtrace);
-            final boolean result = Utils.sequal(v1, v2);
+            return Seq.sequal(v1, v2);
+            
+            /*final boolean result = Utils.sequal(v1, v2);
             if (result) {
                 return result;
             }
             if (Seq.isSequence(v1) && Seq.isSequence(v2)) {
-                return Seq.sequal(v1, v2);
+
             }
-            return false;
+            return false;*/
         }
     }
 

@@ -557,8 +557,8 @@ public class Utils {
     }
 
     public static final NumCompOp nc = new NumCompOp();
-
-    public static boolean sequal(Object v1, Object v2) {
+    
+    public static boolean objequal(Object v1, Object v2) {
         if (v1==null) {
             if (v2 == null) {
                 return true;
