@@ -556,6 +556,10 @@ public class Utils {
         return a.equals(b);
     }
 
+    public static boolean enumEqual(Enum e, Object o) {
+        return Seq.sequal(e.name(), o);
+    }
+
     public static final NumCompOp nc = new NumCompOp();
     
     public static boolean objequal(Object v1, Object v2) {
@@ -573,6 +577,13 @@ public class Utils {
         if ((v1 instanceof Number) && (v2 instanceof Number)) {
             return nc.compare((Number)v1, (Number) v2) == 0;
         }
+        if (v1.getClass().isEnum()) {
+            return enumEqual((Enum)v1, v2);
+        }
+        if (v2.getClass().isEnum()) {
+            return enumEqual((Enum)v2, v1);
+        }
+        
         return false;
     }
 }

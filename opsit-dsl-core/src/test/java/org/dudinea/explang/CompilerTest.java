@@ -222,6 +222,11 @@ public class CompilerTest extends AbstractTest {
                 { "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))", true, true, null, null, p},
                 { "(== (HASHSET 1 2 3.0 \"foo\" null) (HASHSET null \"foo\" 1 2 3))", false, false, null, null, p},
                 { "(== (LIST 1 (HASHSET 1 2 3)) (LIST 1 (HASHSET 1 2 3)))", true, true, null, null, p},
+                { "(== \"UNO\" (.S \"org.dudinea.explang.TestEnum\" \"UNO\"))", true, true, null, null, p},
+                { "(== \"DUO\" (.S \"org.dudinea.explang.TestEnum\" \"UNO\"))", false, false, null, null, p},
+                { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"UNO\")", true, true, null, null, p},
+                { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"DUO\")", false, false, null, null, p},
+
                 
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",
