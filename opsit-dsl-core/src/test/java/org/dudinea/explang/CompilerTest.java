@@ -195,9 +195,24 @@ public class CompilerTest extends AbstractTest {
                 { "(EQUAL NIL NULL )", true, true, null, null, p},
                 { "(EQUAL (SYMBOL \"A\") (QUOTE A))", true, true, null, null, p},
 
+                { "(== 1 1b)", true, true, null, null, p},
                 { "(== 1 1)", true, true, null, null, p},
                 { "(== 1 1.0)", true, true, null, null, p},
-
+                { "(== 12345678 12345678)", true, true, null, null, p},
+                { "(== 12345678 12345678L)", true, true, null, null, p},
+                { "(== 12345678L 12345678)", true, true, null, null, p},
+                { "(== 12345678 12345678.0)", true, true, null, null, p},
+                { "(== 12345678.0 12345678.0f)", true, true, null, null, p},
+                { "(== (LIST 1) (LIST 1))", true, true, null, null, p},
+                { "(== (LIST 1.0) (LIST 1))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2)) (LIST 1 (LIST 2)))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2.1)))", false, false, null, null, p},
+                // FIXME: maps enum values set
+                //{ "(== (MAP 1 10.0) (MAP 1 10))", true, true, null, null, p},
+                
+                
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",
                   list(true, "some-result"), true, null, null, p},

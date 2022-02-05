@@ -6,11 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import org.dudinea.explang.Funcs.ABSTRACT_OP;
+//import org.dudinea.explang.Funcs.AbstractOp;
 
 
 public class RangeList  implements List {
-    final private ABSTRACT_OP addop = new ABSTRACT_OP() {
+    final private AbstractOp addop = new AbstractOp() {
             @Override
             public  Number doIntOp(Number result, Number arg) {
                 return result.longValue() + arg.longValue();

@@ -1,6 +1,5 @@
 package org.dudinea.explang;
 
-import org.dudinea.explang.Funcs.ABSTRACT_OP;
 import org.dudinea.explang.Version;
 
 // used by numeric operators
@@ -50,7 +49,7 @@ public class Promotion {
             }
         }
     }
-    public Number callOP(ABSTRACT_OP op, Number arg1, Number arg2) {
+    public Number callOP(AbstractOp op, Number arg1, Number arg2) {
         final Number result =
             (noVersion
              ? (noDouble 

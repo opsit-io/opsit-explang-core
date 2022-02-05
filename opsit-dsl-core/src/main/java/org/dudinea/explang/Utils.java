@@ -555,4 +555,24 @@ public class Utils {
         }
         return a.equals(b);
     }
+
+    public static final NumCompOp nc = new NumCompOp();
+
+    public static boolean sequal(Object v1, Object v2) {
+        if (v1==null) {
+            if (v2 == null) {
+                return true;
+            }
+        }
+        if (v2 == null) {
+            return false;
+        }
+        if (v1.equals(v2)) {
+            return true;
+        }
+        if ((v1 instanceof Number) && (v2 instanceof Number)) {
+            return nc.compare((Number)v1, (Number) v2) == 0;
+        }
+        return false;
+    }
 }

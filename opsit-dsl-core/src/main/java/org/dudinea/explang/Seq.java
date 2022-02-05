@@ -250,5 +250,30 @@ public class Seq {
         }
         return result;
     }
+
     
+    public static boolean sequal(Object o1, Object o2) {
+        int l1 = Seq.getLength(o2, false);
+        int l2 = Seq.getLength(o2, false);
+        if (l1 != l2) {
+            return false;
+        }
+        for (int i = 0; i < l1; i++) {
+            final Object el1 = getElement(o1, i);
+            final Object el2 = getElement(o2, i);
+            // compare non-sequence objects
+            // if both of them is sequnces and x.equals(y) == true
+            //  it's ok as well.
+            if (Utils.sequal(el1, el2)) {
+                continue;
+            }
+            if (isSequence(el1) && isSequence(el2)) {
+                if (sequal(el1, el2)) {
+                    continue;
+                }
+            }
+            return false;
+        }
+        return true;
+    }
 }
