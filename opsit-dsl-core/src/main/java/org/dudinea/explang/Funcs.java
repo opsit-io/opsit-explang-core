@@ -887,7 +887,6 @@ public class Funcs {
             return map;
         }
     }
-    
 
     // FIXME: allow function be symbol (or function name?)
     @Arguments(spec={"function", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
@@ -2769,6 +2768,21 @@ public class Funcs {
                 lst.add(val);
             }
             return lst;
+        }
+    }
+
+    @Arguments(spec={ArgSpec.ARG_REST,"args"})
+    @Docstring(text="Create a HashSet. Returns a set containing the supplied objects. ")
+    @Package(name=Package.BASE_SEQ)
+    public static class HASHSET extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            List rest = (List)eargs.get(0, backtrace);
+            final Set<Object> set = new HashSet<Object>(rest.size());
+            for (Object val : rest) {
+                set.add(val);
+            }
+            return set;
         }
     }
 

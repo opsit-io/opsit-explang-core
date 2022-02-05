@@ -387,6 +387,7 @@ public class Compiler {
                  "PRINT", PRINT.class,
                  // sequences operations
                  "LIST", LIST.class,
+                 "HASHSET", HASHSET.class,
                  "NTH", NTH.class,
                  "CONS", CONS.class,
                  "APPEND", APPEND.class,
