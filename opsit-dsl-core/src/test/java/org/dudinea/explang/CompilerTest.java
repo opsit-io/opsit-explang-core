@@ -219,6 +219,9 @@ public class CompilerTest extends AbstractTest {
                 { "(== (HASHMAP 3 (LIST 1)) (HASHMAP 3 (LIST 1.0)))", true, true, null, null, p},
                 { "(LET ((A (MAKE-ARRAY 2))) (ASET A 0 1000) (ASET A 1 2000) (== (LIST 1000 2000) A))", true, true, null, null, p},
                 { "(LET ((A (MAKE-ARRAY 2))) (ASET A 0 1000.0) (ASET A 1 2000) (== (LIST 1000 2000.0) A))", true, true, null, null, p},
+                { "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))", true, true, null, null, p},
+                { "(== (HASHSET 1 2 3.0 \"foo\" null) (HASHSET null \"foo\" 1 2 3))", false, false, null, null, p},
+                { "(== (LIST 1 (HASHSET 1 2 3)) (LIST 1 (HASHSET 1 2 3)))", true, true, null, null, p},
                 
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",

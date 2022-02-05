@@ -287,6 +287,10 @@ public class Seq {
         if ((o1 instanceof Map) && (o2 instanceof Map)) {
             return sequal((Map) o1, (Map) o2);
         }
+        if ((o1 instanceof Set) && (o2 instanceof Set)) {
+            return o1.equals(o2);
+        }
+        
         for (int i = 0; i < l1; i++) {
             final Object el1 = getElement(o1, i);
             final Object el2 = getElement(o2, i);
