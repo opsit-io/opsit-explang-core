@@ -153,6 +153,19 @@ public class CompilerTest extends AbstractTest {
                 { "(AND)",                 true             , true, null, null, p},
                 { "(AND 1 2 3L)",           new Long(3)   , true, null, null, p},
                 { "(AND 1 2 0L)",           new Long(0)   , false,null, null, p},
+                { "(PROGN "+
+                  " (SETQ CNTR 0) "+
+                  " (DEFUN GETARG () (SETQ CNTR (+ CNTR 1)))" +
+                  " (SETQ ACC ()) " +
+                  " (FOREACH (X (LIST 1 2 3 )) " +
+                  "          (SETQ CNTR 0) "+
+                  "          (APPEND! ACC "+
+                  "              (LIST (AND (< (GETARG) 2) (< (GETARG) 2) (< (GETARG) 2) (< (GETARG) 2)) " +
+                  "                    CNTR))) "+
+                  " ACC )", list(false, 2,false, 2,false, 2), true, null, null, p},
+
+
+                { "(MAP (LAMBDA (X) (AND (> X 25))) (LIST  25 28))", list(false,true), true, null,null,p},
                 { "(LET ((a NIL)) (LIST (AND (SETV a 1) (SETV a 0) (SETV a 3) ) a))",
                   list (0,0), true, null, null, p},
                 { "(NOT 0 )",              true             , true, null, null, p},
