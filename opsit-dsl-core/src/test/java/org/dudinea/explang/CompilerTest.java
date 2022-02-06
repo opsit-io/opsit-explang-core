@@ -881,13 +881,12 @@ public class CompilerTest extends AbstractTest {
                 {"(RE-MATCHES (RE-PATTERN \"^(F)([0-9])$\") \"BLA\")", null, false, null,null,p},
                 {"(RE-FIND (RE-PATTERN \"(F)([0-9])\") \"BLA\")", null, false, null,null,p},
                 {"(RE-FIND (RE-PATTERN \"(F)([0-9])\") \"F1\")", list("F1","F","1"), true, null,null,p},
-
                 {"(DWIM-MATCHES \"a1231b\" (RE-PATTERN \"[0-9]\"))", list("1","2","3","1"), true, null,null,p},
                 {"(DWIM-MATCHES \"a1231b\" \"1\")", list("1"), true, null,null,p},
                 {"(DWIM-MATCHES NIL NIL)", list((Object)null), true, null,null,p},
                 {"(DWIM-MATCHES 1 1)", list(1), true, null,null,p},
                 {"(DWIM-MATCHES 1 1.0)", list(1), true, null,null,p},
-                {"(DWIM-MATCHES 1.0 1)", list(1.0), true, null,null,p},
+                {"(DWIM-MATCHES 1.0 1)", list(1.0), true, null, null, p},
 
                 {"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") (EQUAL _ \"foo\"))", list("foo"), true, null,null,p},
                 {"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true, null,null,p},
@@ -955,6 +954,7 @@ public class CompilerTest extends AbstractTest {
                 {"(FORMAT \"foo\")", "foo", true, null, null, p},
                 {"(SEQ (. \"H-E-L-P\" \"split\" (LIST \"-\")))", list("H","E","L","P"), true, null, null, p},
                 {"(SYMBOL \"fooo\")", new Symbol("fooo"), true, null, null, p},
+
                 {"(WITH-BINDINGS (HASHMAP \"a\"   1   \"B\"    2  \"c\" 3 \"D\" 4) (+ a B c D))",
                  10 , true, null, null, p},
                 {"(WITH-BINDINGS (BEAN testbean) (LIST name surName age accepted children))",

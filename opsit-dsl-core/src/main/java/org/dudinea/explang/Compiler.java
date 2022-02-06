@@ -1540,7 +1540,7 @@ public class Compiler {
                 @Override
                 public boolean perform(Object obj) {
                     Map objMap = (obj instanceof Map) ? (Map) obj : new Funcs.BeanMap(obj);
-                    final ICtx checkCtx = new Ctx(ctx, objMap);
+                    final ICtx checkCtx =  new Ctx(ctx, objMap, true);
                     checkCtx.getMappings().put("_", obj);
                     Object chkResult = null;
                     //try {
@@ -1626,11 +1626,20 @@ public class Compiler {
     }
 
     public class Ctx implements ICtx {
-        final Map<String, Object> mappings = new HashMap<String, Object>();
+        final Map<String, Object> mappings;
         final Map<String, Map<Object, Object>> propsMap =
                 new HashMap<String, Map<Object, Object>>();
         ICtx prev;
         IMissHandler missHandler = new NilMissHandler();
+
+        protected Map<String,Object> mkMappings() {
+            return new HashMap<String, Object>();
+        }
+
+        protected void initCtxSettings() {
+            setMissHandler(Compiler.this.failOnMissingVariables ? new ErrorMissHandler()
+                           : new NilMissHandler());
+        }
 
         public Map<String, Map<Object, Object>> getPropsMap() {
             return propsMap;
@@ -1697,34 +1706,36 @@ public class Compiler {
         }
 
         public Ctx(Map<String, Object> vars) {
-            super();
-            this.prev = null;
-            if (null != vars) {
-                mappings.putAll(vars);
-            }
+            this(null, vars, false);
         }
 
         public Ctx(ICtx prev, Map<String, Object> vars) {
+            this(prev, vars, false);
+        }
+
+        public Ctx(ICtx prev, Map<String, Object> vars, boolean roCtx) {
             super();
-            this.prev = prev;
-            if (null != vars) {
-                mappings.putAll(vars);
-            }
+            initCtxSettings();
+            if (roCtx) {
+                this.mappings = mkMappings();
+                this.prev = new Ctx(prev, vars, false);
+            } else {
+                this.mappings = (null == vars) ? mkMappings() : vars;
+                this.prev = prev;
+            } 
+
         }
 
         public Ctx() {
-            super();
-            setMissHandler(Compiler.this.failOnMissingVariables ? new ErrorMissHandler()
-                    : new NilMissHandler());
+            this(null, null, false);
         }
 
         public Ctx(ICtx prev) {
-            super();
-            this.prev = prev;
+            this(prev, null, false);
         }
 
         public Ctx(ICtx locals, ICtx ctx) {
-            super();
+            this();
             mappings.putAll(locals.getMappings());
             prev = ctx;
         }
@@ -1904,6 +1915,11 @@ public class Compiler {
 
     public ICtx newCtx(Map vars) {
         return new Ctx(vars);
+    }
+
+    public ICtx newCtxFromROMap(Map vars) {
+        ICtx ctx = new Ctx(vars);
+        return newCtx(ctx);
     }
 
     public Backtrace newBacktrace() {
