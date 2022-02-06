@@ -138,15 +138,9 @@ public class Funcs {
     }
 
     /**** ARITHMETIC FUNCTIONS ****/
-    public static interface ABSTRACT_OP  {
-        Number doIntOp(Number arg1, Number arg2);
-        Number doDoubleOp(Number arg1, Number arg2);
-        Number doFloatOp(Number arg1, Number arg2);
-        Number doVersionOp( Number arg1, Number arg2);
-    }    
 
     @Arguments(spec={ArgSpec.ARG_REST,"args"})
-    public static abstract class ABSTRACT_ADD extends FuncExp implements ABSTRACT_OP {
+    public static abstract class ABSTRACT_ADD extends FuncExp implements AbstractOp {
         protected abstract Number getNeutral();
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -233,7 +227,7 @@ public class Funcs {
     
 
     @Arguments(spec={ArgSpec.ARG_REST,"args"})
-    public abstract static class ABSTRACT_SUB extends FuncExp implements  ABSTRACT_OP {
+    public abstract static class ABSTRACT_SUB extends FuncExp implements  AbstractOp {
         protected abstract Number getNeutral();
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -343,7 +337,7 @@ public class Funcs {
                "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "+
                "(same semantic as for the Java % operator.")
     @Package(name=Package.BASE_ARITHMENTICS)
-    public  static class REMOP extends FuncExp implements  ABSTRACT_OP {
+    public  static class REMOP extends FuncExp implements  AbstractOp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final Number first = Utils.asNumber(eargs.get(0, backtrace));
@@ -381,7 +375,7 @@ public class Funcs {
                "returns result of the modulus operation. If one of them is floating point "+
                "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
     @Package(name=Package.BASE_ARITHMENTICS)
-    public  static class MODOP extends FuncExp implements  ABSTRACT_OP {
+    public  static class MODOP extends FuncExp implements  AbstractOp {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             final Number first = Utils.asNumber(eargs.get(0, backtrace));
@@ -493,8 +487,50 @@ public class Funcs {
         }
     }
 
+   
+    @Arguments(spec={"x","y"})
+    @Docstring(text="Check Value Equality. "+
+               "Returns true if x equal to y according to call to Java method "+
+               "x.equals(y) or if both objects are NIL. If they are not, it  returns true if  thy are "+
+               "equal numerically or structurally.")
+    @Package(name=Package.BASE_LOGIC)
+    public static class SEQUAL extends FuncExp {
+        NumCompOp nc = new NumCompOp();
+        
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object v1 = eargs.get(0, backtrace);
+            final Object v2 = eargs.get(1, backtrace);
+            return Seq.sequal(v1, v2);
+            
+            /*final boolean result = Utils.sequal(v1, v2);
+            if (result) {
+                return result;
+            }
+            if (Seq.isSequence(v1) && Seq.isSequence(v2)) {
+
+            }
+            return false;*/
+        }
+    }
+
+    /**** COMPARISON ****/
+    @Arguments(spec={"x","y"})
+    @Docstring(text="Check Object Equality. "+
+               "Objects identity check: returns true if Object x is same as Object y. " +
+               "Uses java operator == to check objects identity")
+    @Package(name=Package.BASE_LOGIC)
+    public static class EQ extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object v1 = eargs.get(0, backtrace);
+            final Object v2 = eargs.get(1, backtrace);
+            return v1 == v2;
+        }
+    }
+
     @Arguments(spec={"x",ARG_REST,"args"})
-    public static abstract class NUMCOMP extends FuncExp implements ABSTRACT_OP    {
+    public static abstract class NUMCOMP extends FuncExp implements AbstractOp    {
         @Override
         public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
             boolean result = true;
@@ -853,10 +889,9 @@ public class Funcs {
             return map;
         }
     }
-    
 
     // FIXME: allow function be symbol (or function name?)
-    @Arguments(spec={"function", ArgSpec.ARG_REST,"arguments"})
+    @Arguments(spec={"function", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
     @Docstring(text="Apply Arguments to a Function. Function must be a function object")
     @Package(name=Package.BASE_FUNCS)
     public static class FUNCALL extends AbstractExpr {
@@ -950,7 +985,7 @@ public class Funcs {
     
     /****** MAPPING OPERATIONS ******/
     // args is a spreadable list designator
-    @Arguments(spec={"f", ArgSpec.ARG_REST,"arguments"})
+    @Arguments(spec={"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
     @Docstring(text="Apply function to arguments. arguments must be a spreadable list designator, i.e. if the last argument is a list, it contents will be appended to the list of arguments.")
     @Package(name=Package.BASE_FUNCS)
     public static class APPLY extends FuncExp  {
@@ -2735,6 +2770,21 @@ public class Funcs {
                 lst.add(val);
             }
             return lst;
+        }
+    }
+
+    @Arguments(spec={ArgSpec.ARG_REST,"args"})
+    @Docstring(text="Create a HashSet. Returns a set containing the supplied objects. ")
+    @Package(name=Package.BASE_SEQ)
+    public static class HASHSET extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            List rest = (List)eargs.get(0, backtrace);
+            final Set<Object> set = new HashSet<Object>(rest.size());
+            for (Object val : rest) {
+                set.add(val);
+            }
+            return set;
         }
     }
 

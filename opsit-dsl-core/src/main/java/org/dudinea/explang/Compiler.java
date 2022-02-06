@@ -337,6 +337,8 @@ public class Compiler {
                  // object comparisons
                  // java .equals()
                  "EQUAL", EQUAL.class,
+                 "===", EQ.class,
+                 "==", SEQUAL.class,
                  // variables
                  "SETQ", SETQ.class,
                  "SETV", SETV.class,
@@ -385,6 +387,7 @@ public class Compiler {
                  "PRINT", PRINT.class,
                  // sequences operations
                  "LIST", LIST.class,
+                 "HASHSET", HASHSET.class,
                  "NTH", NTH.class,
                  "CONS", CONS.class,
                  "APPEND", APPEND.class,

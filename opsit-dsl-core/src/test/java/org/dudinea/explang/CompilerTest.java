@@ -66,8 +66,9 @@ public class CompilerTest extends AbstractTest {
         List<Object> parsedQuine =(List<Object>)((List<Object>)Utils.unASTN((new SexpParser()).parse(new ParseCtx("quine"),quine))).get(0);
         List data ;
 
-	
-        return Arrays.asList(new Object[][] {
+        final Object[] ONLY = {"__ONLY__"};
+
+        Object[][] tests = (new Object[][] {
                 //empty list
                 { "()",         new ArrayList<Object>(0)  , false, null, null, p},
                 //atomic values
@@ -152,6 +153,19 @@ public class CompilerTest extends AbstractTest {
                 { "(AND)",                 true             , true, null, null, p},
                 { "(AND 1 2 3L)",           new Long(3)   , true, null, null, p},
                 { "(AND 1 2 0L)",           new Long(0)   , false,null, null, p},
+                { "(PROGN "+
+                  " (SETQ CNTR 0) "+
+                  " (DEFUN GETARG () (SETQ CNTR (+ CNTR 1)))" +
+                  " (SETQ ACC ()) " +
+                  " (FOREACH (X (LIST 1 2 3 )) " +
+                  "          (SETQ CNTR 0) "+
+                  "          (APPEND! ACC "+
+                  "              (LIST (AND (< (GETARG) 2) (< (GETARG) 2) (< (GETARG) 2) (< (GETARG) 2)) " +
+                  "                    CNTR))) "+
+                  " ACC )", list(false, 2,false, 2,false, 2), true, null, null, p},
+
+
+                { "(MAP (LAMBDA (X) (AND (> X 25))) (LIST  25 28))", list(false,true), true, null,null,p},
                 { "(LET ((a NIL)) (LIST (AND (SETV a 1) (SETV a 0) (SETV a 3) ) a))",
                   list (0,0), true, null, null, p},
                 { "(NOT 0 )",              true             , true, null, null, p},
@@ -185,11 +199,48 @@ public class CompilerTest extends AbstractTest {
                 //{ "(= 0.1 0.1F)", true, true, null, null, p},
                 { "(= 3.0 3.0F 3L 3 3S 3B)", true, true, null, null, p},
 
+                // object identity
+                { "(=== 12345678 12345678)", false, false, null, null, p},
+                { "(LET ((A 1) (B A)) (=== A B))", true , true, null,null,p},
+                { "(=== NIL  NIL)", true , true, null,null,p},
                 // java equal
                 { "(EQUAL 1 1)", true, true, null, null, p},
                 { "(EQUAL \"a\" \"a\" )", true, true, null, null, p},
                 { "(EQUAL NIL NULL )", true, true, null, null, p},
                 { "(EQUAL (SYMBOL \"A\") (QUOTE A))", true, true, null, null, p},
+
+                { "(== 1 1b)", true, true, null, null, p},
+                { "(== 1 1)", true, true, null, null, p},
+                { "(== 1 1.0)", true, true, null, null, p},
+                { "(== 12345678 12345678)", true, true, null, null, p},
+                { "(== 12345678 12345678L)", true, true, null, null, p},
+                { "(== 12345678L 12345678)", true, true, null, null, p},
+                { "(== 12345678 12345678.0)", true, true, null, null, p},
+                { "(== 12345678.0 12345678.0f)", true, true, null, null, p},
+                { "(== (LIST 1) (LIST 1))", true, true, null, null, p},
+                { "(== (LIST 1.0) (LIST 1))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2)) (LIST 1 (LIST 2)))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
+                { "(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2.1)))", false, false, null, null, p},
+                // FIXME: maps enum values set
+                
+                { "(== (HASHMAP 1 1000.0) (HASHMAP 1 1000.l))", true, true, null, null, p},
+                { "(== (HASHMAP 2 1000) (HASHMAP 2 1000.0))", true, true, null, null, p},
+                { "(== (HASHMAP 2 1000) (HASHMAP 2 11))", false, false, null, null, p},
+                { "(== (HASHMAP 2 1000) (HASHMAP 2 10.1))", false, false, null, null, p},
+                { "(== (HASHMAP 3 (LIST 1)) (HASHMAP 3 (LIST 1.0)))", true, true, null, null, p},
+                { "(LET ((A (MAKE-ARRAY 2))) (ASET A 0 1000) (ASET A 1 2000) (== (LIST 1000 2000) A))", true, true, null, null, p},
+                { "(LET ((A (MAKE-ARRAY 2))) (ASET A 0 1000.0) (ASET A 1 2000) (== (LIST 1000 2000.0) A))", true, true, null, null, p},
+                { "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))", true, true, null, null, p},
+                { "(== (HASHSET 1 2 3.0 \"foo\" null) (HASHSET null \"foo\" 1 2 3))", false, false, null, null, p},
+                { "(== (LIST 1 (HASHSET 1 2 3)) (LIST 1 (HASHSET 1 2 3)))", true, true, null, null, p},
+                { "(== \"UNO\" (.S \"org.dudinea.explang.TestEnum\" \"UNO\"))", true, true, null, null, p},
+                { "(== \"DUO\" (.S \"org.dudinea.explang.TestEnum\" \"UNO\"))", false, false, null, null, p},
+                { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"UNO\")", true, true, null, null, p},
+                { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"DUO\")", false, false, null, null, p},
+
+                
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",
                   list(true, "some-result"), true, null, null, p},
@@ -305,6 +356,8 @@ public class CompilerTest extends AbstractTest {
                 {"(LET ((%% 100)) (->> 10 (- 1) (- 2)) %%)", 100, true, null, null, p},
 
                 {"(@->  (LIST 1 2 3 4 5) (TAKE 3) (SUBSEQ 1))", list(2,3), true, null, null, p},
+                {"(@->  (LIST 1 2 3 4 5) (APPLY (FUNCTION *)))", 120, true, null, null, p},
+                {"(@->  (RANGE 1 6) (APPLY (FUNCTION *)))", 120, true, null, null, p},
                 //{"(PROGN (DEFUN FFF (X &PIPE Y) (TAKE X Y)) (@-> (LIST 1 2 3 4 5) (FFF 3)))", list(1,2,3), true, null, null, p},
                 // FIXME: does not work when DEFUN is defined in smae expr:
                 //        because of the funcall hack
@@ -1103,6 +1156,18 @@ public class CompilerTest extends AbstractTest {
                  "  (VERSION \"0.0.8\" )) ", true, true, null,null,p}
 
             });
+        List<Object[]> result = new ArrayList<Object[]>();
+        for (int i = 0; i < tests.length; i++) {
+            Object []test = tests[i];
+            if (test[0].equals(ONLY[0])) {
+                result.clear();
+                result.add(tests[i+1]);
+                break;
+            } else {
+                result.add(test);
+            }
+        }
+        return result;
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY,"a","b","c"})

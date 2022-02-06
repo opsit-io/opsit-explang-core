@@ -6,7 +6,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.dudinea.explang.Compiler.Eargs;
 import org.dudinea.explang.Funcs.FuncExp;
-import org.dudinea.explang.Funcs.ABSTRACT_OP;
 import org.dudinea.explang.Funcs.NUMEQ;
 
 

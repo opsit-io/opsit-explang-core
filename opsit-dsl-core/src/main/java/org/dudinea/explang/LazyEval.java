@@ -5,25 +5,18 @@ import org.dudinea.explang.Compiler.ICtx;
 public class LazyEval implements ICompiled  {
     private ICompiled expr;
     private ICtx ctx;
-    private Object value = null;
-    boolean hasValue = false;
     public LazyEval(ICompiled expr) {
-	this.expr = expr;
-	//this.ctx = ctx;
+        this.expr = expr;
     }
 
-    //@Override
+    @Override
     public Object evaluate(Backtrace backtrace, ICtx extCtx) {
-	ctx = extCtx;
-	return this;
+        ctx = extCtx;
+        return this;
     }
 
     public Object getValue(Backtrace backtrace) {
-	if (!hasValue) {
-	    value = expr.evaluate(backtrace, ctx);
-	    hasValue = true;
-	}
-	return value;
+        return expr.evaluate(backtrace, ctx);
     }
 
     @Override
@@ -38,6 +31,6 @@ public class LazyEval implements ICompiled  {
 
     @Override
     public ParseCtx getDebugInfo() {
-	return expr.getDebugInfo();
+        return expr.getDebugInfo();
     }
 }
