@@ -1490,7 +1490,7 @@ public class Funcs {
 
         protected Map<String,Method> getGettersMap() {
             Map<String,Method> result = new HashMap<String,Method>();
-            Method[] methods = obj.getClass().getMethods();
+            Method[] methods = null == obj ? new Method[0] : obj.getClass().getMethods();
             for(int i = 0; i < methods.length; i++) {
                 Method m = methods[i];
                 //if (m.getParameterCount()>0) {
