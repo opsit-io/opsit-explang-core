@@ -892,6 +892,9 @@ public class CompilerTest extends AbstractTest {
                 {"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true, null,null,p},
                 // FIXME: no common regex syntax for sexp and lisp reader
                 {"(DWIM-SEARCH (LIST (HASHMAP \"foo\" \"bar\" \"baz\" \"boog\") (HASHMAP \"foo\" \"bar2\" \"baz\" \"boog2\")) (EQUAL foo \"bar\") )", list(map("foo","bar","baz","boog")), true, null,null,p},
+                {"(DWIM-SEARCH 5 (> _ 2))" , list(5), true, null, null, p},
+                {"(DWIM-SEARCH 2 (> _ 2))" , list(), false, null, null, p},
+                {"(DWIM-SEARCH NIL (> _ 2))" , list(), false, null, null, p},
                 //{"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true, null,null,p},
                 
                 {"(GET-IN  NIL        NIL)", null, false, null,null,p},
