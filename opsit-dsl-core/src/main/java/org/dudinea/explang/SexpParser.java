@@ -74,6 +74,12 @@ public class SexpParser implements IParser {
                         }
                         buf.append(chr);
                     } else if ((!inStr) && (chr=='(')) {
+                        if (buf.length() > 0) {
+                            ((ASTNList)sexp.get(sexp.size() - 1))
+                                .add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
+                            clearBuf(buf);
+                            spctx = null;
+                        }
                         depth++;
                         sexp.add(new ASTNList(new ArrayList(), pctx.clone()));
                     } else if ((!inStr) && chr==')') {
