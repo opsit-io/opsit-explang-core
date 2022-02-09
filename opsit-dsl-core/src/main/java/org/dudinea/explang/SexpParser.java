@@ -57,7 +57,6 @@ public class SexpParser implements IParser {
                 if (code < 0) {
                     break;
                 }
-		
                 pctx.setPos(i-lineStart);
                 pctx.setOff(i);
                 char chr = (char)code;
@@ -68,17 +67,13 @@ public class SexpParser implements IParser {
                 } else {
                     if (chr=='"') {
                         inStr = ! inStr;
-			
                         if (buf.length() == 0) {
                             spctx = pctx.clone();
                         }
                         buf.append(chr);
                     } else if ((!inStr) && (chr=='(')) {
                         if (buf.length() > 0) {
-                            ((ASTNList)sexp.get(sexp.size() - 1))
-                                .add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
-                            clearBuf(buf);
-                            spctx = null;
+                            addParsedAtom(sexp, buf, pctx, spctx);
                         }
                         depth++;
                         sexp.add(new ASTNList(new ArrayList(), pctx.clone()));
@@ -88,19 +83,13 @@ public class SexpParser implements IParser {
                             sexp.add(new ASTNLeaf(null, pctx, new ParserException(pctx, "Too many right parentheses")));
                         }
                         if (buf.length()>0) {
-                            ((ASTNList)sexp.get(sexp.size() - 1))
-                                .add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
-                            clearBuf(buf);
-                            spctx = null;
+                            addParsedAtom(sexp, buf, pctx, spctx);
                         }
                         ASTN tmp =  sexp.remove(sexp.size() - 1);
                         ((ASTNList)sexp.get(sexp.size() - 1)).add(tmp);
                     } else if ((!inStr) && " \n\r\t".indexOf(chr) > -1) {
                         if (buf.length() > 0) {
-                            ((ASTNList)sexp.get(sexp.size() - 1))
-                                .add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
-                            clearBuf(buf);
-                            spctx = null;
+                            addParsedAtom(sexp, buf, pctx, spctx);
                         }
                     } else if ((!inStr) && ';' == chr) {
                         inComment = true;
@@ -116,7 +105,6 @@ public class SexpParser implements IParser {
                     lineStart = i + 1;
                 }
             }
-
         } catch (IOException ex) {
             problem = new ParserException(pctx.clone(), "I/O exception", ex);
         }
@@ -126,9 +114,8 @@ public class SexpParser implements IParser {
         if (depth > 0) {
             problem = new ParserException(pctx.clone(), "unbalanced '('");
         }
-	
         if (buf.length() > 0) {
-            ((ASTNList)sexp.get(sexp.size() - 1)).add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
+            addParsedAtom(sexp, buf, pctx, spctx);
         }
         ASTNList resultList = (ASTNList)sexp.get(0);
         if (null != problem) {
@@ -137,6 +124,11 @@ public class SexpParser implements IParser {
         return resultList;
     }
 
+    private void addParsedAtom(List<ASTN> sexp, StringBuffer buf, ParseCtx pctx, ParseCtx spctx) {
+        ((ASTNList)sexp.get(sexp.size() - 1))
+            .add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
+        clearBuf(buf);
+    }
     
     private ASTN parseAtom(String string, ParseCtx pctx)  {
         final Object[] holder = new Object[1];
