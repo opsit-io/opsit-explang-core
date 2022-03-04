@@ -338,6 +338,7 @@ public class Compiler {
                  "RANDOM", RANDOM.class,
                  "SQRT", SQRT.class,
                  "LOG", LOG.class,
+                 "EXP", EXP.class,
                  // object comparisons
                  // java .equals()
                  "EQUAL", EQUAL.class,

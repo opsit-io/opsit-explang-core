@@ -875,7 +875,7 @@ public class Funcs {
     }
 
     @Arguments(spec={"x","&OPTIONAL","base"})
-    @Docstring(text="Computes logarithm. If base is not given it computes natural logarithm. Returns double value.")
+    @Docstring(text="Computes logarithm. If base is not given it computes natural logarithm. Returns a Double value.")
     @Package(name=Package.BASE_MATH)
     public static class LOG extends FuncExp {
         @Override
@@ -899,7 +899,32 @@ public class Funcs {
             return val;
         }
     }
+    @Arguments(spec={"x","&OPTIONAL","base"})
+    @Docstring(text="Perform exponentiation. If base is not given it returns e raised to power x. Returns a Double value.")
+    @Package(name=Package.BASE_MATH)
+    public static class EXP extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object numberObj = eargs.get(0, backtrace);
+            if (! (numberObj  instanceof Number)) {
+                throw new ExecutionException(backtrace, getName() + " argument must be a number");
+            }
+            double base = Math.E;
+            if (eargs.size() > 1 ) {
+                final Object baseObj = eargs.get(1, backtrace);
+                if (null != baseObj) {
+                    if (!(baseObj instanceof Number)) {
+                        throw new ExecutionException(backtrace, getName()
+                                + " logarithmm base must be a number, but got " + baseObj);
+                    }
+                    base = ((Number) baseObj).doubleValue();
+                }
+            }
+            return Math.pow(((Number) numberObj).doubleValue(), base);
+        }
+    }
 
+    
     
     /**** VARIABLES, DATATYPES AND FUNCTIONS ****/
     // FIXME: are array types supported?
