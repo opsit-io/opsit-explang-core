@@ -321,6 +321,8 @@ public class Compiler {
                  ">=", NUMGE.class,
                  "<=", NUMLE.class,
                  "<", NUMLT.class,
+                 "MAX", MAXOP.class,
+                 "MIN", MINOP.class,                 
                  // coercion
                  "INT", INT.class,
                  "SHORT", SHORT.class,
@@ -334,6 +336,7 @@ public class Compiler {
                  // math
                  "SIGNUM", SIGNUM.class,
                  "RANDOM", RANDOM.class,
+                 "SQRT", SQRT.class,
                  // object comparisons
                  // java .equals()
                  "EQUAL", EQUAL.class,
