@@ -729,6 +729,18 @@ public class CompilerTest extends AbstractTest {
                 {"(SIGNUM 2b)",(byte)1, true, null, null, p},
                 {"(SIGNUM -2b)",(byte)-1, true, null, null, p},
                 {"(SIGNUM 0b)",(byte)0, false, null, null, p},
+
+                {"(SQRT 4)",Math.sqrt(4), true, null, null, p},
+                {"(SQRT 0)",Math.sqrt(0), false, null, null, p},
+                {"(SQRT 99)",Math.sqrt(99), true, null, null, p},
+                {"(SQRT 99.9)",Math.sqrt(99.9), true, null, null, p},
+
+                {"(MAX 3 2 1 9.2 -9 (VERSION \"1.1.0\"))",9.2, true, null, null, p},
+                {"(MIN 3 2 1 9.2 -9 (VERSION \"1.1.0\"))",-9, true, null, null, p},
+                {"(MAX 3 2 1 9.2 -9 (VERSION \"10.1.0\"))",
+                 Version.mkSemVersion(10L,1L,0L,null,null),
+                 true, null, null, p},
+                
                 //FFI
                 // medhod w/o parameters
                 {"(. \"FOO\" \"length\" (LIST ) )", new Integer(3), true, null, null, p},
