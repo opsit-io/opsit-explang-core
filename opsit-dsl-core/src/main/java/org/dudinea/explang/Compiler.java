@@ -337,6 +337,7 @@ public class Compiler {
                  "SIGNUM", SIGNUM.class,
                  "RANDOM", RANDOM.class,
                  "SQRT", SQRT.class,
+                 "LOG", LOG.class,
                  // object comparisons
                  // java .equals()
                  "EQUAL", EQUAL.class,

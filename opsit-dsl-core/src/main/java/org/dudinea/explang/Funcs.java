@@ -874,6 +874,32 @@ public class Funcs {
         }
     }
 
+    @Arguments(spec={"x","&OPTIONAL","base"})
+    @Docstring(text="Computes logarithm. If base is not given it computes natural logarithm. Returns double value.")
+    @Package(name=Package.BASE_MATH)
+    public static class LOG extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object numberObj = eargs.get(0, backtrace);
+            if (! (numberObj  instanceof Number)) {
+                throw new ExecutionException(backtrace, getName() + " argument must be a number");
+            }
+            double val =
+                java.lang.Math.log(((Number)numberObj).doubleValue());
+            if (eargs.size() > 1 ) {
+                final Object baseObj = eargs.get(1, backtrace);
+                if (null != baseObj) {
+                    if (!(baseObj instanceof Number)) {
+                        throw new ExecutionException(backtrace, getName()
+                                + " logarithmm base must be a number, but got " + baseObj);
+                    }
+                    val = val / java.lang.Math.log(((Number) baseObj).doubleValue());
+                }
+            }
+            return val;
+        }
+    }
+
     
     /**** VARIABLES, DATATYPES AND FUNCTIONS ****/
     // FIXME: are array types supported?
