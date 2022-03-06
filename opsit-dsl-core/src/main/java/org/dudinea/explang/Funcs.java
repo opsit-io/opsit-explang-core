@@ -329,6 +329,49 @@ public class Funcs {
 
     }
 
+    @Arguments(spec={"x",ArgSpec.ARG_REST,"args"})
+    @Docstring(text="Find maximum. "+
+               "Returns the maximum of numeric values of it's arguments, " +
+               "performing any necessary type conversions in the process. ")
+    @Package(name=Package.BASE_ARITHMENTICS)
+    public static class MAXOP extends NUMGE {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Promotion p = new Promotion();
+            Number result = Utils.asNumber(eargs.get(0, backtrace));
+            List rest = (List)eargs.get(1, backtrace);
+            p.promote(result);
+            for (int i=0; i< rest.size() ; i++) {
+                Number val = Utils.asNumber(rest.get(i));
+                p.promote(val);
+                Integer dif = p.callOP(this, result, val).intValue();
+                result = compareResult(dif) ? result : val;
+            }
+            return result;
+        }
+    }
+
+    @Arguments(spec={"x",ArgSpec.ARG_REST,"args"})
+    @Docstring(text="Find minimum. "+
+               "Returns the maximum of numeric values of it's arguments, " +
+               "performing any necessary type conversions in the process. ")
+    @Package(name=Package.BASE_ARITHMENTICS)
+    public static class MINOP extends NUMLE {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            Promotion p = new Promotion();
+            Number result = Utils.asNumber(eargs.get(0, backtrace));
+            List rest = (List)eargs.get(1, backtrace);
+            p.promote(result);
+            for (int i=0; i< rest.size() ; i++) {
+                Number val = Utils.asNumber(rest.get(i));
+                p.promote(val);
+                Integer dif = p.callOP(this, result, val).intValue();
+                result = compareResult(dif) ? result : val;
+            }
+            return result;
+        }
+    }
 
     @Arguments(spec={"x","y"})
     @Docstring(text="Compute Remainder. "+
@@ -815,6 +858,73 @@ public class Funcs {
         }
     }
 
+    @Arguments(spec={"x"})
+    @Docstring(text="Computes square root of the argument. Returns double value.")
+    @Package(name=Package.BASE_MATH)
+    public static class SQRT extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object numberObj = eargs.get(0, backtrace);
+            if (! (numberObj  instanceof Number)) {
+                throw new ExecutionException(backtrace, getName() + " argument must be a number");
+            }
+            final double val =
+                java.lang.Math.sqrt(((Number)numberObj).doubleValue());
+            return val;
+        }
+    }
+
+    @Arguments(spec={"x","&OPTIONAL","base"})
+    @Docstring(text="Computes logarithm. If base is not given it computes natural logarithm. Returns a Double value.")
+    @Package(name=Package.BASE_MATH)
+    public static class LOG extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object numberObj = eargs.get(0, backtrace);
+            if (! (numberObj  instanceof Number)) {
+                throw new ExecutionException(backtrace, getName() + " argument must be a number");
+            }
+            double val =
+                java.lang.Math.log(((Number)numberObj).doubleValue());
+            if (eargs.size() > 1 ) {
+                final Object baseObj = eargs.get(1, backtrace);
+                if (null != baseObj) {
+                    if (!(baseObj instanceof Number)) {
+                        throw new ExecutionException(backtrace, getName()
+                                + " logarithmm base must be a number, but got " + baseObj);
+                    }
+                    val = val / java.lang.Math.log(((Number) baseObj).doubleValue());
+                }
+            }
+            return val;
+        }
+    }
+    @Arguments(spec={"x","&OPTIONAL","base"})
+    @Docstring(text="Perform exponentiation. If base is not given it returns e raised to power x. Returns a Double value.")
+    @Package(name=Package.BASE_MATH)
+    public static class EXP extends FuncExp {
+        @Override
+        public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+            final Object numberObj = eargs.get(0, backtrace);
+            if (! (numberObj  instanceof Number)) {
+                throw new ExecutionException(backtrace, getName() + " argument must be a number");
+            }
+            double base = Math.E;
+            if (eargs.size() > 1 ) {
+                final Object baseObj = eargs.get(1, backtrace);
+                if (null != baseObj) {
+                    if (!(baseObj instanceof Number)) {
+                        throw new ExecutionException(backtrace, getName()
+                                + " logarithmm base must be a number, but got " + baseObj);
+                    }
+                    base = ((Number) baseObj).doubleValue();
+                }
+            }
+            return Math.pow(((Number) numberObj).doubleValue(), base);
+        }
+    }
+
+    
     
     /**** VARIABLES, DATATYPES AND FUNCTIONS ****/
     // FIXME: are array types supported?
