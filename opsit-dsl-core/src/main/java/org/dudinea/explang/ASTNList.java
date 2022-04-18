@@ -105,4 +105,24 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
         b.append(")");
         return b.toString();
     }
+
+    @Override
+    public String toString() {
+        return
+            (null != problem  ? "<"+problem+">" : "") +
+            ((null != object) ? astnlistToString((List<ASTN>)object)  : "<null>");
+    }
+
+    protected String astnlistToString(List<ASTN> lst) {
+        final StringBuilder b = new StringBuilder();
+        b.append("(");
+        for (Object obj : lst) {
+            if (b.length() > 1) {
+                b.append(", ");
+            }
+            b.append(obj.toString());
+        }
+        b.append(")");
+        return b.toString();
+    }
 }
