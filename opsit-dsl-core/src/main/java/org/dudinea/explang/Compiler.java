@@ -469,7 +469,22 @@ public class Compiler {
     }
 
     public ICompiled compile(ASTN ast) {
-        if (ast.isList()) {
+        if (ast.isList() && ((ASTNList) ast).isLiteralList()) {
+            //FIXME: DRY with callfunc like AST manipulation
+            //       should go in subroutine?
+            //       unless we get rid of callfunc usage here (implement label?)
+            ASTNList astList = ((ASTNList) ast);
+            if (astList.size() == 0) {
+                return new EmptyListExp();
+            }
+            ParseCtx pctx = ast.getPctx();
+            ASTNList listfunc =
+                new ASTNList(Utils.list(new ASTNLeaf(new Symbol("LIST"), pctx)), pctx);
+            listfunc.addAll((ASTNList)ast);
+            IExpr func = (IExpr) compile(listfunc);
+            func.setDebugInfo(pctx);
+            return func;
+        } else if (ast.isList() && !((ASTNList) ast).isLiteralList()) {
             //@SuppressWarnings("unchecked")
             ASTNList astList = ((ASTNList) ast);
 

@@ -66,8 +66,6 @@ public class CompilerTest extends AbstractTest {
         List<Object> parsedQuine =(List<Object>)((List<Object>)Utils.unASTN((new SexpParser()).parse(new ParseCtx("quine"),quine))).get(0);
         List data ;
 
-        final Object[] ONLY = {"__ONLY__"};
-
         Object[][] tests = (new Object[][] {
                 //empty list
                 { "()",         new ArrayList<Object>(0)  , false, null, null, p},
@@ -1177,18 +1175,7 @@ public class CompilerTest extends AbstractTest {
                  "  (VERSION \"0.0.8\" )) ", true, true, null,null,p}
 
             });
-        List<Object[]> result = new ArrayList<Object[]>();
-        for (int i = 0; i < tests.length; i++) {
-            Object []test = tests[i];
-            if (test[0].equals(ONLY[0])) {
-                result.clear();
-                result.add(tests[i+1]);
-                break;
-            } else {
-                result.add(test);
-            }
-        }
-        return result;
+        return filterTests(tests);
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY,"a","b","c"})

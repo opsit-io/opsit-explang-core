@@ -5,6 +5,8 @@ import java.util.List;
 
 public class ASTNList extends ASTN implements Iterable<ASTN> {
     protected boolean isMultiExpr = false;
+    protected boolean isLiteralList = false;
+
     public ASTNList(List object, ParseCtx pctx) {
         super(object, pctx);
     }
@@ -115,14 +117,22 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
 
     protected String astnlistToString(List<ASTN> lst) {
         final StringBuilder b = new StringBuilder();
-        b.append("(");
+        b.append(this.isLiteralList() ? "[" : "(");
         for (Object obj : lst) {
             if (b.length() > 1) {
                 b.append(", ");
             }
             b.append(obj.toString());
         }
-        b.append(")");
+        b.append(this.isLiteralList ? "]" : ")");
         return b.toString();
+    }
+
+    public void setIsLiteralList(boolean val) {
+        this.isLiteralList = val;
+    }
+
+    public boolean isLiteralList() {
+        return this.isLiteralList;
     }
 }
