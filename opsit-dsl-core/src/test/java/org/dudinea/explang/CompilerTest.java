@@ -238,6 +238,12 @@ public class CompilerTest extends AbstractTest {
                 { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"UNO\")", true, true, null, null, p},
                 { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"DUO\")", false, false, null, null, p},
 
+                { "(== \"git\" \"github\")", false, false, null,null,p},
+                { "(== \"github\" \"git\")", false, false, null,null,p},
+                { "(== \"git\" \"git\")", true, true, null,null,p},
+                { "(== \"\" \"git\")", false, false, null,null,p},
+                { "(== \"git\" \"\")", false, false, null,null,p},
+                { "(== \"\" \"\")", true, true, null,null,p},
                 
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",

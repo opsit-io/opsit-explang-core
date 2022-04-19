@@ -282,7 +282,7 @@ public class Seq {
         } else if ((o1 instanceof Set) && (o2 instanceof Set)) {
             return o1.equals(o2);
         } else if (Seq.isSequence(o1) && Seq.isSequence(o2)) {
-            int l1 = Seq.getLength(o2, false);
+            int l1 = Seq.getLength(o1, false);
             int l2 = Seq.getLength(o2, false);
             if (l1 != l2) {
                 return false;
