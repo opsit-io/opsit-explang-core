@@ -66,8 +66,6 @@ public class CompilerTest extends AbstractTest {
         List<Object> parsedQuine =(List<Object>)((List<Object>)Utils.unASTN((new SexpParser()).parse(new ParseCtx("quine"),quine))).get(0);
         List data ;
 
-        final Object[] ONLY = {"__ONLY__"};
-
         Object[][] tests = (new Object[][] {
                 //empty list
                 { "()",         new ArrayList<Object>(0)  , false, null, null, p},
@@ -240,6 +238,12 @@ public class CompilerTest extends AbstractTest {
                 { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"UNO\")", true, true, null, null, p},
                 { "(== (.S \"org.dudinea.explang.TestEnum\" \"UNO\") \"DUO\")", false, false, null, null, p},
 
+                { "(== \"git\" \"github\")", false, false, null,null,p},
+                { "(== \"github\" \"git\")", false, false, null,null,p},
+                { "(== \"git\" \"git\")", true, true, null,null,p},
+                { "(== \"\" \"git\")", false, false, null,null,p},
+                { "(== \"git\" \"\")", false, false, null,null,p},
+                { "(== \"\" \"\")", true, true, null,null,p},
                 
                 // LOADR
                 { "(PROGN (SETV *loaded* NIL) (LIST (LOAD \"./src/test/resources/org/dudinea/explang/resloadtest.lsp\") *loaded*))",
@@ -1177,18 +1181,7 @@ public class CompilerTest extends AbstractTest {
                  "  (VERSION \"0.0.8\" )) ", true, true, null,null,p}
 
             });
-        List<Object[]> result = new ArrayList<Object[]>();
-        for (int i = 0; i < tests.length; i++) {
-            Object []test = tests[i];
-            if (test[0].equals(ONLY[0])) {
-                result.clear();
-                result.add(tests[i+1]);
-                break;
-            } else {
-                result.add(test);
-            }
-        }
-        return result;
+        return filterTests(tests);
     }
 
     @Arguments(spec={ArgSpec.ARG_LAZY,"a","b","c"})
