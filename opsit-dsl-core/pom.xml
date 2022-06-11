@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.opsit</groupId>
     <artifactId>opsit-dsl-core</artifactId>
-    <version>1.0.14</version>
+    <version>1.0.15</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -14,22 +14,14 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-maven-plugin</artifactId>
-            <version>${antlr4.version}</version>
+          <groupId>org.antlr</groupId>
+          <artifactId>antlr4</artifactId>
+          <version>${antlr4.version}</version>
         </dependency>
-
-        <!--        <dependency>-->
-        <!--            <groupId>com.vmware.antlr4-c3</groupId>-->
-        <!--            <artifactId>antlr4-c3</artifactId>-->
-        <!--            <version>1.1</version>-->
-        <!--        </dependency>-->
-
         <dependency>
-            <groupId>com.vmware.antlr4-c3</groupId>
-            <artifactId>antlr4-c3</artifactId>
-            <version>${antlr4-c3.version}</version>
-            <!--version>1.2-SNAPSHOT</version-->
+          <groupId>com.vmware.antlr4-c3</groupId>
+          <artifactId>antlr4-c3</artifactId>
+          <version>${antlr4-c3.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
