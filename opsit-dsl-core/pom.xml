@@ -44,7 +44,6 @@
       </repository>
     </distributionManagement>
 
-
     <build>
         <plugins>
             <plugin>
@@ -77,7 +76,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>org.dudinea.explang.REPL</mainClass>
+                            <mainClass>io.opsit.explang.REPL</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
