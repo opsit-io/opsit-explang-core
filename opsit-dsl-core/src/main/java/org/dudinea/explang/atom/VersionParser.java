@@ -3,7 +3,7 @@ package org.dudinea.explang.atom;
 import org.dudinea.explang.ParseCtx;
 import static org.dudinea.explang.Utils.symbol;
 import static org.dudinea.explang.Utils.list;
-import org.dudinea.explang.Version;
+import io.opsit.version.Version;
  
 public  class VersionParser implements AtomParser {
     static private EscStringParser sp = new EscStringParser();

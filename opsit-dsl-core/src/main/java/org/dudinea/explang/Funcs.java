@@ -2,6 +2,7 @@ package org.dudinea.explang;
 
 import static org.dudinea.explang.ArgSpec.ARG_OPTIONAL;
 import static org.dudinea.explang.ArgSpec.ARG_REST;
+import io.opsit.version.Version;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -3443,7 +3444,7 @@ public class Funcs {
             final String spec  =  Utils.asString(eargs.get(0, backtrace));
             try {
                 return Version.parseVersion(spec);
-            } catch (InvalidParametersException ex) {
+            } catch (IllegalArgumentException ex) {
                 throw new ExecutionException(backtrace,
                         "Failed to parse version spec: " + ex);
             }

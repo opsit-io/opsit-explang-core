@@ -1,6 +1,6 @@
 package org.dudinea.explang;
 
-import org.dudinea.explang.Version;
+import io.opsit.version.Version;
 
 // used by numeric operators
 public class Promotion {

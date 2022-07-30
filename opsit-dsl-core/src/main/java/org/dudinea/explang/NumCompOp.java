@@ -1,6 +1,7 @@
 package org.dudinea.explang;
 
 import java.util.Comparator;
+import io.opsit.version.Version;
 
 public class NumCompOp implements AbstractOp, Comparator<Number> {
     @Override
