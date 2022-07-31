@@ -253,24 +253,16 @@ public class ArgList {
   public Eargs evaluateArguments(Backtrace backtrace, ICtx ctx) {
     final int size = params.length;
     final Object []  result = new Object[size];
-    //final boolean [] needEval = new boolean[size];
     Eargs eargs = ctx.getCompiler().newEargs(result, null /*needEval*/, this, ctx);
     for (int i = 0; i < size; i++) {
-      //if (this.spec.getArg(i).isLazy()) {
-      //	needEval[i] = true;
-      //	result[i]=params[i];
-      //} else {
       final Object varValue = evaluateArgument(i,backtrace, ctx, eargs);
       result[i]=varValue;
-      //}
     }
     return eargs;
   }
 
   private Object evaluateArgument(int argIdx, Backtrace backtrace, ICtx ctx, Eargs eargs) {
     final ICompiled varExpr = params[argIdx];
-    //Object varValue = null;
-    // FIXME!
     final ArgSpec.Arg arg = spec.getArg(argIdx);
     if (arg.getFlag() == ArgSpec.AF.REST) {
       final List <ICompiled>lst = (List)varExpr.evaluate(backtrace, ctx);
@@ -298,12 +290,6 @@ public class ArgList {
     return (null == rest) ? params.length : params.length - 1 + rest.size();
   }
     
-  //public ICompiled getPositionalArg(int i) {
-  //	return i < restIdx ?
-  //	    params[i] :
-  //	    (ICompiled)rest.get(i - restIdx);
-  //}
-
   public ICompiled get(int i) {
     return params[i];
   }
