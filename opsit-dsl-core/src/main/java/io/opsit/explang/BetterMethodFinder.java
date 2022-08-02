@@ -14,24 +14,25 @@ public final class BetterMethodFinder {
   /**
    * The target class to look for methods and constructors in.
    */
-  private final Class clazz;
+  private final Class<?> clazz;
 
   /**
    * Mapping from method name to the Methods in the target
    * class with that name.
    */
-  private final Map methodMap = new HashMap();
+  private final Map<String,List<Method>> methodMap = new HashMap<String, List<Method>>();
 
   /**
    * List of the Constructors in the target class.
    */
-  private final List ctorList = new ArrayList();
+  private final List<Constructor<?>> ctorList = new ArrayList<Constructor<?>>();
 
   /**
    * Mapping from a Constructor or Method object to the Class
    * objects representing its formal parameters.
    */
-  private final Map paramMap = new HashMap();
+  private final Map<Executable, Class<?>[]> paramMap =
+    new HashMap<Executable, Class<?>[]>();
 
   /**
    * @param  clazz  Class in which I will look for methods and
@@ -39,7 +40,7 @@ public final class BetterMethodFinder {
    * @exception  IllegalArgumentException  if clazz is null, or
    * represents a primitive, or represents an array type
    */
-  public BetterMethodFinder(Class clazz) {
+  public BetterMethodFinder(Class<?> clazz) {
     if (clazz == null) {
       throw new IllegalArgumentException("null Class parameter");
     }
@@ -88,12 +89,12 @@ public final class BetterMethodFinder {
    * the criteria, or if the reflective call is ambiguous based on the
    * parameter types
    */
-  public Constructor findConstructor(Class[] parameterTypes)
+  public Constructor<?> findConstructor(Class<?>[] parameterTypes)
   throws NoSuchMethodException {
-    if (parameterTypes == null)
+    if (parameterTypes == null) {
       parameterTypes = new Class[0];
-
-    return (Constructor) findMemberIn(ctorList, parameterTypes);
+    }
+    return (Constructor<?>) findMemberIn(ctorList, parameterTypes);
   }
 
   /**
@@ -101,19 +102,26 @@ public final class BetterMethodFinder {
    * fed to this method will be either all Constructor objects or all
    * Method objects.
    */
-  private Member findMemberIn(List memberList, Class[] parameterTypes)
-  throws NoSuchMethodException {
-    List matchingMembers = new ArrayList();
 
-    for (Iterator it = memberList.iterator(); it.hasNext();) {
-      Member member = (Member) it.next();
-      Class[] methodParamTypes = (Class[]) paramMap.get(member);
+  private Member findMemberIn(List<? extends Executable> memberList, Class<?>[] parameterTypes)
+  throws NoSuchMethodException {
+    // For some reason List<Member> is compile time incompatible when
+    // calling it with List<Constructor> inspite of Constructor implementing Member!
+    // so have to use common supertype as argument type
+    // Why?
+    List<Member> matchingMembers = new ArrayList<Member>();
+    
+    for ( Iterator<? extends Executable> it = memberList.iterator(); it.hasNext();) {
+      // on single member level it handles the type just fine!
+      Member member = it.next();
+      Class<?>[] methodParamTypes =  paramMap.get(member);
 
       if (Arrays.equals(methodParamTypes, parameterTypes))
         return member;
 
-      if (ClassUtilities.compatibleClasses(methodParamTypes, parameterTypes))
+      if (ClassUtilities.compatibleClasses(methodParamTypes, parameterTypes)) {
         matchingMembers.add(member);
+      }
     }
 
     if (matchingMembers.isEmpty())
@@ -144,9 +152,9 @@ public final class BetterMethodFinder {
    * criteria, or if the reflective call is ambiguous based on the
    * parameter types, or if methodName is null
    */
-  public Method findMethod(String methodName, Class[] parameterTypes)
+  public Method findMethod(String methodName, Class<?>[] parameterTypes)
   throws NoSuchMethodException {
-    List methodList = (List) methodMap.get(methodName);
+    List<Method> methodList =  methodMap.get(methodName);
 
     if (methodList == null)
       throw new NoSuchMethodException(
@@ -165,13 +173,13 @@ public final class BetterMethodFinder {
    * @exception  NoSuchMethodException  if there is an ambiguity
    * as to which is most specific
    */
-  private Member findMostSpecificMemberIn(List memberList)
+  private Member findMostSpecificMemberIn(List <Member>memberList)
   throws NoSuchMethodException {
-    List mostSpecificMembers = new ArrayList();
+    List<Member> mostSpecificMembers = new ArrayList<Member>();
 
-    for (Iterator memberIt = memberList.iterator(); memberIt.hasNext();)
+    for (Iterator <Member>memberIt = memberList.iterator(); memberIt.hasNext();)
     {
-      Member member = (Member) memberIt.next();
+      Member member =  memberIt.next();
 
       if (mostSpecificMembers.isEmpty())
       {
@@ -184,9 +192,9 @@ public final class BetterMethodFinder {
         boolean lessSpecific = false;
 
         // Is member more specific than everyone in the most-specific set?
-        for (Iterator specificIt = mostSpecificMembers.iterator(); specificIt.hasNext();)
+        for (Iterator<Member> specificIt = mostSpecificMembers.iterator(); specificIt.hasNext();)
         {
-          Member moreSpecificMember = (Member) specificIt.next();
+          Member moreSpecificMember = specificIt.next();
 
           if (! memberIsMoreSpecific(member, moreSpecificMember))
           {
@@ -235,9 +243,9 @@ public final class BetterMethodFinder {
    * Class array is returned.  If an element in args is null, then
    * Void.TYPE is the corresponding Class in the return array.
    */
-  public static Class[] getParameterTypesFrom(Object[] args)
+  public static Class<?>[] getParameterTypesFrom(Object[] args)
   {
-    Class[] argTypes = null;
+    Class<?>[] argTypes = null;
 
     if (args != null) {
       argTypes = new Class[args.length];
@@ -268,7 +276,7 @@ public final class BetterMethodFinder {
    * @exception  ClassNotFoundException  if any of the FQNs name
    * an unknown class
    */
-  public static Class[] getParameterTypesFrom(String[] classNames)
+  public static Class<?>[] getParameterTypesFrom(String[] classNames)
   throws ClassNotFoundException {
     return getParameterTypesFrom(
         classNames, BetterMethodFinder.class.getClassLoader());
@@ -292,10 +300,10 @@ public final class BetterMethodFinder {
    * @exception  ClassNotFoundException  if any of the FQNs name
    * an unknown class
    */
-  public static Class[] getParameterTypesFrom(String[] classNames,
+  public static Class<?>[] getParameterTypesFrom(String[] classNames,
      ClassLoader loader)
   throws ClassNotFoundException {
-    Class[] types = null;
+    Class<?>[] types = null;
 
     if (classNames != null) {
       types = new Class[classNames.length];
@@ -318,7 +326,7 @@ public final class BetterMethodFinder {
    * Loads up the data structures for my target class's constructors.
    */
   private void loadConstructors() {
-    Constructor[] ctors = clazz.getConstructors();
+    Constructor<?>[] ctors = clazz.getConstructors();
 
     for (int i = 0; i < ctors.length; ++i) {
       ctorList.add(ctors[i]);
@@ -335,12 +343,12 @@ public final class BetterMethodFinder {
     for (int i = 0; i < methods.length; ++i) {
       Method m = methods[i];
       String methodName = m.getName();
-      Class[] paramTypes = m.getParameterTypes();
+      Class<?>[] paramTypes = m.getParameterTypes();
 
-      List list = (List) methodMap.get(methodName);
+      List<Method> list =  methodMap.get(methodName);
 
       if (list == null) {
-        list = new ArrayList();
+        list = new ArrayList<Method>();
         methodMap.put(methodName, list);
       }
 
@@ -362,9 +370,8 @@ public final class BetterMethodFinder {
    * procedure in the Java Language Specification, section 15.12.2.
    */
   private boolean memberIsMoreSpecific(Member first, Member second) {
-    Class[] firstParamTypes = (Class[]) paramMap.get(first);
-    Class[] secondParamTypes = (Class[]) paramMap.get(second);
-
+    Class<?>[] firstParamTypes = (Class[]) paramMap.get(first);
+    Class<?>[] secondParamTypes = (Class[]) paramMap.get(second);
     return ClassUtilities.compatibleClasses(secondParamTypes, firstParamTypes);
   }
 }
