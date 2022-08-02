@@ -1,7 +1,5 @@
 package io.opsit.explang;
 
-import java.util.List;
-
 public class ASTNLeaf extends ASTN {
     public ASTNLeaf(Object object, ParseCtx pctx) {
         super(object, pctx);

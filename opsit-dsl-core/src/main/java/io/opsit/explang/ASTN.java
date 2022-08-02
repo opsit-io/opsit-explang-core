@@ -1,8 +1,7 @@
 package io.opsit.explang;
 
-import java.util.List;
 
-// FIXME: must be interface
+// FIXME: must be interface?
 public abstract class ASTN {
     public ASTN(Object object, ParseCtx pctx) {
         this.object = object;
