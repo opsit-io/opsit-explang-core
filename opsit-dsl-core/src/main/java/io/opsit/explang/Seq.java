@@ -2,15 +2,14 @@ package io.opsit.explang;
 
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.function.Consumer;
 
 
 public class Seq {
@@ -30,7 +29,7 @@ public class Seq {
     
     public static void forEach(Object seq, Operation op, boolean allowNonSeq) {
         if (seq instanceof Map) {
-            seq = ((Map)seq).entrySet();
+          seq = ((Map<?,?>)seq).entrySet();
         }
         if (null == seq) {
             if (allowNonSeq) {
@@ -39,8 +38,8 @@ public class Seq {
                 throw new RuntimeException("NIL is not a supported sequence.");
             }
         } else if (seq instanceof Iterable) {
-            final Iterator iter = ((Iterable)seq).iterator();
-            boolean brk = false;;
+            final Iterator<?> iter = ((Iterable<?>)seq).iterator();
+            //boolean brk = false;;
             while (iter.hasNext()) {
                 if (op.perform(iter.next())) {
                     break;
@@ -62,16 +61,17 @@ public class Seq {
                 }
             }
         } else if (seq instanceof Enumeration) {
-            final Enumeration en = (Enumeration) seq;
+            final Enumeration<?> en = (Enumeration<?>) seq;
             while (en.hasMoreElements()) {
                 if (op.perform(en.nextElement())) {
                     break;
                 }
             }
         } else if (seq instanceof Map) {
-            final Map map = (Map) seq;
-            Iterable col = map.values();
-            Iterator iter = col.iterator();
+          // FIXME: dead code? Why?
+          final Map<?,?> map = (Map<?,?>) seq;
+            Iterable<?> col = map.values();
+            Iterator<?> iter = col.iterator();
             while(iter.hasNext()) {
                 if (op.perform(iter.next())) {
                     break;
@@ -90,7 +90,7 @@ public class Seq {
 	    if (null == seq) {
             return false;
 	    } else if (seq instanceof Collection) {
-            return ((Collection)seq).contains(obj);
+            return ((Collection<?>)seq).contains(obj);
 	    } else if (seq.getClass().isArray()) {
             final int len = Array.getLength(seq);
             for (int j = 0; j < len; j++) {
@@ -118,7 +118,7 @@ public class Seq {
             }
             return false;
         } else if (seq instanceof Map) {
-            return ((Map) seq).containsValue(obj);
+          return ((Map<?,?>) seq).containsValue(obj);
         } else {
             return false;
 	    }
@@ -129,7 +129,7 @@ public class Seq {
             return null;
 	    } else if (seq instanceof List) {
             try {
-                final List<Object> list = (List<Object>)seq;
+                final List<?> list = (List<?>)seq;
                 return list.get(index);
             } catch (IndexOutOfBoundsException bex) {
                 return null;
@@ -162,13 +162,13 @@ public class Seq {
                 throw new RuntimeException("NIL not a sequence: ");
             }
         } else if (val instanceof Collection) {
-            return ((Collection)val).size();
+            return ((Collection<?>)val).size();
         } else if (val instanceof CharSequence) {
             return ((CharSequence)val).length();
         } else if (val.getClass().isArray()) {
             return Array.getLength(val);
         } else if (val instanceof Map) {
-            return ((Map)val).size();
+          return ((Map<?,?>)val).size();
         } else {
             if (allowNonSeq) {
                 return 1;
@@ -178,8 +178,8 @@ public class Seq {
         }
     }
 
-    public static Set asSet(Object obj) {
-        final Set result = new HashSet();
+    public static Set<?> asSet(Object obj) {
+        final Set<Object> result = new HashSet<Object>();
         if (null!=obj) {
             forEach(obj, new Operation () {
                     @Override
@@ -193,8 +193,8 @@ public class Seq {
         return result;
     }
 
-    public static List valuesList(Object seq) {
-        final List result = Utils.list();
+    public static List<Object> valuesList(Object seq) {
+        final List<Object> result = Utils.list();
         if (null != seq) {
             forEach(seq, new Operation () {
                     @Override
@@ -238,9 +238,9 @@ public class Seq {
         public Object perform(Object... objs);
     }
 
-    public static List mapall(Multiop op, Object... seqs) {
+    public static List<Object> mapall(Multiop op, Object... seqs) {
         int maxlen = maxLength(seqs);
-        List result = new ArrayList<Object>(maxlen);
+        List<Object> result = new ArrayList<Object>(maxlen);
         Object[] args = new Object[seqs.length];
         for (int i = 0; i < maxlen; i++) {
             for (int j = 0; j < seqs.length; j++) {
@@ -252,13 +252,13 @@ public class Seq {
     }
 
 
-    public static boolean sequal(Map m1, Map m2) {
+  public static boolean sequal(Map <?,?>m1, Map<?,?> m2) {
         // not sure that this is right
         // probably need to check keys according to the same rules?
         // but it could get messy
         // unless we use same equality rules for getting keys from maps
-        final Set k1 = m1.keySet();
-        final Set k2 = m2.keySet();
+        final Set<?> k1 = m1.keySet();
+        final Set<?> k2 = m2.keySet();
         if (!k1.equals(k2)) {
             return false;
         }
@@ -273,12 +273,12 @@ public class Seq {
         return true;
     }
 
-    // FIXME: circular refs
+    // FIXME: identify circular refs?
     public static boolean sequal(Object o1, Object o2) {
         if (Utils.objequal(o1, o2)) {
             return true;
         } else if ((o1 instanceof Map) && (o2 instanceof Map)) {
-            return sequal((Map) o1, (Map) o2);
+          return sequal((Map<?,?>) o1, (Map<?,?>) o2);
         } else if ((o1 instanceof Set) && (o2 instanceof Set)) {
             return o1.equals(o2);
         } else if (Seq.isSequence(o1) && Seq.isSequence(o2)) {

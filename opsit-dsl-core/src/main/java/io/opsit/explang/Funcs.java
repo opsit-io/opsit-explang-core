@@ -1434,7 +1434,7 @@ public class Funcs {
     /***** JAVA INTEROP *****/
     public static class FilteredMap implements Map {
         protected Map src;
-        protected Set<Object> filterSet;
+        protected Set<?> filterSet;
 
         public FilteredMap(Map src, Object filter) {
             this.src = src;

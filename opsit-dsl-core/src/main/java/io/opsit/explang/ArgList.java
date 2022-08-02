@@ -265,10 +265,10 @@ public class ArgList {
     final ICompiled varExpr = params[argIdx];
     final ArgSpec.Arg arg = spec.getArg(argIdx);
     if (arg.getFlag() == ArgSpec.AF.REST) {
-      final List <ICompiled>lst = (List)varExpr.evaluate(backtrace, ctx);
+      final List <ICompiled>lst = (List<ICompiled>)varExpr.evaluate(backtrace, ctx);
       final int size = lst.size();
-      final List evList = arg.isLazy() ?
-        new RestList(new ArrayList(size), backtrace) : new ArrayList(size);
+      final List<Object> evList = arg.isLazy() ?
+        (List<Object>)new RestList(new ArrayList(size), backtrace) : new ArrayList<Object>(size);
 		
       for (int i = 0; i < size; i++) {
         evList.add(lst.get(i).evaluate(backtrace, ctx));

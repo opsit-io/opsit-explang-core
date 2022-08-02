@@ -31,9 +31,9 @@ public class RestList implements List {
   }
 
   @Override
-  public Iterator iterator() {
+  public Iterator<Object> iterator() {
 	final Iterator lstIter = lst.iterator();
-	return new Iterator() {
+	return new Iterator<Object>() {
 	    
       @Override
       public boolean hasNext() {
