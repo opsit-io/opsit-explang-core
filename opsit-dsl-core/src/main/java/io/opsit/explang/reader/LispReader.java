@@ -1,26 +1,32 @@
 package io.opsit.explang.reader;
+
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PushbackInputStream;
 import java.io.PushbackReader;
 import java.io.Reader;
-import java.util.List;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.List;
 
 import io.opsit.explang.ASTN;
 import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTNList;
 import io.opsit.explang.IParser;
-import io.opsit.explang.ParseCtx;
-import io.opsit.explang.Utils;
-import io.opsit.explang.reader.MacroFuncs.ReadComment;
 import io.opsit.explang.Keyword;
-import io.opsit.explang.atom.*;
-import io.opsit.explang.ParserException;
+import io.opsit.explang.ParseCtx;
 import io.opsit.explang.ParserEOFException;
+import io.opsit.explang.ParserException;
+import io.opsit.explang.Utils;
+import io.opsit.explang.atom.AtomParseException;
+import io.opsit.explang.atom.AtomParser;
+import io.opsit.explang.atom.BooleanParser;
+import io.opsit.explang.atom.KeywordParser;
+import io.opsit.explang.atom.NullParser;
+import io.opsit.explang.atom.NumberParser;
+import io.opsit.explang.atom.SymbolParser;
 
 public class LispReader implements IParser  {
 

@@ -7,10 +7,10 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   protected boolean isMultiExpr = false;
   protected boolean isLiteralList = false;
 
-  public ASTNList(List object, ParseCtx pctx) {
+  public ASTNList(List<ASTN> object, ParseCtx pctx) {
     super(object, pctx);
   }
-  public ASTNList(List object, ParseCtx pctx, boolean isComment) {
+  public ASTNList(List<ASTN> object, ParseCtx pctx, boolean isComment) {
     super(object, pctx, isComment);
   }
 
@@ -37,7 +37,7 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
     if (null != getProblem()) {
       return true;
     }
-    for( ASTN astn: (List<ASTN>)object) {
+    for( ASTN astn: getList()) {
       if (astn.hasProblems()) {
         return true;
       }
@@ -46,17 +46,18 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   }
     
   //@Override
+  @SuppressWarnings("unchecked")
   public List<ASTN> getList() {
     return (List<ASTN>)object;
   }
 
   @Override
   public Iterator<ASTN> iterator() {
-    return ((List)object).iterator();
+    return getList().iterator();
   }
 
   public ASTN get(int i) {
-    return (ASTN)((List)object).get(i);
+    return getList().get(i);
   }
 
   public void addAll(ASTNList astns) {
@@ -66,26 +67,28 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   }
     
   public void add(ASTN astn) {
+    // FIXME: when can it happen?
     //if (null == astn.parent) {
     astn.parent = this;
-    ((List<ASTN>)object).add(astn);
+    getList().add(astn);
     //} else {
     //throw new RuntimeException("ASTN node already has parent");
     // }
   }
 
   public int size() {
-    return ((List<ASTN>)object).size();
+    return getList().size();
   }
 
   public ASTNList subList(int start, int end) {
-    final List<ASTN> subList = ((List<ASTN>)object).subList(start, end);
+    // FIXME: when is it used? what with parent tracking?
+    final List<ASTN> subList = getList().subList(start, end);
     ASTNList subASTNlist = new ASTNList(subList, pctx, isComment);
     return subASTNlist;
   }
 
   public boolean isEmpty() {
-    return ((List<ASTN>)object).isEmpty();
+    return getList().isEmpty();
   }
 
   @Override
@@ -112,7 +115,7 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   public String toString() {
     return
       (null != problem  ? "<"+problem+">" : "") +
-      ((null != object) ? astnlistToString((List<ASTN>)object)  : "<null>");
+      ((null != object) ? astnlistToString(getList())  : "<null>");
   }
 
   protected String astnlistToString(List<ASTN> lst) {
@@ -135,4 +138,5 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   public boolean isLiteralList() {
     return this.isLiteralList;
   }
+
 }

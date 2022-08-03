@@ -9,15 +9,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import static io.opsit.explang.Utils.list;
+
 @RunWith(Parameterized.class)
 public class ParserPosTest extends AbstractTest {
   static int testNum = 0;
   static final String INAME = "@";
     
-  public static List<Object> list(Object ... objs) {
-    return Arrays.asList(objs);
-  }
-
   public static Symbol sym(String str) {
     return new Symbol(str);
   }
@@ -33,7 +31,7 @@ public class ParserPosTest extends AbstractTest {
     this.ep = ep;
   }
 
-  protected static ASTNList alist(List<Object> obj, int line, int pos, int offset, int len) {
+  protected static ASTNList alist(List<ASTN> obj, int line, int pos, int offset, int len) {
     ParseCtx pctx = new ParseCtx(INAME, line, pos, offset, len);
     return new ASTNList(obj, pctx, false);
   }
