@@ -1,8 +1,6 @@
 package io.opsit.explang.atom;
 
 import io.opsit.explang.ParseCtx;
-import static io.opsit.explang.Utils.symbol;
-import static io.opsit.explang.Utils.list;
 import io.opsit.version.Version;
  
 public  class VersionParser implements AtomParser {

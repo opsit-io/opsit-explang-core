@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import io.opsit.explang.Compiler.Eargs;
-import io.opsit.explang.Funcs.FuncExp;
 import io.opsit.explang.Funcs.NUMEQ;
 
 

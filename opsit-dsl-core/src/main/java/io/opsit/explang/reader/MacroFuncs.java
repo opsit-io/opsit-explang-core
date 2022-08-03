@@ -2,7 +2,6 @@ package io.opsit.explang.reader;
 
 import java.io.IOException;
 import java.io.PushbackReader;
-import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import io.opsit.explang.ParseCtx;
@@ -42,7 +41,7 @@ public class MacroFuncs  {
 			    PushbackReader is,
 			    ReadTable  rt,
 			    ParseCtx pctx)  { 
-	    ASTNList lst = new ASTNList(new ArrayList(), pctx.clone());
+	    ASTNList lst = new ASTNList(Utils.list(), pctx.clone());
 	    while (true) {
 		char c;
 		try {

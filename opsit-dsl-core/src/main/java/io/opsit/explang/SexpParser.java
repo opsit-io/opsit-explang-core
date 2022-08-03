@@ -164,7 +164,7 @@ public class SexpParser implements IParser {
     } else if (obj instanceof List) {
       StringBuffer str = new StringBuffer();
       str.append('(');
-      for (Object member : ((List)obj)) {
+      for (Object member : ((List<?>)obj)) {
         if (str.length()>1) {
           str.append(" ");
         }

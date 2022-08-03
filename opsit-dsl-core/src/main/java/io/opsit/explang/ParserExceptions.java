@@ -9,7 +9,7 @@ public class ParserExceptions extends ParserException {
 
     @Override
     public List<String> getMessages() {
-	final List<String> result = new ArrayList(errList.size());
+	final List<String> result = new ArrayList<String>(errList.size());
 	for (ParserException e : errList) {
 	    result.add(e.getMessage());
 	}

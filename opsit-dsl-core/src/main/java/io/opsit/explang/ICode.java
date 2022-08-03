@@ -1,7 +1,5 @@
 package io.opsit.explang;
 
-import java.util.List;
-
 public interface ICode {
     //public Object evaluate(Backtrace backtrace, Compiler.Ctx ctx);
     public ICompiled getInstance();
