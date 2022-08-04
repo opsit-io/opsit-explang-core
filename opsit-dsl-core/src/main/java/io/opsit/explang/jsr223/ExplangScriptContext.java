@@ -8,16 +8,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptException;
 import javax.script.SimpleBindings;
-
-import io.opsit.explang.Utils;
 
 public class ExplangScriptContext implements ScriptContext {
 
