@@ -21,19 +21,23 @@ public class Utils {
     return (null == str) ? 0 : str.length();
   }
 
-  public static Class defListClz() {
+  public static Class<?> defListClz() {
     return ArrayList.class;
   }
+
+  @SafeVarargs
   public static <T>List<T> list(T ... objs) {
     List <T>lst = new ArrayList<T>(objs.length);
     lst.addAll(Arrays.asList(objs));
     return lst;
   }
 
+  @SafeVarargs
   public static <T>List<T> clist(T ... objs) {
     return Collections.unmodifiableList(list(objs));
   }
 
+  @SuppressWarnings("unchecked")  
   public  static <T,U>Map<T,U> map(Object ... objs) {
     Map <T,U> map  = new HashMap<T,U>(objs.length >> 1);
     for (int i = 0; i < objs.length; i+=2) {
@@ -42,7 +46,7 @@ public class Utils {
     return map;
   }
 
-    
+  @SafeVarargs
   public  static <T> Set<T> set(T ... objs) {
     Set <T>set = new HashSet<T>(objs.length);
     for (T obj: objs) {
@@ -51,6 +55,7 @@ public class Utils {
     return set;
   }
 
+  @SafeVarargs
   public  static <T> Set<T> roset(T ... objs) {
     Set <T>set = new HashSet<T>(objs.length);
     for (T obj: objs) {
@@ -106,9 +111,9 @@ public class Utils {
       ((val instanceof Symbol)  ? ((Symbol)val).getName() : val.toString());
   }
     
-  public static Class tspecToClass(Object tspec) {
+  public static Class<?> tspecToClass(Object tspec) {
     if (tspec instanceof Class) {
-      return (Class)tspec;
+      return (Class<?>)tspec;
     } else {
       return strToClass(asString(tspec));
     }
@@ -127,8 +132,9 @@ public class Utils {
       return null;
     }
     if (seq instanceof List) {
-      final List lst = (List)seq;
-      final List copy = new ArrayList(lst.size());
+      final List<?> lst = (List<?>)seq;
+      // FIXME: type of created target List
+      final List<Object> copy = new ArrayList<Object>(lst.size());
       copy.addAll(lst);
       return copy;
     } else if (seq.getClass().isArray()) {
@@ -139,20 +145,26 @@ public class Utils {
   }
 
     
-  final private static Map<String,Class> primTypesClasses = new HashMap();
+  final private static Map<String,Class<?>> primTypesClasses = new HashMap<String,Class<?>>();
   static {
-    for (Class cls :  new Class[] {
-        void.class,boolean.class,char.class,byte.class,
-        short.class,int.class,long.class,
-        double.class,float.class,
+    for (Class<?> cls :  new Class[] {
+        void.class,
+        boolean.class,
+        char.class,
+        byte.class,
+        short.class,
+        int.class,
+        long.class,
+        double.class,
+        float.class,
       }) {
       primTypesClasses.put(cls.getName(), cls);
     }
   }
     
     
-  public static Class strToClass(String str) {
-    Class result;
+  public static Class<?> strToClass(String str) {
+    Class<?> result;
     try {
       result = Utils.class.getClassLoader().loadClass(str);
     } catch (ClassNotFoundException ex) {
@@ -173,9 +185,9 @@ public class Utils {
     return result;
   }
 
-  public static Class[] getMethodParamsClasses(List methodParams, List typeSpecs) {
+  public static Class<?>[] getMethodParamsClasses(List<Object> methodParams, List<Object> typeSpecs) {
     int listSize = (null == methodParams) ? 0 : methodParams.size();
-    final Class [] methodParamClasses = new Class[listSize];
+    final Class<?> [] methodParamClasses = new Class[listSize];
     for (int j=0; j < listSize; j++) {
       if (null != typeSpecs &&
           typeSpecs.size()>j &&
@@ -206,8 +218,8 @@ public class Utils {
   public static ASTN ASTNize(Object param, ParseCtx ctx) {
     if (param instanceof List) {
       //;ASTN lst = new ASTN
-      List <ASTN>astnList = new ArrayList<ASTN>(((List)param).size());
-      for (Object obj : (List)param) {
+      List <ASTN>astnList = new ArrayList<ASTN>(((List<?>)param).size());
+      for (Object obj : (List<?>)param) {
         final ASTN node = ASTNize(obj,ctx);
         astnList.add(node);
       }
@@ -248,7 +260,9 @@ public class Utils {
     } else if (val instanceof Boolean) {
       return ((boolean)val) ? 1 : 0;
     } else if (val instanceof Collection) {
-      return ((Collection) val).size();
+      // FIXME: Do we neede this?
+      // FIXME: Parameter or this?
+      return ((Collection<?>) val).size();
     } else if (val.getClass().isArray()) {
       return java.lang.reflect.Array.getLength(val);
     }
@@ -337,7 +351,7 @@ public class Utils {
     } else if (val instanceof Character) {
       return (short)((Character)val).charValue();
     } else if (val instanceof Collection) {
-      return ((Collection) val).size();
+      return ((Collection<?>) val).size();
     } else if (val.getClass().isArray()) {
       return java.lang.reflect.Array.getLength(val);
     } else {
@@ -426,8 +440,8 @@ public class Utils {
     try {
       Array.set(arrayObj, index, obj);
     } catch (java.lang.IllegalArgumentException ex) {
-      final Class clz = arrayObj.getClass();
-      final Class ct = clz.getComponentType();
+      final Class<?> clz = arrayObj.getClass();
+      final Class<?> ct = clz.getComponentType();
       if (ct == Character.TYPE || ct == java.lang.Character.class) {
         Array.set(arrayObj, index, Utils.asChar(obj));
       } else if (ct == Byte.TYPE || ct == java.lang.Byte.class) {
@@ -452,11 +466,12 @@ public class Utils {
     }
   }
 
+
   public static boolean arraysDeepEquals(Object e, Object v) {
-    final Class ec = e.getClass();
-    final Class vc = v.getClass();
-    final Class ect = ec.getComponentType();
-    final Class vct = vc.getComponentType();
+    final Class<?> ec = e.getClass();
+    final Class<?> vc = v.getClass();
+    final Class<?> ect = ec.getComponentType();
+    final Class<?> vct = vc.getComponentType();
     if (Object.class.isAssignableFrom(ect) &&
         Object.class.isAssignableFrom(vct)) {
       return Arrays.deepEquals( (Object[])e , (Object[])v);
@@ -500,6 +515,7 @@ public class Utils {
     return null;
   }
 
+  @SafeVarargs
   public static <T> T  nvl(T... objects) {
     for (T object : objects) {
       if (null != object) {
@@ -522,8 +538,9 @@ public class Utils {
     }
   }
 
-  public static Set intersectSets(Set... sets) {
-    final Set result = new HashSet();
+  
+  public static Set<Object> intersectSets(Set<?>... sets) {
+    final Set<Object> result = new HashSet<Object>();
     if (sets.length > 0) {
       result.addAll(sets[0]);
       for (int i = 1; i < sets.length; i++) {
@@ -533,8 +550,8 @@ public class Utils {
     return result;
   }
 
-  public static Set unionSets(Set... sets) {
-    final Set result = new HashSet();
+  public static Set<Object> unionSets(Set<?>... sets) {
+    final Set<Object> result = new HashSet<Object>();
     for (int i = 0; i < sets.length; i++) {
       result.addAll(sets[i]);
     }
@@ -556,7 +573,7 @@ public class Utils {
     return a.equals(b);
   }
 
-  public static boolean enumEqual(Enum e, Object o) {
+  public static boolean enumEqual(Enum<?> e, Object o) {
     return Seq.sequal(e.name(), o);
   }
 
@@ -578,10 +595,10 @@ public class Utils {
       return nc.compare((Number)v1, (Number) v2) == 0;
     }
     if (v1.getClass().isEnum()) {
-      return enumEqual((Enum)v1, v2);
+      return enumEqual((Enum<?>)v1, v2);
     }
     if (v2.getClass().isEnum()) {
-      return enumEqual((Enum)v2, v1);
+      return enumEqual((Enum<?>)v2, v1);
     }
         
     return false;
