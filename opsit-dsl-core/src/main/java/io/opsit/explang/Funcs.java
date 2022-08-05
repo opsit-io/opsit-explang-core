@@ -1432,11 +1432,11 @@ public class Funcs {
     }
 
     /***** JAVA INTEROP *****/
-    public static class FilteredMap implements Map {
-        protected Map src;
+  public static class FilteredMap implements Map<Object,Object> {
+    protected Map<?,?> src;
         protected Set<?> filterSet;
 
-        public FilteredMap(Map src, Object filter) {
+    public FilteredMap(Map<?,?> src, Object filter) {
             this.src = src;
             this.filterSet = Seq.asSet(filter);
         }
@@ -1787,20 +1787,19 @@ public class Funcs {
             final Object obj = eargs.get(0, backtrace);
             final Object ksObj = eargs.get(1, backtrace);
             if (Seq.isSequence(obj) && !(obj instanceof Map)) {
-                final List result = Utils.list();
+                final List<Object> result = Utils.list();
                 Seq.forEach(obj, new Seq.Operation() {
                         @Override
                         public boolean perform(Object obj) {
                             result.add(doSelectKeys(obj, ksObj));
                             return false;
                         }
-                    }
-                    , true);
+                    }, true);
                 return result;
             } else {
                 return doSelectKeys(obj, ksObj);
             }
-        }        
+        }
     }
 
     
