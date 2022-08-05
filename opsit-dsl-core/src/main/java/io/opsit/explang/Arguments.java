@@ -6,13 +6,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.opsit.explang.ArgSpec;
-
 //@Documented
 @Target(ElementType.TYPE)
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Arguments {
-    String[] spec () default 	{ArgSpec.ARG_REST, "args"};
-    String   text () default "";
+  String[] spec () default 	{ArgSpec.ARG_REST, "args"};
+  String   text () default "";
 }
