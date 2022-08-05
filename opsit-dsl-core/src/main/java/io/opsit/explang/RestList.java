@@ -5,12 +5,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-@SuppressWarnings("rawtypes")
-public class RestList implements List {
-  private List lst;
+//@SuppressWarnings("rawtypes")
+public class RestList implements List<Object> {
+  private List<Object> lst;
   Backtrace bt;
     
-  public RestList(List lst, Backtrace bt) {
+  public RestList(List<Object> lst, Backtrace bt) {
 	this.lst = lst;
 	this.bt = bt;
   }
@@ -32,7 +32,7 @@ public class RestList implements List {
 
   @Override
   public Iterator<Object> iterator() {
-	final Iterator lstIter = lst.iterator();
+	final Iterator<Object> lstIter = lst.iterator();
 	return new Iterator<Object>() {
 	    
       @Override
@@ -59,6 +59,7 @@ public class RestList implements List {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public Object[] toArray(Object[] a) {
 	return lst.toArray(a);
   }
@@ -74,27 +75,27 @@ public class RestList implements List {
   }
 
   @Override
-  public boolean containsAll(Collection c) {
+  public boolean containsAll(Collection<?> c) {
 	return lst.containsAll(c);
   }
 
   @Override
-  public boolean addAll(Collection c) {
+  public boolean addAll(Collection<? extends Object> c) {
 	return lst.addAll(c);
   }
 
   @Override
-  public boolean addAll(int index, Collection c) {
+  public boolean addAll(int index, Collection<? extends Object> c) {
 	return lst.addAll(index, c);
   }
 
   @Override
-  public boolean removeAll(Collection c) {
+  public boolean removeAll(Collection<? extends Object> c) {
 	return lst.removeAll(c);
   }
 
   @Override
-  public boolean retainAll(Collection c) {
+  public boolean retainAll(Collection<? extends Object> c) {
 	return lst.retainAll(c);
   }
 
@@ -139,17 +140,17 @@ public class RestList implements List {
   }
 
   @Override
-  public ListIterator listIterator() {
+  public ListIterator<Object> listIterator() {
 	return lst.listIterator();
   }
 
   @Override
-  public ListIterator listIterator(int index) {
+  public ListIterator<Object> listIterator(int index) {
 	return lst.listIterator(index);
   }
 
   @Override
-  public List subList(int fromIndex, int toIndex) {
+  public List<Object> subList(int fromIndex, int toIndex) {
 	return new RestList(lst.subList(fromIndex, toIndex), bt);
   }
 
