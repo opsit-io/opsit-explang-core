@@ -151,7 +151,7 @@ public class Compiler {
     this.packages = packages;
   }
 
-  public boolean checkBuiltinPackage(Class cls, Set<String> pkgs) {
+  public boolean checkBuiltinPackage(Class<?> cls, Set<String> pkgs) {
     final String name = this.getBuiltinPackage(cls);
     if (null != name) {
       return pkgs.contains(name);
@@ -160,7 +160,7 @@ public class Compiler {
     }
   }
     
-  public String getBuiltinPackage(Class cls) {
+  public String getBuiltinPackage(Class<?> cls) {
     final Package pkg = (Package) cls.getAnnotation(Package.class);
     if (null != pkg) {
       return pkg.name();
@@ -170,7 +170,7 @@ public class Compiler {
   }
 
     
-  public void addBuiltIn(String name, Class cls) {
+  public void addBuiltIn(String name, Class<?> cls) {
     if ((! isEnforcePackages()) ||  checkBuiltinPackage(cls, this.getPackages())) {
       final Builtin builtin =
         IForm.class.isAssignableFrom(cls) ? new BuiltinForm(cls) : new BuiltinFunc(cls);
@@ -180,13 +180,12 @@ public class Compiler {
                                  ": class package '" + getBuiltinPackage(cls) + "' does not belong to any of "+
                                  "enabled packages");
     }
-
   }
 
   public abstract class Builtin implements ICode {
-    protected Class cls;
+    protected Class<?> cls;
 
-    public Builtin(Class cls) {
+    public Builtin(Class<?> cls) {
       this.cls = cls;
     }
 
@@ -233,7 +232,7 @@ public class Compiler {
   }
 
   public class BuiltinForm extends Builtin {
-    public BuiltinForm(Class cls) {
+    public BuiltinForm(Class<?> cls) {
       super(cls);
     }
 
@@ -261,7 +260,7 @@ public class Compiler {
   }
 
   public class BuiltinFunc extends Builtin {
-    public BuiltinFunc(Class cls) {
+    public BuiltinFunc(Class<?> cls) {
       super(cls);
     }
 
@@ -301,7 +300,7 @@ public class Compiler {
 
   private void initBuiltins(Set<String>  fromPackages) {
     // arithmetics
-    final List builtinsInit =
+    final List<Object> builtinsInit =
       Utils.list(
                  "+", ADDOP.class,
                  "-", SUBOP.class,
@@ -461,7 +460,7 @@ public class Compiler {
                  );
         
     for (int i = 0; i < builtinsInit.size(); i+=2) {
-      final Class builtinClass = (Class) builtinsInit.get(i + 1);
+      final Class<?> builtinClass = (Class<?>) builtinsInit.get(i + 1);
       if (this.checkBuiltinPackage(builtinClass, fromPackages)) {
         addBuiltIn((String) builtinsInit.get(i), builtinClass);
       }
@@ -692,11 +691,12 @@ public class Compiler {
     private List<ICompiled> finalBlocks = null;
 
     private class CatchEntry {
-      Class exception;
+      Class<? extends Throwable> exception;
       String varName;
       List<ICompiled> blocks;
     }
-
+    
+    @SuppressWarnings("unchecked")
     public CatchEntry compileCatchBlock(ASTNList list) throws InvalidParametersException {
       CatchEntry result = new CatchEntry();
       ASTN exception = list.get(0);
@@ -713,7 +713,7 @@ public class Compiler {
       }
       Symbol excSym = (Symbol) exception.getObject();
       try {
-        result.exception = this.getClass().getClassLoader().loadClass(excSym.getName());
+        result.exception = (Class<? extends Throwable>)this.getClass().getClassLoader().loadClass(excSym.getName());
       } catch (ClassNotFoundException clnf) {
         throw new InvalidParametersException(debugInfo,
                                              "catch: invalid exception class specified: '" + excSym.getName() + "'");
