@@ -10,14 +10,14 @@ import java.util.Set;
 
 
 public class FilteredMapTest {
-  protected Map<String,String> mkTestMap() {
-    Map<String,String> map = map("a", "b", "c", "d");
+  protected Map<Object,Object> mkTestMap() {
+    Map<Object,Object> map = map("a", "b", "c", "d");
     return map;
   }
 
   @Test
   public void testListKS() {
-    Map<String,String> m = mkTestMap();
+    Map<Object,Object> m = mkTestMap();
     Map<Object,Object> fm = new Funcs.FilteredMap(m, list("a"));
     Assert.assertEquals(1,fm.size());
     Assert.assertEquals(fm.get("a"), "b");
@@ -31,7 +31,7 @@ public class FilteredMapTest {
 
   @Test
   public void testArrayKS() {
-    Map<String,String> m = mkTestMap();
+    Map<Object,Object> m = mkTestMap();
     String[] ks = new String[1];
     ks[0] = "a";
     Map<Object,Object> fm = new Funcs.FilteredMap(m, ks);
@@ -47,7 +47,7 @@ public class FilteredMapTest {
 
   @Test
   public void testSetKS() {
-    Map<String,String> m = mkTestMap();
+    Map<Object,Object> m = mkTestMap();
     Set<String> ks = set("a");
     Map<Object,Object> fm = new Funcs.FilteredMap(m, ks);
     Assert.assertEquals(1,fm.size());
@@ -62,7 +62,7 @@ public class FilteredMapTest {
 
   @Test
   public void testSetString() {
-    Map<Object,String> m = map('a', "b", 'c', "d");
+    Map<Object,Object> m = map('a', "b", 'c', "d");
     String ks = "a";
     Map<Object,Object> fm = new Funcs.FilteredMap(m, ks);
     Assert.assertEquals(1,fm.size());

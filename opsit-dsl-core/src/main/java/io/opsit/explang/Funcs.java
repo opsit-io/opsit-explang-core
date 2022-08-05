@@ -1433,10 +1433,10 @@ public class Funcs {
 
     /***** JAVA INTEROP *****/
   public static class FilteredMap implements Map<Object,Object> {
-    protected Map<?,?> src;
-        protected Set<?> filterSet;
+    protected Map<Object,Object> src;
+    protected Set<?> filterSet;
 
-    public FilteredMap(Map<?,?> src, Object filter) {
+    public FilteredMap(Map<Object,Object> src, Object filter) {
             this.src = src;
             this.filterSet = Seq.asSet(filter);
         }
