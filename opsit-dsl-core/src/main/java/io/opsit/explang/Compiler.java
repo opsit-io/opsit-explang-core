@@ -734,13 +734,13 @@ public class Compiler {
             Symbol s = (Symbol) first.getObject();
             if ("CATCH".equals(s.getName())) {
               if (null == catches) {
-                catches = new ArrayList();
+                catches = new ArrayList<CatchEntry>();
               }
               catches.add(compileCatchBlock(pList.subList(1, pList.size())));
               continue;
             } else if ("FINALLY".equals(s.getName())) {
               if (null == finalBlocks) {
-                finalBlocks = new ArrayList();
+                finalBlocks = new ArrayList<ICompiled>();
               }
               finalBlocks.addAll(compileParams(pList.subList(1, pList.size())));
               continue;
@@ -1095,7 +1095,8 @@ public class Compiler {
       this.elseBlocks = compileParams(params.subList(2, params.size()));
     }
 
-    public Object evalWithArgs(Backtrace backtrace, List eargs, ICtx ctx) {
+
+    public Object evalWithArgs(Backtrace backtrace, List<Object> eargs, ICtx ctx) {
       Object condVal = eargs.get(0);
       if (Utils.asBoolean(condVal)) {
         return thenBlock.evaluate(backtrace, ctx);
@@ -1105,7 +1106,7 @@ public class Compiler {
     }
 
     public List<Object> evaluateParameters(Backtrace backtrace, ICtx ctx) {
-      List eargs = new ArrayList(1);
+      List<Object> eargs = new ArrayList<Object>(1);
       eargs.add(condition.evaluate(backtrace, ctx));
       return eargs;
     }
@@ -1291,7 +1292,7 @@ public class Compiler {
       }
       for (int i = 0; i < varNames.size(); i++) {
         String varName = varNames.get(i);
-        localCtx.put(varName, ((List) listVals).get(i));
+        localCtx.put(varName, ((List<?>) listVals).get(i));
       }
       return evalBlocks(backtrace, blocks, localCtx);
     }
@@ -1343,7 +1344,8 @@ public class Compiler {
                                      getName() + " expects a java.lang.Map instance as first parameter, but got "
                                      + bindObj);
       }
-      final ICtx localCtx = new Ctx(ctx, (Map) bindObj);
+      @SuppressWarnings("unchecked")
+      final ICtx localCtx = new Ctx(ctx, (Map<String,Object>) bindObj);
       return evalBlocks(backtrace, blocks, localCtx);
     }
   }
@@ -1559,7 +1561,8 @@ public class Compiler {
       forEach(val, new Operation() {
           @Override
           public boolean perform(Object obj) {
-            Map objMap = (obj instanceof Map) ? (Map) obj : new Funcs.BeanMap(obj);
+            @SuppressWarnings("unchecked")
+            Map<String,Object> objMap = (obj instanceof Map) ? (Map<String,Object>) obj : new Funcs.BeanMap(obj);
             final ICtx checkCtx =  new Ctx(ctx, objMap, true);
             checkCtx.getMappings().put("_", obj);
             Object chkResult = null;
@@ -1788,11 +1791,11 @@ public class Compiler {
       return null == ctx ? this.getLevel0() : ctx;
     }
 
-    protected Map getMappingsOrLocal(String name) {
+    protected Map<String,Object> getMappingsOrLocal(String name) {
       return findCtxOrLocal(name).getMappings();
     }
 
-    protected Map getMappingsOrGlobal(String name) {
+    protected Map<String,Object> getMappingsOrGlobal(String name) {
       return findCtxOrGlobal(name).getMappings();
     }
 
@@ -1811,8 +1814,7 @@ public class Compiler {
       Object prev = mappings.put(name, expr);
       // FIXME: bug - if var was spreviously set to null
       if (null != prev) {
-        throw new RuntimeException(
-                                   "trying to overwrite variable " + name + " in context " + this);
+        throw new RuntimeException("trying to overwrite variable " + name + " in context " + this);
       }
     }
 
@@ -1912,7 +1914,7 @@ public class Compiler {
 
     @Override
     public void remove(String name) {
-      final Map mappings = getMappings();
+      final Map<String,Object> mappings = getMappings();
       if (mappings.containsKey(name)) {
         mappings.remove(name);
       }
@@ -1932,11 +1934,11 @@ public class Compiler {
     return new Ctx(ctx);
   }
 
-  public ICtx newCtx(Map vars) {
+  public ICtx newCtx(Map<String,Object> vars) {
     return new Ctx(vars);
   }
 
-  public ICtx newCtxFromROMap(Map vars) {
+  public ICtx newCtxFromROMap(Map<String,Object> vars) {
     ICtx ctx = new Ctx(vars);
     return newCtx(ctx);
   }
