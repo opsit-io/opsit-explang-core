@@ -147,7 +147,7 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Number result = getNeutral();
       Promotion p = new Promotion();
-      List rest = (List) eargs.get(0, backtrace);
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
       if (rest.size() == 0) {
         p.promote(result);
       } else {
@@ -169,7 +169,7 @@ public class Funcs {
   public static class ADDOP extends ABSTRACT_ADD {
     @Override
     protected Number getNeutral() {
-      return new Integer(0);
+      return Integer.valueOf(0);
     }
     @Override
     public  Number doIntOp(Number result, Number arg) {
@@ -207,7 +207,7 @@ public class Funcs {
   public static class MULOP extends ABSTRACT_ADD {
     @Override
     protected Number getNeutral() {
-      return  new Integer(1);
+      return  Integer.valueOf(1);
     }
     @Override
     public Number doIntOp(Number result, Number arg) {
@@ -232,7 +232,7 @@ public class Funcs {
     protected abstract Number getNeutral();
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      List rest = (List) eargs.get(0, backtrace);
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
       Number num = Utils.asNumber(rest.get(0));
       Promotion p = new Promotion();
       p.promote(num);
@@ -289,7 +289,7 @@ public class Funcs {
     }
     @Override
     protected Number getNeutral() {
-      return new Integer(0);
+      return Integer.valueOf(0);
     }
   }
 
@@ -325,7 +325,7 @@ public class Funcs {
         
     @Override
     protected Number getNeutral() {
-      return new Integer(1);
+      return Integer.valueOf(1);
     }
 
   }
@@ -340,7 +340,7 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Promotion p = new Promotion();
       Number result = Utils.asNumber(eargs.get(0, backtrace));
-      List rest = (List)eargs.get(1, backtrace);
+      List<?> rest = (List<?>)eargs.get(1, backtrace);
       p.promote(result);
       for (int i=0; i< rest.size() ; i++) {
         Number val = Utils.asNumber(rest.get(i));
@@ -362,7 +362,7 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Promotion p = new Promotion();
       Number result = Utils.asNumber(eargs.get(0, backtrace));
-      List rest = (List)eargs.get(1, backtrace);
+      List<?> rest = (List<?>)eargs.get(1, backtrace);
       p.promote(result);
       for (int i=0; i< rest.size() ; i++) {
         Number val = Utils.asNumber(rest.get(i));
@@ -468,7 +468,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object andVal = true;
-      for (Object  val : (List)eargs.get(0, backtrace)) {
+      for (Object  val : (List<?>)eargs.get(0, backtrace)) {
         andVal = val;
         if (!Utils.asBoolean(val)) {
           break;
@@ -491,7 +491,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object orVal = false;
-      for (Object val : (List)eargs.get(0, backtrace)) {
+      for (Object val : (List<?>)eargs.get(0, backtrace)) {
         if (Utils.asBoolean(val)) {
           orVal = val;
           break;
@@ -546,15 +546,6 @@ public class Funcs {
       final Object v1 = eargs.get(0, backtrace);
       final Object v2 = eargs.get(1, backtrace);
       return Seq.sequal(v1, v2);
-            
-      /*final boolean result = Utils.sequal(v1, v2);
-        if (result) {
-        return result;
-        }
-        if (Seq.isSequence(v1) && Seq.isSequence(v2)) {
-
-        }
-        return false;*/
     }
   }
 
@@ -580,7 +571,7 @@ public class Funcs {
       boolean result = true;
       Promotion p = new Promotion();
       Number prevVal = Utils.asNumber(eargs.get(0, backtrace));
-      List rest = (List)eargs.get(1, backtrace);
+      List<?> rest = (List<?>)eargs.get(1, backtrace);
       p.promote(prevVal);
       for (int i=0; i< rest.size() ; i++) {
         Number val = Utils.asNumber(rest.get(i));
@@ -622,7 +613,8 @@ public class Funcs {
   }
 
   @Arguments(spec={"x",ARG_REST,"args"})
-  @Docstring(text="Test numeric equality. Returns True if all arguments are numerically equal.  Returns True if only one argument is given")
+  @Docstring(text="Test numeric equality. Returns True if all arguments are numerically equal. "
+             + "Returns True if only one argument is given")
   @Package(name=Package.BASE_LOGIC)
   public  static class NUMEQ extends NUMCOMP {
     @Override
@@ -633,7 +625,8 @@ public class Funcs {
   }
 
   @Arguments(spec={"x",ARG_REST,"args"})
-  @Docstring(text="Greater Than - Numeric comparison. Returns True if all arguments are monotonically decreasing order.  Returns True if only one argument is given")
+  @Docstring(text="Greater Than - Numeric comparison. Returns True if all arguments are monotonically "
+             + "decreasing order.  Returns True if only one argument is given")
   @Package(name=Package.BASE_LOGIC)
   public static class NUMGT extends NUMCOMP {
     @Override
@@ -643,7 +636,9 @@ public class Funcs {
   }
 
   @Arguments(spec={"x",ARG_REST,"args"})
-  @Docstring(text="Greater or Equal - Numeric comparison. Returns True if all arguments are monotonically non-increasing order.  Returns True if only one argument is given")
+  @Docstring(text="Greater or Equal - Numeric comparison. "
+             + "Returns True if all arguments are monotonically non-increasing order. "
+             + "Returns True if only one argument is given")
   @Package(name=Package.BASE_LOGIC)
   public static class NUMGE extends NUMCOMP {
     @Override
@@ -654,7 +649,9 @@ public class Funcs {
 
   @Arguments(spec={"x",ARG_REST,"args"})
   @Package(name=Package.BASE_LOGIC)
-  @Docstring(text="Less Than - Numeric Comparison. Returns True if all arguments are monotonically increasing order.  Returns True if only one argument is given")
+  @Docstring(text="Less Than - Numeric Comparison. "
+             + "Returns True if all arguments are monotonically increasing order.  "
+             + "Returns True if only one argument is given")
   public static  class NUMLT extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
@@ -664,7 +661,9 @@ public class Funcs {
 
   @Arguments(spec={"x",ARG_REST,"args"})
   @Package(name=Package.BASE_LOGIC)
-  @Docstring(text="Less or Equal - Numeric comparison. Returns True if all arguments are monotonically non-decreasing order.  Returns True if only one argument is given")
+  @Docstring(text="Less or Equal - Numeric comparison. "
+             + "Returns True if all arguments are monotonically non-decreasing order.  "
+             + "Returns True if only one argument is given")
   public static  class NUMLE extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
@@ -673,9 +672,10 @@ public class Funcs {
   }
 
   @Arguments(spec={"x"})
-  @Docstring(text="Return Number Sign. Determines a numerical value that indicates whether number is negative, zero, or positive. "+
-             "Returns one of -1, 0, or 1 according to whether number is negative, zero, or positive. The type of "+
-             "the result is of the same numeric type as x")
+  @Docstring(text="Return Number Sign. "
+             + "Determines a numerical value that indicates whether number is negative, zero, or positive. "
+             + "Returns one of -1, 0, or 1 according to whether number is negative, zero, or positive. "
+             + "The type of the result is of the same numeric type as x")
   @Package(name=Package.BASE_ARITHMENTICS)
   public static class SIGNUM extends FuncExp {
     @Override
