@@ -2687,9 +2687,7 @@ public class Funcs {
   @Package(name=Package.BASE_SEQ)
   public static class SUBSEQ extends FuncExp {
     @Override
-    @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Object result = null;
       final int size = eargs.size();
       if (3 != size) {
         throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
@@ -2721,19 +2719,17 @@ public class Funcs {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Object result = null;
       final int size = eargs.size();
       if (1 != size) {
         throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
       }
-      List seqs = (List)eargs.get(0, backtrace);
+      List<?> seqs = (List<?>)eargs.get(0, backtrace);
       if (seqs.size() == 0) {
         return Utils.list();
       }
       Object firstSeq = seqs.get(0);
-      Class clz = null == firstSeq ? Utils.defListClz() : firstSeq.getClass();
+      Class<?> clz = null == firstSeq ? Utils.defListClz() : firstSeq.getClass();
       if (clz.isArray()) {
         return arrayAppend(clz, backtrace, seqs);
       } else if (CharSequence.class.isAssignableFrom(clz)) {
@@ -2745,7 +2741,7 @@ public class Funcs {
       }
     }
 
-    private Object charSeqAppend(Class clz, Backtrace bt, List seqs) {
+    private Object charSeqAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       // FIXME: support other types but StringBuilder
       Object target = seqs.get(0);
       if (isDestructive && !(target instanceof StringBuilder)) {
@@ -2796,6 +2792,7 @@ public class Funcs {
       return result;
     }
 
+
     protected Collection<?> colAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       Object result = null;
       try {
@@ -2810,8 +2807,9 @@ public class Funcs {
       } catch (NoSuchMethodException ex) {
         throw new ExecutionException(bt, ex);
       }
-      
-      final Collection resultCol = (Collection)result;
+
+      @SuppressWarnings("unchecked")
+      final Collection<Object> resultCol = (Collection<Object>)result;
       final int numArgs = seqs.size();
       for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
         Object seq = seqs.get(i);
@@ -2857,7 +2855,7 @@ public class Funcs {
   @Package(name=Package.BASE_SEQ)
   public static class FIRST extends  NTH {
     @Override
-    @SuppressWarnings("unchecked")
+    //@SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object seq = eargs.get(0, backtrace);
       return Seq.getElement(seq, 0);
@@ -2942,7 +2940,6 @@ public class Funcs {
   @Package(name=Package.BASE_SEQ)
   public static  class SEQUENCEP extends FuncExp {
     @Override
-    @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
       return Seq.isSequence(val);
@@ -3002,7 +2999,7 @@ public class Funcs {
       //prom.promote(step);
 
             
-      final Collection resultSeq = new RangeList(start, to, step);
+      final Collection <?> resultSeq = new RangeList(start, to, step);
       return resultSeq;
     }
   }
@@ -3014,9 +3011,9 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
-      List result = null;
+      List<?> result = null;
       if ((null == val) || (val instanceof List)) {
-        result = (List)val;
+        result = (List<?>)val;
       } else if (val instanceof String) {
         // FIXME: split to chars
         result =  Arrays.asList(((String)val).split(""));
@@ -3048,11 +3045,12 @@ public class Funcs {
       final ICode lambda = (ICode) (eargs.size() == 1 ? null         : eargs.get(0, backtrace)) ;
       return doSort(seq, lambda, backtrace, eargs);
     }
+    @SuppressWarnings({"rawtypes","unchecked"})
     protected Object doSort(final Object seq,
                             final ICode lambda,
                             final Backtrace backtrace,
                             final ICtx ctx) {
-      Comparator comparator = null;
+      Comparator<Object> comparator = null;
       if (null != lambda) {
         final ICtx localCtx = ctx.getCompiler().newCtx(ctx);
         final IExpr compf = (IExpr)lambda.getInstance();
@@ -3064,7 +3062,7 @@ public class Funcs {
                                                    (null == ex.getParseCtx() ? "?" : ex.getParseCtx().toString()),
                                                    ex.getMessage()));
         }
-        comparator = new Comparator() {
+        comparator = new Comparator<Object>() {
             @Override
             public int compare(Object o1, Object o2) {
               localCtx.getMappings().put("%1", o1);
@@ -3073,10 +3071,14 @@ public class Funcs {
             }
           };
       }
-      if (seq instanceof List)  {
-        List col = (List) seq;
+      if (null == seq) {
+        return seq;
+      } else if (seq instanceof List)  {
+        List<?> col = (List<?>) seq;
+        // FIXME: what if values are not actually Comparable, exceptions will happen
+        // need to catch exceptions here
         if (null==comparator) {
-          Collections.sort(col);
+          Collections.sort((List)col);
         } else {
           Collections.sort(col, comparator);
         }
@@ -3089,8 +3091,6 @@ public class Funcs {
           Arrays.sort(ar, comparator);
         }
         return ar;
-      } else if (null == seq) {
-        return seq;
       } else {
         throw new RuntimeException("No idea how to sort object of type "+seq.getClass());
       }
@@ -3149,13 +3149,10 @@ public class Funcs {
   public static class LOAD extends FuncExp {
     protected InputStream openInput(Object loadObj, Backtrace bt) {
       File f = null;
-      String srcName = null;
       if (loadObj instanceof String) {
         f = new File((String) loadObj);
-        srcName = (String) loadObj;
       } else if (loadObj instanceof File) {
         f = (File) loadObj;
-        srcName = f.getPath();
       } else if (loadObj instanceof InputStream) {
         return (InputStream) loadObj;
       }
@@ -3170,8 +3167,6 @@ public class Funcs {
       if (loadObj == null) {
         return false;
       }
-      final String inputName = Utils.asString(loadObj);
-      final ParseCtx pctx = new ParseCtx(inputName);
       InputStream is = null;
       try {
         is = openInput(loadObj, bt);
@@ -3223,8 +3218,8 @@ public class Funcs {
   public static class FUNCTIONS_NAMES extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
-      List results = new ArrayList();
-      List rest = (List)eargs.get(0, backtrace);
+      List<String> results = new ArrayList<String>();
+      List<?> rest = (List<?>)eargs.get(0, backtrace);
       for (String key : eargs.getCompiler().getFunKeys()) {
         if (rest.size() > 0) {
           for (Object obj : rest) {
