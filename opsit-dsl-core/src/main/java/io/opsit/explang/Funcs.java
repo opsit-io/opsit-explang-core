@@ -702,7 +702,8 @@ public class Funcs {
 
   /**** COERCION *****/
   @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Boolean. Value may be a Character, a Number, a Boolean, a Byte, a String, any object or NIL:\n" +
+  @Docstring(text="Coerce Value to Boolean. "
+             + "Value may be a Character, a Number, a Boolean, a Byte, a String, any object or NIL:\n" +
              "* Boolean value will be returned as is\n"+
              "* NIL is false\n"+
              "* Character  \u0000 is false.\n"+
@@ -940,7 +941,7 @@ public class Funcs {
       if (null == tspec) {
         return null == val;
       }
-      final Class tclass = Utils.tspecToClass(tspec);
+      final Class<?> tclass = Utils.tspecToClass(tspec);
       return tclass.isInstance(val);          
     }
   }
@@ -966,7 +967,7 @@ public class Funcs {
   public static class BOUNDP extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      for (Object arg : (List)eargs.get(0, backtrace)) {
+      for (Object arg : (List<?>)eargs.get(0, backtrace)) {
         if ((null == arg) ||
             (! eargs.contains(Utils.asString(arg)))) {
           return false;
@@ -992,8 +993,8 @@ public class Funcs {
     }
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Map map = new HashMap();
-      List rest = (List)eargs.get(0, backtrace);
+      Map<Object,Object> map = new HashMap<Object,Object>();
+      List<?> rest = (List<?>)eargs.get(0, backtrace);
       for (int i = 0; i < rest.size(); i+=2) {
         map.put(rest.get(i), rest.get(i+1));
       }
@@ -1093,7 +1094,7 @@ public class Funcs {
   }
 
 
-    
+
   /****** MAPPING OPERATIONS ******/
   // args is a spreadable list designator
   @Arguments(spec={"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
