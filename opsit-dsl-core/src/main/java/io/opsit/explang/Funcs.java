@@ -1170,7 +1170,7 @@ public class Funcs {
       ICode lambda = (ICode) Utils.asObject(val);
       IExpr instance = (IExpr)lambda.getInstance();
 
-      List list = (List)eargs.get(2, backtrace);
+      List<?> list = (List<?>)eargs.get(2, backtrace);
       Object startVal = eargs.get(1, backtrace);
       // FIXME
       boolean haveStartVal = null != startVal;
@@ -1191,7 +1191,7 @@ public class Funcs {
       } else {
         result = list.get(i++);
       }
-      List<ICompiled> vars = setFuncPosParams(instance, 2);
+      setFuncPosParams(instance, 2);
       for (; i < list.size(); i++) {
         ICtx newCtx = eargs.getCompiler().newCtx(eargs);
         newCtx.getMappings().put("%1",  result);
