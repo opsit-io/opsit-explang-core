@@ -2773,7 +2773,7 @@ public class Funcs {
       return cs;
     }
 
-    private Object arrayAppend(Class clz, Backtrace bt, List seqs) {
+    private Object arrayAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       if (isDestructive) {
         throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of sequence extension");
       }
@@ -2784,7 +2784,7 @@ public class Funcs {
         final Object seq = seqs.get(i);
         totalLength += Seq.getLength(seq, true);
       }
-      final Class componentType = clz.getComponentType();
+      final Class<?> componentType = clz.getComponentType();
       Object result = Array.newInstance(componentType, totalLength);
       final int[] counter = new int[1];
 
@@ -2796,7 +2796,7 @@ public class Funcs {
       return result;
     }
 
-    protected Collection colAppend(Class clz, Backtrace bt, List seqs) {
+    protected Collection<?> colAppend(Class clz, Backtrace bt, List<?> seqs) {
       Object result = null;
       try {
         result = isDestructive ? seqs.get(0) : clz.newInstance();
