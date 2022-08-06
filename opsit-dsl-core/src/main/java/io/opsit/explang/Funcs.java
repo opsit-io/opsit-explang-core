@@ -2514,7 +2514,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       String format = (String) eargs.get(0, backtrace);
-      return String.format(format, ((List)eargs.get(1, backtrace)).toArray());
+      return String.format(format, ((List<?>)eargs.get(1, backtrace)).toArray());
     }
   }
 
@@ -2525,7 +2525,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       StringBuffer buf=new StringBuffer();
-      for (Object val : (List)eargs.get(0, backtrace)) {
+      for (Object val : (List<?>)eargs.get(0, backtrace)) {
         buf.append(Utils.asString(val));
       }
       System.out.print(buf.toString());
@@ -2541,7 +2541,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       StringBuffer buf=new StringBuffer();
-      for (Object val : (List)eargs.get(0, backtrace)) {
+      for (Object val : (List<?>)eargs.get(0, backtrace)) {
         buf.append(Utils.asString(val));
       }
       return buf.toString();
@@ -2566,7 +2566,7 @@ public class Funcs {
     
   private static Seq.Operation mkArraySetter(final Object arr,
                                              final int[] counter,
-                                             Class componentType) {
+                                             Class<?> componentType) {
     if (componentType.isPrimitive()) {
       if (componentType.equals(Character.TYPE)) {
         return new Seq.Operation() {
@@ -2611,7 +2611,7 @@ public class Funcs {
     }
   }
 
-  private static Object charSeqSubseq(Class clz, Backtrace bt,
+  private static Object charSeqSubseq(Class<?> clz, Backtrace bt,
                                       CharSequence seq,
                                       int start,
                                       Integer end) {
@@ -2619,8 +2619,8 @@ public class Funcs {
     return seq.subSequence(start, null == end ? siz : (end >= siz ? siz : end));
   }
 
-  private static Object arraySubseq(Class clz, Backtrace bt, Object arrayObj, int start, Integer end) {
-    final Class componentType = clz.getComponentType();
+  private static Object arraySubseq(Class<?> clz, Backtrace bt, Object arrayObj, int start, Integer end) {
+    final Class<?> componentType = clz.getComponentType();
     final int siz = Array.getLength(arrayObj);
     final int endPos = null == end ? siz : (end >= siz ? siz : end);
     final Object result = Array.newInstance(componentType, endPos - start);
@@ -2632,19 +2632,19 @@ public class Funcs {
     return result;
   }
 
-  protected static List listSubseq(Class clz, Backtrace bt, List lst, int start, Integer end) {
+  protected static List<?> listSubseq(Class<?> clz, Backtrace bt, List<?> lst, int start, Integer end) {
     final int siz = lst.size();
     return lst.subList(start,  null == end ? siz : (end >= siz ? siz : end));
   }
 
   protected static Object seqSubseq(Object seqObj, Backtrace backtrace, int start, Integer end) {
-    Class clz = null == seqObj ? Utils.defListClz() : seqObj.getClass();
+    Class<?> clz = null == seqObj ? Utils.defListClz() : seqObj.getClass();
     if (clz.isArray()) {
       return arraySubseq(clz, backtrace, seqObj, start, end);
     } else if (CharSequence.class.isAssignableFrom(clz)) {
       return charSeqSubseq(clz, backtrace, (CharSequence) seqObj, start, end);
     } else if (List.class.isAssignableFrom(clz)) {
-      return listSubseq(clz, backtrace, (List)seqObj, start, end);
+      return listSubseq(clz, backtrace, (List<?>)seqObj, start, end);
     } else {
       throw new ExecutionException(backtrace, "SUBSEQ: Unsupported sequence type: " + clz);
     }
@@ -2658,9 +2658,7 @@ public class Funcs {
   @Package(name=Package.BASE_SEQ)
   public static class TAKE extends FuncExp {
     @Override
-    @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Object result = null;
       final int size = eargs.size();
       if (2 != size) {
         throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
@@ -2701,7 +2699,6 @@ public class Funcs {
       final Integer end = (null == endObj) ? null : Utils.asNumber(endObj).intValue();
       return seqSubseq(seqObj, backtrace, start, end);
     }
-
   }
     
   @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
@@ -2867,7 +2864,6 @@ public class Funcs {
   @Package(name=Package.BASE_SEQ)
   public static class LENGTH extends FuncExp {
     @Override
-    @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       return Seq.getLength(eargs.get(0, backtrace), true);
     }
@@ -2879,7 +2875,7 @@ public class Funcs {
   public static class LIST extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      List rest = (List)eargs.get(0, backtrace);
+      List<?> rest = (List<?>)eargs.get(0, backtrace);
       final List<Object> lst = new ArrayList<Object>(rest.size());
       for (Object val : rest) {
         lst.add(val);
@@ -2894,7 +2890,7 @@ public class Funcs {
   public static class HASHSET extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      List rest = (List)eargs.get(0, backtrace);
+      List<?> rest = (List<?>)eargs.get(0, backtrace);
       final Set<Object> set = new HashSet<Object>(rest.size());
       for (Object val : rest) {
         set.add(val);
@@ -2946,7 +2942,6 @@ public class Funcs {
     }
   }
 
-
   @Arguments(spec={"sequence"})
   @Docstring(text="Reverse a sequence (destructive).")
   @Package(name=Package.BASE_SEQ)
@@ -2964,6 +2959,7 @@ public class Funcs {
       return list;
     }
   }
+  
   @Arguments(spec={"sequence"})
   @Docstring(text="Reverse a sequence (non-destructive).")
   @Package(name=Package.BASE_SEQ)
@@ -2973,10 +2969,9 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
       if (null == val) return null;
-      return super.reverseList((List)Utils.copySeq((List<Object>)val));
+      return super.reverseList((List<Object>)Utils.copySeq((List<Object>)val));
     }
   }
-
 
   @Arguments(spec={"start",  "stop", ArgSpec.ARG_OPTIONAL,  "step"})
   @Docstring(text="Return sequence of numbers." +
@@ -3109,7 +3104,7 @@ public class Funcs {
     protected Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final IExpr instance = (IExpr) ((ICode)eargs.get(0, backtrace)).getInstance();
       try {
-        instance.setParams(new ArrayList());
+        instance.setParams(new ArrayList<ICompiled>());
       } catch (InvalidParametersException iex) {
         throw new RuntimeException(iex);
       }
@@ -3131,7 +3126,6 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
       String fname = Utils.asString(eargs.get(0, backtrace));
       Object funcObj = eargs.getCompiler().getFun(fname);
-      Object result = null;
       if  (null == funcObj) {
         throw new RuntimeException("Symbol "+fname+" function value is NULL");
       } else if (funcObj instanceof ICode) {
@@ -3354,11 +3348,7 @@ public class Funcs {
         final int lastIdx = parents.size()-1;
         ICtx ctx = parents.get(lastIdx - level);
         ctx.getMappings().put(sym.getName(), obj);
-      } else if (null != uplevelObj && null == levelObj) {
-        if (null != levelObj) {
-          throw new ExecutionException(backtrace,
-                                       getName() + " only one of two must be set: level | uplevel");
-        }
+      } else if (null != uplevelObj) {
         final int uplevel = Utils.asNumber(uplevelObj).intValue();
         ICtx ctx = eargs.getPrev();
         for (int i = 0; i < uplevel && null!=ctx; i++) {
@@ -3416,7 +3406,7 @@ public class Funcs {
       final int size = Utils.asNumber(eargs.get(0, backtrace)).intValue();
       final Object et = eargs.get("element-type", backtrace);
       if (null != et) {
-        final Class tclass = Utils.tspecToClass(et);
+        final Class<?> tclass = Utils.tspecToClass(et);
         return Array.newInstance(tclass, size);
       } else {
         return  new Object[size];
@@ -3602,7 +3592,7 @@ public class Funcs {
 
   public static class EmptyListExp extends ValueExpr {
     public EmptyListExp() {
-      super(new ArrayList());
+      super(new ArrayList<Object>());
     }
         
   }
