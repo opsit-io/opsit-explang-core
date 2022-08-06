@@ -1106,23 +1106,22 @@ public class Funcs {
       Object val = eargs.get(0, backtrace);
       ICode lambda = (ICode) Utils.asObject(val);
       IExpr instance = (IExpr)lambda.getInstance();
-      List fArgs = (List) eargs.get(1, backtrace);
+      List<?> fArgs = (List<?>) eargs.get(1, backtrace);
 
       ICtx applyCtx = eargs.getCompiler().newCtx(eargs);
-
-
-      List rest = null;
+      
+      List<?> rest = null;
       int restSize;
       int headSize;  
       if ((fArgs.size()>0) && ((fArgs.get(fArgs.size()-1)) instanceof List)) {
-        rest = (List) fArgs.get(fArgs.size()-1);
+        rest = (List<?>) fArgs.get(fArgs.size()-1);
         restSize = rest.size();
         headSize = fArgs.size() - 1;
       } else {
         restSize = 0;
         headSize = fArgs.size();
       }
-      List<ICompiled> callParams = new ArrayList(restSize + headSize);
+      List<ICompiled> callParams = new ArrayList<ICompiled>(restSize + headSize);
       for (int i=0; i < headSize; i++) {
         callParams.add(new ObjectExp(fArgs.get(i)));
       }
