@@ -1900,15 +1900,14 @@ public class Compiler {
       for (Entry<String, Object> e : eset) {
         final String key = e.getKey();
         if (e.getKey().startsWith(pattern)) {
-          if (!eset.contains(key)) {
-            matches.put(e.getKey(), e.getValue());
+          if (!matches.containsKey(key)) {
+            matches.put(key, e.getValue());
           }
         }
       }
       if (null != this.getPrev()) {
         getPrev().addMatches(matches, pattern);
       }
-
     }
 
     @Override
