@@ -2796,15 +2796,21 @@ public class Funcs {
       return result;
     }
 
-    protected Collection<?> colAppend(Class clz, Backtrace bt, List<?> seqs) {
+    protected Collection<?> colAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       Object result = null;
       try {
-        result = isDestructive ? seqs.get(0) : clz.newInstance();
+        //result = isDestructive ? seqs.get(0) : clz.newInstance();
+        result = isDestructive ? seqs.get(0) : clz.getConstructor().newInstance();
       } catch (InstantiationException ex) {
         throw new ExecutionException(bt, ex);
       } catch (IllegalAccessException ex) {
         throw new ExecutionException(bt, ex);
+      } catch (InvocationTargetException ex) {
+        throw new ExecutionException(bt, ex);
+      } catch (NoSuchMethodException ex) {
+        throw new ExecutionException(bt, ex);
       }
+      
       final Collection resultCol = (Collection)result;
       final int numArgs = seqs.size();
       for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
