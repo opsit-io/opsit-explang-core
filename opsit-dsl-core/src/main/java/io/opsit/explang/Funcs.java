@@ -1525,11 +1525,11 @@ public class Funcs {
     }
 
     @Override
-    public Set entrySet() {
-      Set<Map.Entry> entries = new HashSet<Map.Entry>();
+    public Set<Map.Entry<Object, Object>> entrySet() {
+      Set<Map.Entry<Object,Object>> entries = new HashSet<Map.Entry<Object,Object>>();
       for (Object key : this.keySet()) {
         final Object entryKey = key;
-        entries.add(new Map.Entry() {
+        entries.add(new Map.Entry<Object,Object>() {
             @Override
             public Object getKey() {
               return entryKey;
@@ -1551,14 +1551,14 @@ public class Funcs {
 
     @Override
     public String toString() {
-      Iterator<Entry> i = entrySet().iterator();
+      Iterator<Entry<Object,Object>> i = entrySet().iterator();
       if (!i.hasNext())
         return "{}";
 
       StringBuilder sb = new StringBuilder();
       sb.append('{');
       for (;;) {
-        Entry e = i.next();
+        Entry<Object,Object> e = i.next();
         Object key = e.getKey();
         Object value = e.getValue();
         sb.append(key == this ? "(this Map)" : key);
