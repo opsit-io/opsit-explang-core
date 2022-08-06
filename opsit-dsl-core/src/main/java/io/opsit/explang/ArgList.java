@@ -265,10 +265,11 @@ public class ArgList {
     final ICompiled varExpr = params[argIdx];
     final ArgSpec.Arg arg = spec.getArg(argIdx);
     if (arg.getFlag() == ArgSpec.AF.REST) {
+      @SuppressWarnings("unchecked")
       final List <ICompiled>lst = (List<ICompiled>)varExpr.evaluate(backtrace, ctx);
       final int size = lst.size();
       final List<Object> evList = arg.isLazy() ?
-        (List<Object>)new RestList(new ArrayList(size), backtrace) : new ArrayList<Object>(size);
+        (List<Object>)new RestList(new ArrayList<Object>(size), backtrace) : new ArrayList<Object>(size);
 		
       for (int i = 0; i < size; i++) {
         evList.add(lst.get(i).evaluate(backtrace, ctx));
