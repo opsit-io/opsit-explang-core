@@ -47,12 +47,12 @@ public final class BetterMethodFinder {
 
     if (clazz.isPrimitive()) {
       throw new IllegalArgumentException(
-        "primitive Class parameter");
+                                         "primitive Class parameter");
     }
 
     if (clazz.isArray()) {
       throw new IllegalArgumentException(
-        "array Class parameter");
+                                         "array Class parameter");
     }
 
     this.clazz = clazz;
@@ -90,7 +90,7 @@ public final class BetterMethodFinder {
    * parameter types
    */
   public Constructor<?> findConstructor(Class<?>[] parameterTypes)
-  throws NoSuchMethodException {
+    throws NoSuchMethodException {
     if (parameterTypes == null) {
       parameterTypes = new Class[0];
     }
@@ -104,7 +104,7 @@ public final class BetterMethodFinder {
    */
 
   private Member findMemberIn(List<? extends Executable> memberList, Class<?>[] parameterTypes)
-  throws NoSuchMethodException {
+    throws NoSuchMethodException {
     // For some reason List<Member> is compile time incompatible when
     // calling it with List<Constructor> inspite of Constructor implementing Member!
     // so have to use common supertype as argument type
@@ -126,7 +126,7 @@ public final class BetterMethodFinder {
 
     if (matchingMembers.isEmpty())
       throw new NoSuchMethodException(
-        "no member in " + clazz.getName() + " matching given args");
+                                      "no member in " + clazz.getName() + " matching given args");
 
     if (matchingMembers.size() == 1)
       return (Member) matchingMembers.get(0);
@@ -153,12 +153,12 @@ public final class BetterMethodFinder {
    * parameter types, or if methodName is null
    */
   public Method findMethod(String methodName, Class<?>[] parameterTypes)
-  throws NoSuchMethodException {
+    throws NoSuchMethodException {
     List<Method> methodList =  methodMap.get(methodName);
 
     if (methodList == null)
       throw new NoSuchMethodException(
-        "no method named " + clazz.getName() + "." + methodName);
+                                      "no method named " + clazz.getName() + "." + methodName);
 
     if (parameterTypes == null)
       parameterTypes = new Class[0];
@@ -174,64 +174,64 @@ public final class BetterMethodFinder {
    * as to which is most specific
    */
   private Member findMostSpecificMemberIn(List <Member>memberList)
-  throws NoSuchMethodException {
+    throws NoSuchMethodException {
     List<Member> mostSpecificMembers = new ArrayList<Member>();
 
     for (Iterator <Member>memberIt = memberList.iterator(); memberIt.hasNext();)
-    {
-      Member member =  memberIt.next();
-
-      if (mostSpecificMembers.isEmpty())
       {
-        // First guy in is the most specific so far.
-        mostSpecificMembers.add(member);
-      }
-      else
-      {
-        boolean moreSpecific = true;
-        boolean lessSpecific = false;
+        Member member =  memberIt.next();
 
-        // Is member more specific than everyone in the most-specific set?
-        for (Iterator<Member> specificIt = mostSpecificMembers.iterator(); specificIt.hasNext();)
-        {
-          Member moreSpecificMember = specificIt.next();
-
-          if (! memberIsMoreSpecific(member, moreSpecificMember))
+        if (mostSpecificMembers.isEmpty())
           {
-            /* Can't be more specific than the whole set.  Bail out, and
-               mark whether member is less specific than the member
-               under consideration.  If it is less specific, it need not be
-               added to the ambiguity set.  This is no guarantee of not
-               getting added to the ambiguity set...we're just not clever
-               enough yet to make that assessment. */
-
-            moreSpecific = false;
-            lessSpecific = memberIsMoreSpecific(moreSpecificMember, member);
-            break;
+            // First guy in is the most specific so far.
+            mostSpecificMembers.add(member);
           }
-        }
+        else
+          {
+            boolean moreSpecific = true;
+            boolean lessSpecific = false;
 
-        if (moreSpecific)
-        {
-          // Member is the most specific now.
-          mostSpecificMembers.clear();
-          mostSpecificMembers.add(member);
-        }
-        else if (! lessSpecific)
-        {
-          // Add to ambiguity set if mutually unspecific.
-          mostSpecificMembers.add(member);
-        }
+            // Is member more specific than everyone in the most-specific set?
+            for (Iterator<Member> specificIt = mostSpecificMembers.iterator(); specificIt.hasNext();)
+              {
+                Member moreSpecificMember = specificIt.next();
+
+                if (! memberIsMoreSpecific(member, moreSpecificMember))
+                  {
+                    /* Can't be more specific than the whole set.  Bail out, and
+                       mark whether member is less specific than the member
+                       under consideration.  If it is less specific, it need not be
+                       added to the ambiguity set.  This is no guarantee of not
+                       getting added to the ambiguity set...we're just not clever
+                       enough yet to make that assessment. */
+
+                    moreSpecific = false;
+                    lessSpecific = memberIsMoreSpecific(moreSpecificMember, member);
+                    break;
+                  }
+              }
+
+            if (moreSpecific)
+              {
+                // Member is the most specific now.
+                mostSpecificMembers.clear();
+                mostSpecificMembers.add(member);
+              }
+            else if (! lessSpecific)
+              {
+                // Add to ambiguity set if mutually unspecific.
+                mostSpecificMembers.add(member);
+              }
+          }
       }
-    }
 
     if (mostSpecificMembers.size() > 1)
-    {
-      throw new NoSuchMethodException(
-        "Ambiguous request for member in "
-        + clazz.getName()
-        + " matching given args" ); 
-    }
+      {
+        throw new NoSuchMethodException(
+                                        "Ambiguous request for member in "
+                                        + clazz.getName()
+                                        + " matching given args" ); 
+      }
 
     return (Member) mostSpecificMembers.get(0);
   }
@@ -277,9 +277,9 @@ public final class BetterMethodFinder {
    * an unknown class
    */
   public static Class<?>[] getParameterTypesFrom(String[] classNames)
-  throws ClassNotFoundException {
+    throws ClassNotFoundException {
     return getParameterTypesFrom(
-        classNames, BetterMethodFinder.class.getClassLoader());
+                                 classNames, BetterMethodFinder.class.getClassLoader());
   }
 
   /**
@@ -301,8 +301,8 @@ public final class BetterMethodFinder {
    * an unknown class
    */
   public static Class<?>[] getParameterTypesFrom(String[] classNames,
-     ClassLoader loader)
-  throws ClassNotFoundException {
+                                                 ClassLoader loader)
+    throws ClassNotFoundException {
     Class<?>[] types = null;
 
     if (classNames != null) {

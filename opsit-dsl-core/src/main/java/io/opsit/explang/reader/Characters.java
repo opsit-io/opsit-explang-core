@@ -11,7 +11,7 @@ import io.opsit.explang.ParserException;
 
 public class Characters {
   final public static Map<String,Character> nameToChar =
-	Utils.map("NULL",(char)0,"NUL",(char)0, 
+    Utils.map("NULL",(char)0,"NUL",(char)0, 
               "SOH",      (char)1,
               "STX",      (char)2,
               "ETX",      (char)3,
@@ -48,27 +48,27 @@ public class Characters {
               "NBSP",    (char)160, "NO-BREAK_SPACE", (char)160);
 
   private static final Map<String, Integer> codePoints
-	= Collections.synchronizedMap(new HashMap<String, Integer>(1024));
+    = Collections.synchronizedMap(new HashMap<String, Integer>(1024));
   private static volatile boolean incomplete =  true;
   private static volatile int lastLookup = Character.MIN_CODE_POINT - 1;
   // FIXME: is there better way to get the mapping?
   public static int getCodePoint(String name) {
-	name = name.toUpperCase().replace('_', ' ');
+    name = name.toUpperCase().replace('_', ' ');
     final Integer cp = codePoints.get(name);
     if (cp == null && incomplete) {
       synchronized(codePoints) {
-		while (lastLookup < Character.MAX_CODE_POINT) {
+        while (lastLookup < Character.MAX_CODE_POINT) {
           lastLookup++;
           String uName = Character.getName(lastLookup);
           if (uName != null) {
-			codePoints.put(uName.toUpperCase(),
+            codePoints.put(uName.toUpperCase(),
                            lastLookup);
-			if (uName.equalsIgnoreCase(name)) {
+            if (uName.equalsIgnoreCase(name)) {
               return lastLookup;
-			}
+            }
           }
-		}
-		incomplete = false;
+        }
+        incomplete = false;
       }
     }
     return null == cp ? -1 : cp;
@@ -76,24 +76,24 @@ public class Characters {
 
 
   public static char nameToChar(String s) throws ParserException {
-	String upper = s.toUpperCase();
-	Character c = Characters.nameToChar.get(upper);
-	if (c!=null) return c;
-	if (upper.startsWith("U")) {
+    String upper = s.toUpperCase();
+    Character c = Characters.nameToChar.get(upper);
+    if (c!=null) return c;
+    if (upper.startsWith("U")) {
       int length = upper.length();
       if (length > 1 && length <=5) {
-		try {
+        try {
           final int i = Integer.parseInt(upper.substring(1), 16);
           return (char)i;
-		} catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
           // fall through
-		};
+        };
       }
-	}
-	int cp = getCodePoint(upper);
-	if (cp>=0) {
+    }
+    int cp = getCodePoint(upper);
+    if (cp>=0) {
       return (char)cp;
-	}
-	throw new ParserException("Unrecognized character name: \"" + s + '"');
+    }
+    throw new ParserException("Unrecognized character name: \"" + s + '"');
   }
 }

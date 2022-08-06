@@ -389,7 +389,7 @@ public class Utils {
     if (val instanceof Collection) {
       return !((Collection<?>)val).isEmpty();
     }
-	
+    
     if (val instanceof Character) {
       final char c = (char)val;
       return c!='\0';

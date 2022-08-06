@@ -126,7 +126,7 @@ public class ArgSpec {
         return false;
       }
     }
-	
+    
   }
 
   public List<String> asSpecList()  {
@@ -198,7 +198,7 @@ public class ArgSpec {
   private  Object []argSpecs;
   private boolean hasRest = false;
     
-  /* &required	             &opt                
+  /* &required               &opt                
    *+---+                         +----+
    *|   V         &opt            V    | &mnd
    *+-mandatory  ----------> optional -+----->mandatory2
@@ -230,7 +230,7 @@ public class ArgSpec {
               AF.REST_KEY,  Utils.map(ARG_KEY,  AF.REST_KEY,
                                       ARG_MANDATORY,AF.MANDATORY2)
               );
-		  
+          
 
     
     
@@ -244,7 +244,7 @@ public class ArgSpec {
   /**
    * @param hasRest the hasRest to set
    */
-  private AF flagTrans(AF current , String spec) throws InvalidParametersException {	    
+  private AF flagTrans(AF current , String spec) throws InvalidParametersException {        
     Map<Object,Object> transitions =  xmap.get(current);
     if (null == transitions) {
       throw new RuntimeException("Internal error: unknown current arg state: "+ current);
@@ -267,7 +267,7 @@ public class ArgSpec {
     }
     return args;
   }
-	
+    
     
   private static Object[] astnToArray(ASTNList astnList,Compiler comp)
     throws InvalidParametersException {
@@ -275,7 +275,7 @@ public class ArgSpec {
     //    throw new InvalidParametersException("Argument Specification must be a list, but got "+ argSpecs.getObject());
     //}
     //final List astnList = argSpecs.getList();
-	
+    
     Object specs[] = new Object[astnList.size()];
     for (int i = 0; i < astnList.size(); i++) {
       ASTN astn = (ASTN)astnList.get(i);
@@ -292,7 +292,7 @@ public class ArgSpec {
           } else {
             listSpec.add(comp.compile(el));
           }
-		    
+            
         }
         specs[i]=listSpec;
       }
@@ -333,7 +333,7 @@ public class ArgSpec {
           flag = flagTrans(flag, specSym.getName());
           continue;
         }
-	    
+        
         if (ARG_ALLOW_OTHER_KEYS.equalsIgnoreCase(specSym.getName())) {
           if (AF.KEY==flag ||  AF.REST_KEY==flag) {
             otherKeys = true;
@@ -366,7 +366,7 @@ public class ArgSpec {
       } else if (spec instanceof List) {
         arg = new Arg();
         @SuppressWarnings("unchecked")
-        List<Object> listSpec  = (List<Object>) spec;
+          List<Object> listSpec  = (List<Object>) spec;
         if (AF.MANDATORY==flag
             || AF.MANDATORY2==flag) {
           throw new InvalidParametersException("Invalid parameter spec: must be Symbol for required argument");

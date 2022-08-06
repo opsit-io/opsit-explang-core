@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Arguments {
-  String[] spec () default 	{ArgSpec.ARG_REST, "args"};
+  String[] spec () default  {ArgSpec.ARG_REST, "args"};
   String   text () default "";
 }

@@ -33,7 +33,7 @@ public class SexpParser implements IParser {
     final InputStream is = new ByteArrayInputStream(input.getBytes());
     return parse(pctx, is, maxExprs);
   }
-	
+    
   public ASTNList parse(ParseCtx pctx, InputStream is, int maxExprs) {
     final Reader reader = new InputStreamReader(is);
     return parse(pctx, reader, maxExprs);
@@ -98,7 +98,7 @@ public class SexpParser implements IParser {
           } else {
             if (buf.length() == 0) {
               spctx = pctx.clone();
-            }			
+            }           
             buf.append(chr);
           }
         }

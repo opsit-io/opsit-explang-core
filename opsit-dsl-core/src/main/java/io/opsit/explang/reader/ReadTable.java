@@ -10,19 +10,19 @@ import io.opsit.explang.Utils;
 public class ReadTable {
 
   protected static class DispatchTable  {
-	protected final Map<Character, IDispatchMacroFunc> functions;
+    protected final Map<Character, IDispatchMacroFunc> functions;
 
-	public DispatchTable(Map <Character, IDispatchMacroFunc> functions) {
+    public DispatchTable(Map <Character, IDispatchMacroFunc> functions) {
       this.functions = functions;
-	}
+    }
 
-	public DispatchTable() {
+    public DispatchTable() {
       this.functions = new HashMap<Character, IDispatchMacroFunc>();
-	}
+    }
 
-	public DispatchTable(DispatchTable dt)	{
+    public DispatchTable(DispatchTable dt)  {
       this.functions = new HashMap<Character, IDispatchMacroFunc> (dt.functions);
-	}
+    }
   }
 
     
@@ -35,7 +35,7 @@ public class ReadTable {
 
   //default must be SYNTAX_TYPE_CONSTITUENT;
   protected final Map<Character,Byte> syntax = 
-	Utils.map('\t',    SYNTAX_TYPE_WHITESPACE,
+    Utils.map('\t',    SYNTAX_TYPE_WHITESPACE,
               '\n',   SYNTAX_TYPE_WHITESPACE, // linefeed
               '\f',   SYNTAX_TYPE_WHITESPACE, // form feed
               '\r',   SYNTAX_TYPE_WHITESPACE, // return
@@ -50,10 +50,10 @@ public class ReadTable {
               '#',  SYNTAX_TYPE_NON_TERMINATING_MACRO,
               '\\', SYNTAX_TYPE_SINGLE_ESCAPE,
               '|',  SYNTAX_TYPE_MULTIPLE_ESCAPE);
-		  
-	
+          
+    
   protected final Map<Character,IReaderMacroFunc> readerMacroFunctions =
-	Utils.map(';'  , LispReader.READ_COMMENT,
+    Utils.map(';'  , LispReader.READ_COMMENT,
               '"'  , LispReader.READ_STRING,
               '('  , LispReader.READ_LIST,
               ')'  , LispReader.READ_RIGHT_PAREN,
@@ -67,7 +67,7 @@ public class ReadTable {
   //readerMacroFunctions[',']  = Symbol.COMMA_MACRO;
 
   public final IReaderMacroFunc getReaderMacroFunction(char c) {
-	return readerMacroFunctions.get(c);
+    return readerMacroFunctions.get(c);
   }
 
   protected Map<Character, DispatchTable> dispatchTables;
@@ -75,12 +75,12 @@ public class ReadTable {
     
   public ReadTable()
   {
-	initialize();
+    initialize();
   }
 
   protected void initialize()
   {
-	DispatchTable dt = new DispatchTable(Utils.map('(',  LispReader.SHARP_LEFT_PAREN,
+    DispatchTable dt = new DispatchTable(Utils.map('(',  LispReader.SHARP_LEFT_PAREN,
                                                    '*', LispReader.SHARP_STAR,
                                                    '.', LispReader.SHARP_DOT,
                                                    ':', LispReader.SHARP_COLON,
@@ -104,35 +104,35 @@ public class ReadTable {
                                                    10, LispReader.SHARP_ILLEGAL, // newline, linefeed
                                                    12, LispReader.SHARP_ILLEGAL, // page
                                                    13, LispReader.SHARP_ILLEGAL)); // return
-	dispatchTables = Utils.map();
-	dispatchTables.put('#', dt);
-	//readtableCase = Keyword.UPCASE;
-	readtableCase = Keyword.PRESERVE;
+    dispatchTables = Utils.map();
+    dispatchTables.put('#', dt);
+    //readtableCase = Keyword.UPCASE;
+    readtableCase = Keyword.PRESERVE;
   }
 
   public final IDispatchMacroFunc getDispatchMacroCharacter(char dispChar, char subChar)
     throws ParserException {
-	DispatchTable dispatchTable = dispatchTables.get(dispChar);
-	if (dispatchTable == null) {
+    DispatchTable dispatchTable = dispatchTables.get(dispChar);
+    if (dispatchTable == null) {
       throw new ParserException(dispChar + " is not a dispatch character.");
-	}
-	final IDispatchMacroFunc function = dispatchTable.functions.get(subChar);
-	//return (function != null) ? function : NIL;
-	return function;
+    }
+    final IDispatchMacroFunc function = dispatchTable.functions.get(subChar);
+    //return (function != null) ? function : NIL;
+    return function;
   }
 
   public final boolean isWhitespace(char c)  {
-	return getSyntaxType(c) == SYNTAX_TYPE_WHITESPACE;
+    return getSyntaxType(c) == SYNTAX_TYPE_WHITESPACE;
   }
 
   public final byte getSyntaxType(char c) {
-	final Byte t =  syntax.get(c);
-	return null == t ?  SYNTAX_TYPE_CONSTITUENT : t;
+    final Byte t =  syntax.get(c);
+    return null == t ?  SYNTAX_TYPE_CONSTITUENT : t;
   }
 
   public final boolean isInvalid(char c)
   {
-	switch (c)
+    switch (c)
       {
       case 8:
       case 9:
@@ -141,26 +141,26 @@ public class ReadTable {
       case 13:
       case 32:
       case 127:
-		return true;
+        return true;
       default:
-		return false;
+        return false;
       }
   }
 
   public final Keyword getReadtableCase()
   {
-	return readtableCase;
+    return readtableCase;
   }
 
   public final void checkInvalid(char c)  throws ParserException {
-	// "... no mechanism is provided for changing the constituent trait of a
-	// character." (2.1.4.2)
-	if (isInvalid(c)) {
+    // "... no mechanism is provided for changing the constituent trait of a
+    // character." (2.1.4.2)
+    if (isInvalid(c)) {
       StringBuilder sb = new StringBuilder("Invalid character");
       sb.append(" \\");
       sb.append(c);
       throw new ParserException(sb.toString());
-	}
+    }
   }
 
 }

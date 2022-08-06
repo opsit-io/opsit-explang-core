@@ -2811,7 +2811,7 @@ public class Funcs {
       }
 
       @SuppressWarnings("unchecked")
-      final Collection<Object> resultCol = (Collection<Object>)result;
+        final Collection<Object> resultCol = (Collection<Object>)result;
       final int numArgs = seqs.size();
       for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
         Object seq = seqs.get(i);
@@ -3625,6 +3625,4 @@ public class Funcs {
       super(value);
     }
   }
-    
-    
 }

@@ -67,7 +67,7 @@ public class RangeList  implements List<Number> {
         final double t = to.doubleValue();
         return (inv ^ (f < t)) && (f != t) ;
       }
-			    
+                
       @Override
       public Number next() {
         final Number result = prom.returnResult(from[0]);
@@ -142,7 +142,7 @@ public class RangeList  implements List<Number> {
   }
 
   @Override
-  public boolean addAll(Collection<? extends Number> c) {	
+  public boolean addAll(Collection<? extends Number> c) {   
     throw new UnsupportedOperationException("Cannot use addAll on RANGE");
   }
 
@@ -153,7 +153,7 @@ public class RangeList  implements List<Number> {
 
   @Override
   public boolean retainAll(Collection<?> c) {
-    throw new UnsupportedOperationException("Cannot use addAll on RANGE");			
+    throw new UnsupportedOperationException("Cannot use addAll on RANGE");          
   }
 
   @Override
@@ -221,7 +221,7 @@ public class RangeList  implements List<Number> {
   public int lastIndexOf(Object o) {
     return indexOf(o);
   }
-		    
+            
   @Override
   public ListIterator<Number> listIterator() {
     // FIXME
@@ -249,7 +249,4 @@ public class RangeList  implements List<Number> {
     final Number toNum = (Number)unlimGet(toIndex);
     return new RangeList(startNum, toNum, step);
   }
-
 }
-
-

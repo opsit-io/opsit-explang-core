@@ -92,7 +92,7 @@ public class REPL {
       for (ICompiled expr : exprs) {
         if (verbose) {
           System.err.println("EXPR(" + file.getName() + "):\n" + expr +"\n------\n");
-        }	
+        }   
         result = expr.evaluate(ctx.getCompiler().newBacktrace(), ctx);
         if (verbose) {
           System.err.println("RESULT(" + file.getName() + "):\n" + result +"\n------\n");
@@ -149,10 +149,10 @@ public class REPL {
         ctx.getMappings().put("***", ctx.get("**", bt));
         ctx.getMappings().put("**", ctx.get("*", bt));
         ctx.getMappings().put("*", result);
-		
+        
         System.out.print("["+inputNo+"]> ");
         System.out.flush();
-		
+        
         err = null;
 
         ParseCtx pctx = new ParseCtx("INPUT"+(inputNo++));
@@ -257,5 +257,4 @@ public class REPL {
     exprASTN.dispatchWalker(errCollector);
     return buf.toString();
   }
-
 }

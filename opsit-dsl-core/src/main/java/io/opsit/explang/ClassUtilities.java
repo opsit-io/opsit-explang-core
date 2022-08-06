@@ -90,7 +90,7 @@ final class ClassUtilities {
    * unknown class or primitive
    */
   static Class<?> classForNameOrPrimitive(String name, ClassLoader loader)
-  throws ClassNotFoundException {
+    throws ClassNotFoundException {
     if (name == null || name.equals("") || name.equals("null")
         || name.equals("void"))
       return Void.TYPE;
@@ -250,8 +250,8 @@ final class ClassUtilities {
    */
   static Class<?> primitiveEquivalentOf(Class<?> aClass) {
     return aClass.isPrimitive()
-           ? aClass
-           : (Class<?>) objectToPrimitiveMap.get(aClass);
+      ? aClass
+      : (Class<?>) objectToPrimitiveMap.get(aClass);
   }
 
   /**
