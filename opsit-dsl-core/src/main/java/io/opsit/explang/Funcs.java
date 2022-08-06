@@ -1753,11 +1753,12 @@ public class Funcs {
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected static Object doSelectKeys(Object obj, Object ksObj) {
     if (obj == null || ksObj== null) {
       return Utils.map();
     } else if (obj instanceof Map) {
-      return new FilteredMap((Map)obj, ksObj);
+      return new FilteredMap((Map<Object,Object>)obj, ksObj);
     } else {
       return new BeanMap(obj,
                          null,
@@ -1845,11 +1846,11 @@ public class Funcs {
   public static class DOTN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Class cls = Utils.tspecToClass(eargs.get(0, backtrace));
-      final List<Object> constrArgs = (eargs.size() > 1) ? (List) eargs.get(1, backtrace) : null;
-      final List<Object> tspecs = (eargs.size() > 2) ? (List) eargs.get(2, backtrace) : null;
-      final Class[] paramsClasses = Utils.getMethodParamsClasses(constrArgs, tspecs);
-      Constructor constr;
+      final Class <?>cls = Utils.tspecToClass(eargs.get(0, backtrace));
+      final List<?> constrArgs = (eargs.size() > 1) ? (List<?>) eargs.get(1, backtrace) : null;
+      final List<?> tspecs = (eargs.size() > 2) ? (List<?>) eargs.get(2, backtrace) : null;
+      final Class<?>[] paramsClasses = Utils.getMethodParamsClasses(constrArgs, tspecs);
+      Constructor<?> constr;
       try {
         if (null != tspecs) {
           constr = cls.getConstructor(paramsClasses);
@@ -1876,13 +1877,13 @@ public class Funcs {
   }
     
   public static abstract class FFI extends FuncExp {
-    protected Object javaCall(Object object, List parts) {
+    protected Object javaCall(Object object, List<?> parts) {
       try {
         for(int i=0; i<parts.size(); i++) {
           String partname = Utils.asString(parts.get(i));
           boolean isMethod = false;
-          List methodParams = null;
-          List paramsTypesSpec = null;
+          List<?> methodParams = null;
+          List<?> paramsTypesSpec = null;
           //List<?> methodParams = null;
           if (partname.endsWith("()")) {
             isMethod = true;
@@ -1895,13 +1896,13 @@ public class Funcs {
             i++;
             if ((parts.size()>i+1) &&
                 (parts.get(i+1) instanceof List)) {
-              paramsTypesSpec = (List)parts.get(i+1);
+              paramsTypesSpec = (List<?>)parts.get(i+1);
               i++;
             }
           }
-          Class cls;
+          Class<?> cls;
           if (object instanceof Class) {
-            cls = (Class)object;
+            cls = (Class<?>)object;
             object = null;
           } else {
             cls = object.getClass();
@@ -1909,7 +1910,7 @@ public class Funcs {
                     
           if (isMethod) {
             if (null != methodParams) {
-              final Class methodParamClasses[] = Utils.getMethodParamsClasses(methodParams, paramsTypesSpec);
+              final Class<?> methodParamClasses[] = Utils.getMethodParamsClasses(methodParams, paramsTypesSpec);
               Method m;
               if (null != paramsTypesSpec) {
                 m = cls.getMethod(partname, methodParamClasses);
@@ -1919,7 +1920,7 @@ public class Funcs {
               }
               object = m.invoke(object, methodParams.toArray());
             } else {
-              Method m = cls.getMethod(partname, null);
+              Method m = cls.getMethod(partname);
               object = m.invoke(object);
             }
           } else {
@@ -1971,11 +1972,12 @@ public class Funcs {
   @Docstring(text="Call Java Object Method/Read Field"+
              "Call method of java object or read contend of object field. ")
   @Package(name=Package.FFI)
+  @SuppressWarnings("unchecked")
   public static class DOT extends FFI {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object object = eargs.get(0, backtrace);
-      final List<Object> parts = super.getCallParts((List)eargs.get(1, backtrace));
+      final List<Object> parts = super.getCallParts((List<Object>)eargs.get(1, backtrace));
       final Object result = javaCall(object, parts);
       return result;
     }
@@ -1985,13 +1987,14 @@ public class Funcs {
   @Docstring(text="Call Static Java Method/Read Static Field"+
              "Call method of java object or read contend of object field. ")
   @Package(name=Package.FFI)
+  @SuppressWarnings("unchecked")
   public static class DOTS extends FFI {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final List rest = (List)eargs.get(1, backtrace);
+      final List<Object> rest = (List<Object>)eargs.get(1, backtrace);
       final Object tspec = eargs.get(0, backtrace);
-      final Class cls = Utils.tspecToClass(tspec);
-      final StringBuilder trail = new StringBuilder();
+      final Class<?> cls = Utils.tspecToClass(tspec);
+      //final StringBuilder trail = new StringBuilder();
       final List<Object> parts = super.getCallParts(rest);
       final Object result = javaCall(cls, parts);          
       return result;
@@ -2075,7 +2078,7 @@ public class Funcs {
 
   public static Object returnGroups(Matcher m) {
     if (m.groupCount()>0) {
-      final List glist = new ArrayList(m.groupCount() + 1);
+      final List<Object> glist = new ArrayList<Object>(m.groupCount() + 1);
       glist.add (m.group());
       for (int i = 1; i <= m.groupCount(); i++) {
         glist.add(m.group(i));
@@ -2168,12 +2171,12 @@ public class Funcs {
   @Package(name=Package.BASE_REGEX)
   public static class RE_SEQ extends FuncExp {
     @Override
-    protected Iterable evalWithArgs(final Backtrace backtrace, final Eargs eargs) {
-      return new Iterable() {
+    protected Iterable<Object> evalWithArgs(final Backtrace backtrace, final Eargs eargs) {
+      return new Iterable<Object>() {
         @Override
-        public Iterator iterator() {
+        public Iterator<Object> iterator() {
 
-          return new Iterator() {
+          return new Iterator<Object>() {
             final Matcher m = getMatcher(eargs,  backtrace);
             boolean findResult = m.find();
 
@@ -2232,10 +2235,10 @@ public class Funcs {
   // FIXME: allow use other sequences, including lazy ones
   protected static Object getKeyByIndex(Object ksObj, int ksIdx) {
     if (ksObj instanceof List) {
-      if (ksIdx < 0 || ksIdx >= ((List)ksObj).size()) {
+      if (ksIdx < 0 || ksIdx >= ((List<?>)ksObj).size()) {
         return null;
       }
-      return ((List) ksObj).get(ksIdx);
+      return ((List<?>) ksObj).get(ksIdx);
     }
     if (null == ksObj) {
       return null;
@@ -2259,6 +2262,7 @@ public class Funcs {
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected static boolean doGet(final Object obj,
                                  final Object[] result,
                                  final Object keyObj
@@ -2321,7 +2325,6 @@ public class Funcs {
     return true;
   }
     
-  @SuppressWarnings("unchecked")
   protected static Object doGetIn(final Object obj,
                                   final Object ksObj,
                                   final int ksIdx,
@@ -2443,10 +2446,11 @@ public class Funcs {
   @Docstring(text = "Associates value with key in an map structure. \n" +
              "Return new instance of the structure, the original is left unchanged.")
   @Package(name=Package.BASE_SEQ)
+  @SuppressWarnings("unchecked")
   public static  class ASSOC extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Map result = null;
+      Map<Object,Object> result = null;
       final int argsnum = eargs.size();
       if (argsnum < 1) {
         throw new ExecutionException(backtrace,
@@ -2456,9 +2460,9 @@ public class Funcs {
       final Object obj = eargs.get(0, backtrace);
       // FIXME: use same type?
       // FIXME: data sharing?
-      result = new HashMap();
+      result = new HashMap<Object,Object>();
       if (null != obj) {
-        result.putAll((Map)obj);
+        result.putAll((Map<Object,Object>)obj);
       }
       doMapAssoc(result, eargs, backtrace);
       return result;
@@ -2470,27 +2474,28 @@ public class Funcs {
   @Docstring(text = "Associates value with key in an map structure. \n" +
              "Modifies the object and returns it as the result.")
   @Package(name=Package.BASE_SEQ)
+  @SuppressWarnings("unchecked")
   public static  class NASSOC extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Map result = null;
+      Map<Object,Object> result = null;
       if (eargs.size() < 1) {
         throw new ExecutionException(backtrace,
                                      "Unexpected number of arguments: expected at least one argument, but got "
                                      +eargs.size());
       }
       final Object obj = eargs.get(0, backtrace);
-      result = null == obj ? new HashMap() : (Map) obj;
+      result = null == obj ? new HashMap<Object,Object>() : (Map<Object,Object>) obj;
       doMapAssoc(result, eargs, backtrace);
       return result;
     }
   }
 
-  protected static void doMapAssoc(Map target, Eargs eargs,Backtrace backtrace) {
+  protected static void doMapAssoc(Map<Object,Object> target, Eargs eargs,Backtrace backtrace) {
     final int argsnum = eargs.size();
     target.put(eargs.get(1,backtrace), eargs.get(2,backtrace));
     if (argsnum > 3) {
-      List rest = (List)eargs.get(3,backtrace);
+      List<?> rest = (List<?>)eargs.get(3,backtrace);
       for (int i = 0; i < rest.size(); i += 2) {
         final Object k = rest.get(i);
         final Object v = i + 1 < rest.size() ? rest.get(i + 1) : null;

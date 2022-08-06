@@ -185,7 +185,7 @@ public class Utils {
     return result;
   }
 
-  public static Class<?>[] getMethodParamsClasses(List<Object> methodParams, List<Object> typeSpecs) {
+  public static Class<?>[] getMethodParamsClasses(List<?> methodParams, List<?> typeSpecs) {
     int listSize = (null == methodParams) ? 0 : methodParams.size();
     final Class<?> [] methodParamClasses = new Class[listSize];
     for (int j=0; j < listSize; j++) {
