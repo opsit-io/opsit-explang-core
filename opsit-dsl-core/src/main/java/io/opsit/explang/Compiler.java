@@ -1199,8 +1199,7 @@ public class Compiler {
             public void setParams(List<ICompiled> params)
               throws InvalidParametersException {
               if (null != this.argList) {
-                throw new RuntimeException(
-                                           "internal error: parameters already set");
+                throw new RuntimeException("internal error: parameters already set");
               }
               this.argList = new ArgList(argSpec, params);
             }
