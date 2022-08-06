@@ -1212,7 +1212,7 @@ public class Funcs {
       Object val = eargs.get(0, backtrace);
       ICode lambda = (ICode) Utils.asObject(val);
       IExpr instance = (IExpr)lambda.getInstance();
-      List list = (List) eargs.get(1, backtrace);
+      List<?> list = (List<?>) eargs.get(1, backtrace);
       final String argname = "arg#0";
       final List<ICompiled> callParams = new ArrayList<ICompiled>(1);
       callParams.add(new VarExp(argname));
@@ -1223,7 +1223,7 @@ public class Funcs {
                                                  (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
                                                  e.getMessage()));
       }
-      List results = new ArrayList();
+      List<Object> results = new ArrayList<Object>();
       for (int i = 0; i < list.size(); i++) {
         ICtx loopCtx = eargs.getCompiler().newCtx(eargs);
         loopCtx.put(argname, list.get(i));
@@ -1243,7 +1243,7 @@ public class Funcs {
       ICode lambda = (ICode) Utils.asObject(val);
       IExpr instance = (IExpr)lambda.getInstance();
 
-      List rest = (List) eargs.get(1, backtrace);
+      List<?> rest = (List<?>) eargs.get(1, backtrace);
       final int numLists = rest.size();
       if (numLists == 0) {
         throw new RuntimeException("At least one sequence must be provided");
@@ -1256,7 +1256,7 @@ public class Funcs {
         if (seq instanceof Map) {
           seq = Seq.valuesList(seq);
         }
-        seqs[i] = null == seq ? new ArrayList() : seq;
+        seqs[i] = null == seq ? new ArrayList<Object>() : seq;
         callParams.add(new VarExp("arg#"+i));
       }
       try {
@@ -1269,15 +1269,15 @@ public class Funcs {
       }
         
 
-      List results = new ArrayList();
+      List<Object> results = new ArrayList<Object>();
       callfuncs(backtrace, results, seqs, instance, callParams, eargs);
       return results;
     }
 
-    abstract protected void callfuncs(Backtrace backtrace, List results, Object seqs[], 
+    abstract protected void callfuncs(Backtrace backtrace, List<Object> results, Object seqs[], 
                                       IExpr instance, List<ICompiled> callParams, ICtx ctx);
         
-    protected int callfunc(Backtrace backtrace, List results,
+    protected int callfunc(Backtrace backtrace, List<Object> results,
                            Object seqs[], int indices[],
                            IExpr instance, List<ICompiled> callParams, ICtx ctx) {
       ICtx loopCtx = ctx.getCompiler().newCtx(ctx);
@@ -1308,7 +1308,7 @@ public class Funcs {
              "func should accept number arguments that is equal to number of lists.")
   @Package(name=Package.BASE_SEQ)
   public static class MAP extends ABSTRACTMAPOP {
-    protected void callfuncs(Backtrace backtrace, List results, Object seqs[], 
+    protected void callfuncs(Backtrace backtrace, List<Object> results, Object seqs[], 
                              IExpr instance, List<ICompiled> callParams, ICtx ctx) {
       int indices[] = new int[seqs.length];
       int overflow=-1;
@@ -1330,7 +1330,7 @@ public class Funcs {
              "arguments that is equal to number of lists.")
   @Package(name=Package.BASE_SEQ)
   public static class MAPPROD extends ABSTRACTMAPOP {
-    protected void callfuncs(Backtrace backtrace, List results, Object seqs[], 
+    protected void callfuncs(Backtrace backtrace, List<Object> results, Object seqs[], 
                              IExpr instance, List<ICompiled> callParams, ICtx ctx) {
       int indices[] = new int[seqs.length];
       int overflow=-1;
@@ -1404,6 +1404,7 @@ public class Funcs {
   @Arguments(spec = {"symbol","properties-map"})
   @Docstring(text = "Set Properties Map for a Variable")
   @Package(name=Package.BASE_BINDINGS)
+  @SuppressWarnings("unchecked")
   public static class SETPROPS extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1415,7 +1416,7 @@ public class Funcs {
       if (null != propsObj && !(propsObj instanceof Map)) {
         throw new RuntimeException("properties-map must be a java.util.Map");
       }
-      eargs.putProps(Utils.asString(symbolObj), (Map)propsObj);
+      eargs.putProps(Utils.asString(symbolObj), (Map<Object,Object>)propsObj);
       return null;
     }
   }
@@ -1500,7 +1501,7 @@ public class Funcs {
     }
 
     @Override
-    public void putAll(Map m) {
+    public void putAll(Map<?,?> m) {
       src.putAll(m);
     }
 
@@ -1510,12 +1511,12 @@ public class Funcs {
     }
 
     @Override
-    public Set keySet() {
+    public Set<Object> keySet() {
       return Utils.intersectSets(filterSet, src.keySet());
     }
 
     @Override
-    public Collection values() {
+    public Collection<Object> values() {
       Set<Object> values = new HashSet<Object>();
       for (Object key : this.keySet()) {
         values.add(get(key));
