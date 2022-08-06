@@ -1571,7 +1571,7 @@ public class Funcs {
     }
   }
     
-  public static class BeanMap implements Map {
+  public static class BeanMap implements Map<String,Object> {
     protected Object obj;
     //protected Backtrace backtrace;
     protected String prefix;
@@ -1673,7 +1673,7 @@ public class Funcs {
     }
 
     @Override
-    public Object put(Object key, Object value) {
+    public Object put(String key, Object value) {
       throw new RuntimeException("put is not implemented");
     }
 
@@ -1683,7 +1683,7 @@ public class Funcs {
     }
 
     @Override
-    public void putAll(Map m) {
+    public void putAll(Map<? extends String, ? extends Object> m) {
       throw new RuntimeException("putAll is not implemented");
     }
 
@@ -1693,12 +1693,12 @@ public class Funcs {
     }
 
     @Override
-    public Set keySet() {
+    public Set<String> keySet() {
       return getters.keySet();
     }
 
     @Override
-    public Collection values() {
+    public Collection<Object> values() {
       Set<Object> values = new HashSet<Object>();
       for (Object key : getters.keySet()) {
         values.add(get(key));
@@ -1707,13 +1707,13 @@ public class Funcs {
     }
 
     @Override
-    public Set entrySet() {
-      Set<Map.Entry> entries = new HashSet<Map.Entry>();
-      for (Object key : getters.keySet()) {
-        final Object entryKey = key;
-        entries.add(new Map.Entry() {
+    public Set<Map.Entry<String,Object>> entrySet() {
+      Set<Map.Entry<String,Object>> entries = new HashSet<Map.Entry<String, Object>>();
+      for (String key : getters.keySet()) {
+        final String entryKey = key;
+        entries.add(new Map.Entry<String, Object>() {
             @Override
-            public Object getKey() {
+            public String getKey() {
               return entryKey;
             }
 
@@ -1733,13 +1733,13 @@ public class Funcs {
 
     @Override
     public String toString() {
-      Iterator<Entry> i = entrySet().iterator();
+      Iterator<Entry<String,Object>> i = entrySet().iterator();
       if (!i.hasNext())
         return "{}";
       StringBuilder sb = new StringBuilder();
       sb.append('{');
       for (;;) {
-        Entry e = i.next();
+        Entry<String,Object> e = i.next();
         Object key = e.getKey();
         Object value = e.getValue();
         sb.append(key == this ? "(this Map)" : key);
