@@ -3468,7 +3468,7 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
       final ASTN astn =
-          (obj instanceof ASTN) ? (ASTN) obj : Utils.ASTNize(obj, new ParseCtx("<EVAL>"));
+          (obj instanceof ASTN) ? (ASTN) obj : Utils.astnize(obj, new ParseCtx("<EVAL>"));
       final ICompiled expr = eargs.getCompiler().compile(astn);
       final Object result = expr.evaluate(backtrace, eargs);
       return result;
@@ -3490,7 +3490,7 @@ public class Funcs {
       if (null == astns || astns.size() == 0) {
         return null;
       }
-      return Utils.unASTN(astns.get(0));
+      return Utils.unAstnize(astns.get(0));
     }
   }
 

@@ -1,4 +1,9 @@
 package io.opsit.explang;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.reflect.Array;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -6,15 +11,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.lang.reflect.Array;
 
 public class Utils {
   public static int safeLen(String str) {
@@ -25,144 +26,206 @@ public class Utils {
     return ArrayList.class;
   }
 
+  /**
+   * Make List of positionals args.
+   */
   @SafeVarargs
-  public static <T>List<T> list(T ... objs) {
-    List <T>lst = new ArrayList<T>(objs.length);
+  public static <T> List<T> list(T... objs) {
+    List<T> lst = new ArrayList<T>(objs.length);
     lst.addAll(Arrays.asList(objs));
     return lst;
   }
 
+  /**
+   * Make unmodifiableList list of positionals args.
+   */
   @SafeVarargs
-  public static <T>List<T> clist(T ... objs) {
+  public static <T> List<T> clist(T... objs) {
     return Collections.unmodifiableList(list(objs));
   }
 
-  @SuppressWarnings("unchecked")  
-  public  static <T,U>Map<T,U> map(Object ... objs) {
-    Map <T,U> map  = new HashMap<T,U>(objs.length >> 1);
-    for (int i = 0; i < objs.length; i+=2) {
-      map.put((T)objs[i],(U)objs[i+1]);
+  /**
+   * Make Map of (key value) pairs of positionals args.
+   */
+  @SuppressWarnings("unchecked")
+  public static <T, U> Map<T, U> map(Object... objs) {
+    Map<T, U> map = new HashMap<T, U>(objs.length >> 1);
+    for (int i = 0; i < objs.length; i += 2) {
+      map.put((T) objs[i], (U) objs[i + 1]);
     }
     return map;
   }
 
+  /**
+   * Make Set of positionals args.
+   */
   @SafeVarargs
-  public  static <T> Set<T> set(T ... objs) {
-    Set <T>set = new HashSet<T>(objs.length);
-    for (T obj: objs) {
+  public static <T> Set<T> set(T... objs) {
+    Set<T> set = new HashSet<T>(objs.length);
+    for (T obj : objs) {
       set.add(obj);
     }
     return set;
   }
 
+  /**
+   * Make Read-only Set of positionals args.
+   */
   @SafeVarargs
-  public  static <T> Set<T> roset(T ... objs) {
-    Set <T>set = new HashSet<T>(objs.length);
-    for (T obj: objs) {
+  public static <T> Set<T> roset(T... objs) {
+    Set<T> set = new HashSet<T>(objs.length);
+    for (T obj : objs) {
       set.add(obj);
     }
     return Collections.unmodifiableSet(set);
   }
 
+  /**
+   * Make Symbol with given name.
+   */
   public static Symbol symbol(String name) {
     return null == name ? null : new Symbol(name);
   }
-    
+
+  /**
+   * Make Reader from string content.
+   */
   public static Reader str2reader(String str) {
     final ByteArrayInputStream is = new ByteArrayInputStream(str.getBytes());
     final Reader r = new InputStreamReader(is);
     return r;
   }
 
-  public static int max(int a, int b) {
-    return a > b ? a : b;
+  /**
+   * Return maximum of two values.
+   */
+  public static int max(int intA, int intB) {
+    return intA > intB ? intA : intB;
   }
 
-  public static String arrayAsString(Object v) {
-    final int len = Array.getLength(v);
-    StringBuilder b = new StringBuilder(len << 3);
-    b.append("[");
+  /**
+   * Convert an array to String for printout.
+   */
+  public static String arrayAsString(Object val) {
+    final int len = Array.getLength(val);
+    StringBuilder buf = new StringBuilder(len << 3);
+    buf.append("[");
     if (len > 0) {
-      b.append(Array.get(v, 0));
+      buf.append(Array.get(val, 0));
       for (int i = 1; i < len; i++) {
-        b.append(", ");
-        b.append(Array.get(v, i));
+        buf.append(", ");
+        buf.append(Array.get(val, i));
       }
     }
-    b.append("]");
-    return b.toString();
+    buf.append("]");
+    return buf.toString();
   }
 
+  /**
+   * Convert an object to its String representation.
+   *
+   * <p>Symbols will be printed as their names, Arrays - using
+   * arrayAsString, null as NIL, other objects using their toString()
+   * method.
+   */
   public static String asString(Object val) {
-    return null == val ? "NIL" : 
-      ((val instanceof Symbol)  ? ((Symbol)val).getName() :
-       (val.getClass().isArray() ? arrayAsString(val)  :
-        val.toString()));
+    return null == val
+        ? "NIL"
+        : ((val instanceof Symbol)
+            ? ((Symbol) val).getName()
+            : (val.getClass().isArray() ? arrayAsString(val) : val.toString()));
   }
 
+  /**
+   * Convert an object to its String representation or return null if value is null.
+   */
   public static String asStringOrNull(Object val) {
-    return (null == val) ?
-      null : 
-      ((val instanceof Symbol)  ? ((Symbol)val).getName() : val.toString());
+    return (null == val)
+        ? null
+        : ((val instanceof Symbol) ? ((Symbol) val).getName() : val.toString());
   }
+
+  /**
+   * Convert an object to its String representation or return empty String if value is null.
+   */
   public static String asStringOrEmpty(Object val) {
-    return (null == val) ?
-      "" : 
-      ((val instanceof Symbol)  ? ((Symbol)val).getName() : val.toString());
+    return (null == val)
+        ? ""
+        : ((val instanceof Symbol) ? ((Symbol) val).getName() : val.toString());
   }
-    
+
+  /**
+   * Convert type specification to Class a object it is
+   * representing. Argument may be a Class instance, in this case it
+   * will be returned as it is.
+   */
   public static Class<?> tspecToClass(Object tspec) {
     if (tspec instanceof Class) {
-      return (Class<?>)tspec;
+      return (Class<?>) tspec;
     } else {
       return strToClass(asString(tspec));
     }
   }
 
+  /**
+   * Create list of positional arguments.
+   */
   public static List<ICompiled> newPosArgsList(int num) {
     List<ICompiled> lst = new ArrayList<ICompiled>(num);
-    for (int i = 1; i <= num ; i++) {
-      lst.add(new Funcs.VarExp("%"+i));
+    for (int i = 1; i <= num; i++) {
+      lst.add(new Funcs.VarExp("%" + i));
     }
     return lst;
   }
 
+  /**
+   * Shallow copy sequence.
+   *
+   * <p>Creates new instance of sequence of the same type
+   * with the same content. Only Lists and Arrays are currently supported.
+   * 
+   */
   public static Object copySeq(Object seq) {
     if (null == seq) {
       return null;
     }
     if (seq instanceof List) {
-      final List<?> lst = (List<?>)seq;
+      final List<?> lst = (List<?>) seq;
       // FIXME: type of created target List
       final List<Object> copy = new ArrayList<Object>(lst.size());
       copy.addAll(lst);
       return copy;
     } else if (seq.getClass().isArray()) {
-      return Arrays.copyOf((Object[])seq, ((Object[])seq).length);
+      return Arrays.copyOf((Object[]) seq, ((Object[]) seq).length);
     } else {
       return seq;
     }
   }
 
-    
-  final private static Map<String,Class<?>> primTypesClasses = new HashMap<String,Class<?>>();
+  private static final Map<String, Class<?>> primTypesClasses = new HashMap<String, Class<?>>();
+
   static {
-    for (Class<?> cls :  new Class[] {
-        void.class,
-        boolean.class,
-        char.class,
-        byte.class,
-        short.class,
-        int.class,
-        long.class,
-        double.class,
-        float.class,
-      }) {
+    for (Class<?> cls :
+        new Class[] {
+          void.class,
+          boolean.class,
+          char.class,
+          byte.class,
+          short.class,
+          int.class,
+          long.class,
+          double.class,
+          float.class,
+        }) {
       primTypesClasses.put(cls.getName(), cls);
     }
   }
-    
-    
+
+  /**
+   * Convert class name to a class object.
+   *
+   * <p>java.lang classes do not require full path.
+   */
   public static Class<?> strToClass(String str) {
     Class<?> result;
     try {
@@ -171,7 +234,7 @@ public class Utils {
       if (!str.contains(".")) {
         result = primTypesClasses.get(str);
         if (null == result) {
-          str = "java.lang."+str;
+          str = "java.lang." + str;
           try {
             result = Utils.class.getClassLoader().loadClass(str);
           } catch (ClassNotFoundException ex2) {
@@ -185,42 +248,50 @@ public class Utils {
     return result;
   }
 
+  /**
+   * Get array of classes of method parameters given optional array of
+   * argument type specifications.
+   */
   public static Class<?>[] getMethodParamsClasses(List<?> methodParams, List<?> typeSpecs) {
     int listSize = (null == methodParams) ? 0 : methodParams.size();
-    final Class<?> [] methodParamClasses = new Class[listSize];
-    for (int j=0; j < listSize; j++) {
-      if (null != typeSpecs &&
-          typeSpecs.size()>j &&
-          typeSpecs.get(j) != null) {
-        methodParamClasses[j] =  tspecToClass(typeSpecs.get(j));
+    final Class<?>[] methodParamClasses = new Class[listSize];
+    for (int j = 0; j < listSize; j++) {
+      if (null != typeSpecs && typeSpecs.size() > j && typeSpecs.get(j) != null) {
+        methodParamClasses[j] = tspecToClass(typeSpecs.get(j));
       } else {
         Object paramObj = methodParams.get(j);
         // FIXME: too naive to be useful in most cases
         // need to emulate what compiler does at compile time
         methodParamClasses[j] = (null == paramObj) ? Object.class : paramObj.getClass();
       }
-    } 
-    return methodParamClasses; 
+    }
+    return methodParamClasses;
   }
 
-  public static Object unASTN(ASTN param)  {
+  /**
+   * Strip objects out of an AST node.
+   */
+  public static Object unAstnize(ASTN param) {
     if (param.isList()) {
       List<Object> result = new ArrayList<Object>();
-      for (ASTN astn : ((ASTNList)param)) {
-        result.add(unASTN(astn));
-      } 
+      for (ASTN astn : ((ASTNList) param)) {
+        result.add(unAstnize(astn));
+      }
       return result;
     } else {
       return param.getObject();
     }
   }
 
-  public static ASTN ASTNize(Object param, ParseCtx ctx) {
+  /**
+   * Make AST node of objects (honoring lists).
+   */
+  public static ASTN astnize(Object param, ParseCtx ctx) {
     if (param instanceof List) {
-      //;ASTN lst = new ASTN
-      List <ASTN>astnList = new ArrayList<ASTN>(((List<?>)param).size());
-      for (Object obj : (List<?>)param) {
-        final ASTN node = ASTNize(obj,ctx);
+      // ;ASTN lst = new ASTN
+      List<ASTN> astnList = new ArrayList<ASTN>(((List<?>) param).size());
+      for (Object obj : (List<?>) param) {
+        final ASTN node = astnize(obj, ctx);
         astnList.add(node);
       }
       return new ASTNList(astnList, ctx);
@@ -228,37 +299,51 @@ public class Utils {
       return new ASTNLeaf(param, ctx);
     }
   }
-    
 
+  /**
+   * Return argument as object.
+   * FIXME: do we need this? why it was added?
+   */
   public static Object asObject(Object val) {
     return val;
   }
 
+  /**
+   * Return object as char.
+   *
+   * <p>Character object returned as is,
+   * Boolean as 'T' or '\0',
+   * Byte as corresponding ASCII character,
+   * otherwise ASCII character of numeric value
+   */
   public static char asChar(Object val) {
     if (null == val) {
-      return (char)0;
+      return (char) 0;
     } else if (val instanceof Character) {
-      return ((Character)val).charValue();
+      return ((Character) val).charValue();
     } else if (val instanceof Boolean) {
-      return (Boolean)val ? 'T' : '\0';
+      return (Boolean) val ? 'T' : '\0';
     } else if (val instanceof Byte) {
-      return (char)(0xff & ((byte)val));
+      return (char) (0xff & ((byte) val));
     } else {
-      return (char)(Utils.asNumberOrParse(val).shortValue());
+      return (char) (Utils.asNumberOrParse(val).shortValue());
     }
   }
 
   // FIXME: make configurable
-  // FIXME: strings
+  // FIXME: docs
+  /**
+   * Coerce object to Number.
+   */
   public static Number asNumber(Object val) {
     if (val == null) {
       return 0;
     } else if (val instanceof Number) {
-      return (Number)val;
+      return (Number) val;
     } else if (val instanceof Character) {
-      return (short)((Character)val).charValue();
+      return (short) ((Character) val).charValue();
     } else if (val instanceof Boolean) {
-      return ((boolean)val) ? 1 : 0;
+      return ((boolean) val) ? 1 : 0;
     } else if (val instanceof Collection) {
       // FIXME: Do we neede this?
       // FIXME: Parameter or this?
@@ -269,106 +354,120 @@ public class Utils {
     return 0;
   }
 
-
+  /**
+   * Parse string as Number.
+   * FIXME: describe format.
+   */
   public static Number parseNumber(String str) {
-    if (((str.length() >  1) &&
-         (str.startsWith("+") ||
-          str.startsWith("-") ||
-          str.startsWith("."))) ||
-        ((str.length()>0) &&
-         (str.charAt(0)>='0' && str.charAt(0)<='9'))) {
-      NumberFormat  nf = NumberFormat.getInstance(new Locale("en)","US"));
-      ParsePosition pos = new ParsePosition(str.startsWith("+")?1:0);
+    if (((str.length() > 1) && (str.startsWith("+") || str.startsWith("-") || str.startsWith(".")))
+        || ((str.length() > 0) && (str.charAt(0) >= '0' && str.charAt(0) <= '9'))) {
+      NumberFormat nf = NumberFormat.getInstance(new Locale("en)", "US"));
+      ParsePosition pos = new ParsePosition(str.startsWith("+") ? 1 : 0);
       try {
-        Number n = (Number)nf.parseObject(str,pos);
+        Number num = (Number) nf.parseObject(str, pos);
         Character typeSpec = null;
         if (pos.getIndex() + 1 == str.length()) {
           typeSpec = str.charAt(pos.getIndex());
         } else if (pos.getIndex() < str.length()) {
           return null;
         }
-        if (str.contains(".") &&
-            (n instanceof Long)) {
-          n = n.doubleValue();
+        if (str.contains(".") && (num instanceof Long)) {
+          num = num.doubleValue();
         }
         if (null != typeSpec) {
-          switch(typeSpec.charValue()) {
-          case 'l':
-          case 'L':
-            n=n.longValue();
-            break;
-          case 'b':
-          case 'B':
-            n=n.byteValue();
-            break;
-          case 's':
-          case 'S':
-            n=n.shortValue();
-            break;
-          case 'i':
-          case 'I':
-            n=n.intValue();
-            break;
-          case 'f':
-          case 'F':
-            n=n.floatValue();
-            break;
-          case 'd':
-          case 'D':
-            n=n.doubleValue();
-            break;
-          default:
-            throw new NumberFormatException(String.format("Failed to parse numeric literal '%s': invalid type modifier %s",
-                                                          str,typeSpec));
+          switch (typeSpec.charValue()) {
+            case 'l':
+            case 'L':
+              num = num.longValue();
+              break;
+            case 'b':
+            case 'B':
+              num = num.byteValue();
+              break;
+            case 's':
+            case 'S':
+              num = num.shortValue();
+              break;
+            case 'i':
+            case 'I':
+              num = num.intValue();
+              break;
+            case 'f':
+            case 'F':
+              num = num.floatValue();
+              break;
+            case 'd':
+            case 'D':
+              num = num.doubleValue();
+              break;
+            default:
+              throw new NumberFormatException(
+                  String.format(
+                      "Failed to parse numeric literal '%s': invalid type modifier %s",
+                      str, typeSpec));
           }
         } else {
-          n = (n instanceof Double) ? n : n.intValue();
+          num = (num instanceof Double) ? num : num.intValue();
         }
-        return n;
+        return num;
       } catch (Exception ex) {
-        throw new NumberFormatException(String.format("Failed to parse numeric literal '%s': %s", str, ex.toString()));
+        throw new NumberFormatException(
+            String.format("Failed to parse numeric literal '%s': %s", str, ex.toString()));
       }
     } else {
       throw new NumberFormatException(String.format("Invalid numeric literal '%s'", str));
     }
   }
 
+  /**
+   *  Coerse object to Number.
+   *
+   * <p>FIXME: describe conversion
+   * FIXME: make configurable
+   */
   public static Number asNumberOrParse(Object val) {
     if (null == val) {
       return 0;
     } else if (val instanceof Boolean) {
       return ((Boolean) val) ? 1 : 0;
     } else if (val instanceof String) {
-      final String str = ((String)val).trim();
+      final String str = ((String) val).trim();
       try {
-        Number n = parseNumber(str);
-        return n;
+        Number num = parseNumber(str);
+        return num;
       } catch (NumberFormatException ex) {
-        throw new RuntimeException("String '"+val+"' cannot be coerced to Number", ex);
+        throw new RuntimeException("String '" + val + "' cannot be coerced to Number", ex);
       }
     } else if (val instanceof Number) {
-      return (Number)val;
+      return (Number) val;
     } else if (val instanceof Character) {
-      return (short)((Character)val).charValue();
+      return (short) ((Character) val).charValue();
     } else if (val instanceof Collection) {
       return ((Collection<?>) val).size();
     } else if (val.getClass().isArray()) {
       return java.lang.reflect.Array.getLength(val);
     } else {
-      throw new RuntimeException("Object "+val+" cannot be coerced to Number");
+      throw new RuntimeException("Object " + val + " cannot be coerced to Number");
     }
   }
 
+  /**
+   * Check if the argument is a floating point number.
+   */
   public static boolean isFP(Number num) {
-    return ((num instanceof Float) ||
-            (num instanceof Double));
+    return ((num instanceof Float) || (num instanceof Double));
   }
 
-  protected static boolean isLast(List<?> list,int idx) {
+  /**
+   * Check if index is the last of the list.
+   */
+  protected static boolean isLast(List<?> list, int idx) {
     return (list.size() - 1) <= idx;
   }
 
-    
+  /**
+   * Coerce object to boolean.
+   */
   public static Boolean asBoolean(Object val) {
     if (null == val) {
       return false;
@@ -377,22 +476,22 @@ public class Utils {
       return !((String) val).isEmpty();
     }
     if (val instanceof Boolean) {
-      return (Boolean)val;
+      return (Boolean) val;
     }
     if (val instanceof Number) {
-      if (isFP((Number)val)) {
-        return 0.0D!=((Number)val).doubleValue();
+      if (isFP((Number) val)) {
+        return 0.0D != ((Number) val).doubleValue();
       } else {
-        return 0L!=((Number)val).longValue();
+        return 0L != ((Number) val).longValue();
       }
     }
     if (val instanceof Collection) {
-      return !((Collection<?>)val).isEmpty();
+      return !((Collection<?>) val).isEmpty();
     }
-    
+
     if (val instanceof Character) {
-      final char c = (char)val;
-      return c!='\0';
+      final char c = (char) val;
+      return c != '\0';
     }
     if (val.getClass().isArray()) {
       return java.lang.reflect.Array.getLength(val) > 0;
@@ -400,43 +499,75 @@ public class Utils {
     return true;
   }
 
-  public static void assertTrue(boolean b) {
-    if (!b) {
+  /**
+   * Assert true value.
+   */
+  public static void assertTrue(boolean val) {
+    if (!val) {
       throw new Error("Internal error: assertion failed");
     }
   }
 
-  public static int[]  array (int ...args) {
-    return args;
-  }
-  public static char[]  array (char ...args) {
-    return args;
-  }
-  public static double[]  array (double ...args) {
+  /**
+   * Make array of int.
+   */
+  public static int[] array(int... args) {
     return args;
   }
 
-  public static float[]  array (float ...args) {
-    return args;
-  }
-  public static boolean[]  array (boolean ...args) {
-    return args;
-  }
-
-
-  public static byte[]  array (byte ...args) {
-    return args;
-  }
-  public static short[]  array (short ...args) {
+  /**
+   * Make array of char.
+   */  
+  public static char[] array(char... args) {
     return args;
   }
 
-  public static long[]  array (long ...args) {
+  /**
+   * Make array of double.
+   */
+  public static double[] array(double... args) {
     return args;
   }
 
+  /**
+   * Make array of float.
+   */
+  public static float[] array(float... args) {
+    return args;
+  }
 
-  public static void aset(Object arrayObj, int index, Object obj)  {
+  /**
+   * Make array of boolean.
+   */
+  public static boolean[] array(boolean... args) {
+    return args;
+  }
+
+  /**
+   * Make array of byte.
+   */
+  public static byte[] array(byte... args) {
+    return args;
+  }
+
+  /**
+   * Make array of short.
+   */
+  public static short[] array(short... args) {
+    return args;
+  }
+
+  /**
+   * Make array of long.
+   */
+  public static long[] array(long... args) {
+    return args;
+  }
+
+  /**
+   * Set array element.
+   */
+  public static void aset(Object arrayObj, int index, Object obj) {
     try {
       Array.set(arrayObj, index, obj);
     } catch (java.lang.IllegalArgumentException ex) {
@@ -452,13 +583,13 @@ public class Utils {
         Array.set(arrayObj, index, Utils.asNumber(obj).intValue());
       } else if (ct == Long.TYPE || ct == java.lang.Long.class) {
         Array.set(arrayObj, index, Utils.asNumber(obj).longValue());
-      } else if (ct == Float.TYPE || ct == java.lang.Float.class)   {
+      } else if (ct == Float.TYPE || ct == java.lang.Float.class) {
         Array.set(arrayObj, index, Utils.asNumber(obj).floatValue());
       } else if (ct == Double.TYPE || ct == java.lang.Double.class) {
         Array.set(arrayObj, index, Utils.asNumber(obj).doubleValue());
       } else if (ct == Boolean.TYPE || ct == java.lang.Boolean.class) {
         Array.set(arrayObj, index, Utils.asBoolean(obj).booleanValue());
-      } else if (ct == java.lang.String.class || ct==java.lang.CharSequence.class) {
+      } else if (ct == java.lang.String.class || ct == java.lang.CharSequence.class) {
         Array.set(arrayObj, index, Utils.asString(obj));
       } else {
         throw ex;
@@ -466,46 +597,53 @@ public class Utils {
     }
   }
 
-
-  public static boolean arraysDeepEquals(Object e, Object v) {
-    final Class<?> ec = e.getClass();
-    final Class<?> vc = v.getClass();
+  /**
+   * Array deep comparison.
+   */   
+  public static boolean arraysDeepEquals(Object arrayE, Object arrayV) {
+    final Class<?> ec = arrayE.getClass();
+    final Class<?> vc = arrayV.getClass();
     final Class<?> ect = ec.getComponentType();
     final Class<?> vct = vc.getComponentType();
-    if (Object.class.isAssignableFrom(ect) &&
-        Object.class.isAssignableFrom(vct)) {
-      return Arrays.deepEquals( (Object[])e , (Object[])v);
+    if (Object.class.isAssignableFrom(ect) && Object.class.isAssignableFrom(vct)) {
+      return Arrays.deepEquals((Object[]) arrayE, (Object[]) arrayV);
     } else {
       if (ect != vct) {
         return false;
       }
       if (ect == int.class) {
-        return Arrays.equals( (int[])e , (int[])v);
+        return Arrays.equals((int[]) arrayE, (int[]) arrayV);
       } else if (ect == char.class) {
-        return Arrays.equals( (char[])e , (char[])v);
+        return Arrays.equals((char[]) arrayE, (char[]) arrayV);
       } else if (ect == boolean.class) {
-        return Arrays.equals( (boolean[])e , (boolean[])v);
+        return Arrays.equals((boolean[]) arrayE, (boolean[]) arrayV);
       } else if (ect == double.class) {
-        return Arrays.equals( (double[])e , (double[])v);
+        return Arrays.equals((double[]) arrayE, (double[]) arrayV);
       } else if (ect == byte.class) {
-        return Arrays.equals( (byte[])e , (byte[])v);
+        return Arrays.equals((byte[]) arrayE, (byte[]) arrayV);
       } else if (ect == long.class) {
-        return Arrays.equals( (long[])e , (long[])v);
+        return Arrays.equals((long[]) arrayE, (long[]) arrayV);
       } else if (ect == short.class) {
-        return Arrays.equals( (short[])e , (short[])v);
+        return Arrays.equals((short[]) arrayE, (short[]) arrayV);
       } else if (ect == float.class) {
-        return Arrays.equals( (float[])e , (float[])v);
+        return Arrays.equals((float[]) arrayE, (float[]) arrayV);
       } else {
         // won't happen
         return false;
       }
-    } 
+    }
   }
 
+  /**
+   * Check if String is empty.
+   */
   public static boolean isEmpty(String str) {
     return null == str || str.length() == 0;
   }
 
+  /**
+   * Return first not null not-empty argument.
+   */
   public static String coalesce(String... strings) {
     for (String s : strings) {
       if (!isEmpty(s)) {
@@ -515,8 +653,11 @@ public class Utils {
     return null;
   }
 
+  /**
+   * return first non-null argument.
+   */
   @SafeVarargs
-  public static <T> T  nvl(T... objects) {
+  public static <T> T nvl(T... objects) {
     for (T object : objects) {
       if (null != object) {
         return object;
@@ -525,11 +666,13 @@ public class Utils {
     return null;
   }
 
+  /**
+   * Concatenate string arguments.
+   */
   public static String concat(String... strs) {
-    if (null!=strs) {
-      final StringBuilder b =
-        new StringBuilder(strs.length << 4);
-      for ( String str : strs) {
+    if (null != strs) {
+      final StringBuilder b = new StringBuilder(strs.length << 4);
+      for (String str : strs) {
         b.append(str);
       }
       return b.toString();
@@ -538,7 +681,9 @@ public class Utils {
     }
   }
 
-  
+  /**
+   * Compute intersection of sets.
+   */
   public static Set<Object> intersectSets(Set<?>... sets) {
     final Set<Object> result = new HashSet<Object>();
     if (sets.length > 0) {
@@ -550,6 +695,9 @@ public class Utils {
     return result;
   }
 
+  /**
+   * Make union of Sets.
+   */
   public static Set<Object> unionSets(Set<?>... sets) {
     final Set<Object> result = new HashSet<Object>();
     for (int i = 0; i < sets.length; i++) {
@@ -558,6 +706,8 @@ public class Utils {
     return result;
   }
 
+  /** Check if Number is equal.
+   */
   public static boolean isRoundNumber(Number val) {
     if (null == val) {
       return false;
@@ -566,21 +716,30 @@ public class Utils {
     return d % 1 == 0;
   }
 
-  public static boolean equal(Object a, Object b) {
-    if (null == a) {
-      return null == b;
+  /**
+   * Check if objects are equal using Object.equals().
+   */
+  public static boolean equal(Object objA, Object objB) {
+    if (null == objA) {
+      return null == objB;
     }
-    return a.equals(b);
+    return objA.equals(objB);
   }
 
-  public static boolean enumEqual(Enum<?> e, Object o) {
-    return Seq.sequal(e.name(), o);
+  /**
+   * Check if equal to enum according to the name of the enum value.
+   */
+  public static boolean enumEqual(Enum<?> enumE, Object obj) {
+    return Seq.sequal(enumE.name(), obj);
   }
 
   public static final NumCompOp nc = new NumCompOp();
-    
+
+  /**
+   * Return true if object are equeal as Objects or Numerically.
+   */
   public static boolean objequal(Object v1, Object v2) {
-    if (v1==null) {
+    if (v1 == null) {
       if (v2 == null) {
         return true;
       }
@@ -592,15 +751,15 @@ public class Utils {
       return true;
     }
     if ((v1 instanceof Number) && (v2 instanceof Number)) {
-      return nc.compare((Number)v1, (Number) v2) == 0;
+      return nc.compare((Number) v1, (Number) v2) == 0;
     }
     if (v1.getClass().isEnum()) {
-      return enumEqual((Enum<?>)v1, v2);
+      return enumEqual((Enum<?>) v1, v2);
     }
     if (v2.getClass().isEnum()) {
-      return enumEqual((Enum<?>)v2, v1);
+      return enumEqual((Enum<?>) v2, v1);
     }
-        
+
     return false;
   }
 }

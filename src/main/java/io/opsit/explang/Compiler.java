@@ -1311,7 +1311,7 @@ public class Compiler {
         throw new InvalidParametersException(debugInfo,
                                              this.getName() + " expects exactly one parameter");
       }
-      this.value = Utils.unASTN(params.get(0));
+      this.value = Utils.unAstnize(params.get(0));
     }
 
 

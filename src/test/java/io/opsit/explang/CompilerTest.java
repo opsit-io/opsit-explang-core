@@ -67,7 +67,7 @@ public class CompilerTest extends AbstractTest {
     String quine = "((LAMBDA (X) (LIST X (LIST (QUOTE QUOTE) X))) (QUOTE (LAMBDA (X) (LIST X (LIST (QUOTE QUOTE) X)))))";
     @SuppressWarnings("unchecked")
       List<Object> parsedQuine =(List<Object>)
-      ((List<Object>)Utils.unASTN((new SexpParser()).parse(new ParseCtx("quine"),quine))).get(0);
+      ((List<Object>)Utils.unAstnize((new SexpParser()).parse(new ParseCtx("quine"),quine))).get(0);
 
     Object[][] tests = (new Object[][] {
         //empty list
