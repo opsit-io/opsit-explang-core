@@ -1,57 +1,165 @@
 <project>
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>io.opsit</groupId>
-    <artifactId>opsit-explang-core</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <junit.version>4.13.1</junit.version>
-    </properties>
-    <dependencies>
-        <dependency>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>io.opsit</groupId>
+  <artifactId>opsit-explang-core</artifactId>
+  <version>0.0.2-SNAPSHOT</version>
+
+  <name>Opsit Explang Core</name>
+  <description>Explang - an extensible dynamic language for the Java platform: Core Module</description>
+  <url>https://github.com/opsit-io/opsit-explang-core</url>
+
+  <licenses>
+    <license>
+      <name>GNU Affero General Public License v3.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Eugene Doudine</name>
+      <email>dudinea@opsit.io</email>
+      <organization>opsit.io</organization>
+      <organizationUrl>https://github.com/opsit-io</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:git:git@github.com:opsit-io/opsit-explang-core.git</connection>
+    <developerConnection>scm:git:ssh@github.com:opsit-io/opsit-explang-core.git</developerConnection>
+    <url>https://github.com/opsit-io/opsit-explang-core</url>
+  </scm>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compiler.target>1.8</maven.compiler.target>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <junit.version>4.13.1</junit.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
 	  <groupId>io.opsit</groupId>
 	  <artifactId>opsit-version-type</artifactId>
 	  <version>0.0.2</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
-    <!--distributionManagement>
-      <repository>
-        <id>github</id>
-        <name>GitHub opsit-io Apache Maven Packages</name>
-        <url>https://maven.pkg.github.com/opsit-io/opsit-dsl</url>
-      </repository>
-    </distributionManagement-->
 
-    <build>
+  <distributionManagement>
+    <snapshotRepository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>ossrh</id>
+      <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </distributionManagement>
+
+  <profiles>
+    <profile>
+      <id>publish</id>
+      <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maaven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>io.opsit.explang.REPL</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
         </plugins>
-    </build>
+      </build>
+    </profile>
+  </profiles>
+  
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M5</version>
+      </plugin>
+      <!--plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.4.0</version>
+		<executions>
+		  <execution>
+			<id>attach-javadocs</id>
+			<goals>
+			  <goal>jar</goal>
+			</goals>
+		  </execution>
+		</executions>
+	  </plugin-->
+      <plugin>
+		<groupId>org.apache.maven.plugins</groupId>
+		<artifactId>maven-source-plugin</artifactId>
+        <version>3.2.1</version>
+		<executions>
+		  <execution>
+			<id>attach-sources</id>
+			<goals>
+			  <goal>jar</goal>
+			</goals>
+		  </execution>
+		</executions>
+	  </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.17</version>
+        <executions>
+          <execution>
+            <id>validate</id>
+            <phase>validate</phase>
+            <configuration>
+              <configLocation>google_checks.xml</configLocation>
+              <suppressionsLocation>.checkstyle-suppressions.xml</suppressionsLocation>
+              <encoding>UTF-8</encoding>
+              <failsOnError>true</failsOnError>
+              <consoleOutput>true</consoleOutput>
+              <includeTestSourceDirectory>true
+              </includeTestSourceDirectory>
+              <failOnViolation>false</failOnViolation>
+              <logViolationsToConsole>true</logViolationsToConsole>
+            </configuration>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maaven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>io.opsit.explang.REPL</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>
