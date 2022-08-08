@@ -2,6 +2,10 @@ package io.opsit.explang;
 
 import static io.opsit.explang.ArgSpec.ARG_OPTIONAL;
 import static io.opsit.explang.ArgSpec.ARG_REST;
+
+import io.opsit.explang.Compiler.Eargs;
+import io.opsit.explang.Compiler.ICtx;
+import io.opsit.explang.Seq.Operation;
 import io.opsit.version.Version;
 
 import java.io.File;
@@ -27,30 +31,26 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.opsit.explang.Compiler.Eargs;
-import io.opsit.explang.Compiler.ICtx;
-import io.opsit.explang.Seq.Operation;
-
 public class Funcs {
-  public static abstract class AbstractExpr implements IExpr, Runnable {
+  public abstract static class AbstractExpr implements IExpr, Runnable {
     protected ParseCtx debugInfo;
     protected String name = null;
-    
 
-    public void run () {
-      final Compiler.ICtx ctx =
-        Threads.contexts.remove(Thread.currentThread());
-      final Object result =
-        this.evaluate(new Backtrace(), ctx);
-      Threads.results.put(Thread.currentThread(),result);
+    /**
+     * Run expression in separate Thread.
+     */
+    public void run() {
+      final Compiler.ICtx ctx = Threads.contexts.remove(Thread.currentThread());
+      final Object result = this.evaluate(new Backtrace(), ctx);
+      Threads.results.put(Thread.currentThread(), result);
     }
-        
-    abstract protected Object doEvaluate(Backtrace backtrace,ICtx  ctx);
+
+    protected abstract Object doEvaluate(Backtrace backtrace, ICtx ctx);
 
     public void setName(String name) {
       this.name = name;
     }
-    
+
     public void setDebugInfo(ParseCtx debugInfo) {
       this.debugInfo = debugInfo;
     }
@@ -62,75 +62,75 @@ public class Funcs {
     protected String getTraceName() {
       return getName();
     }
-        
+
     protected String getName() {
       if (null == this.name) {
         this.name = this.getClass().getSimpleName();
       }
       return this.name;
     }
-    
+
     @Override
-    final public Object evaluate(final Backtrace backtrace,
-                                 final ICtx  ctx) {
+    public final Object evaluate(final Backtrace backtrace, final ICtx ctx) {
       try {
-        backtrace.push(getTraceName(),
-                       this.debugInfo,
-                       ctx);
+        backtrace.push(getTraceName(), this.debugInfo, ctx);
         return doEvaluate(backtrace, ctx);
       } catch (ExecutionException ex) {
         throw ex;
       } catch (Throwable t) {
-        throw new ExecutionException(backtrace,t);
+        throw new ExecutionException(backtrace, t);
       } finally {
         backtrace.pop();
       }
-            
     }
   }
 
-  public static abstract class FuncExp extends AbstractExpr {
-    protected  ArgList argList;
+  public abstract static class FuncExp extends AbstractExpr {
+    protected ArgList argList;
+
     @Override
     protected String getTraceName() {
-      //final StringBuilder b = new StringBuilder(16);
-      //b.append("(").append(getName()).append(")");
+      // final StringBuilder b = new StringBuilder(16);
+      // b.append("(").append(getName()).append(")");
       return getName();
     }
-        
+
     @Override
     public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       return evalWithArgs(backtrace, this.evaluateParameters(backtrace, ctx));
     }
-    
+
     protected abstract Object evalWithArgs(Backtrace backtrace, Eargs eargs);
-    
-    //@Override
+
+    /**
+     * Evaluate function parameters in the execution context.
+     */
     public Eargs evaluateParameters(Backtrace backtrace, ICtx ctx) {
       return argList.evaluateArguments(backtrace, ctx);
     }
 
-
-    public void checkParamsList(List <ICompiled> params)
-      throws InvalidParametersException{
-      if (null!=argList) {
-        throw new InvalidParametersException(this.getDebugInfo(),
-                                             "internal exception: parameters already set");
+    /**
+     * Ensure that parametes are valid and can be set for the object.
+     */
+    public void checkParamsList(List<ICompiled> params) throws InvalidParametersException {
+      // FIXME: what to do with parameters?
+      if (null != argList) {
+        throw new InvalidParametersException(
+            this.getDebugInfo(), "internal exception: parameters already set");
       }
     }
-            
 
-        
+    /**
+     * Set parameters for function on compilation stage.
+     */
     @Override
-    public void setParams(List<ICompiled>  params)
-      throws InvalidParametersException {
+    public void setParams(List<ICompiled> params) throws InvalidParametersException {
 
       Arguments args = this.getClass().getAnnotation(Arguments.class);
       if (null == args) {
-        throw new RuntimeException("argument list not specified for function "
-                                   +this.getClass());
+        throw new RuntimeException("argument list not specified for function " + this.getClass());
       }
-      String specArray[]= args.spec();
+      String []specArray = args.spec();
       // FIXME: no compiler - no initForm!
       ArgSpec spec = new ArgSpec(specArray, null);
       this.checkParamsList(params);
@@ -138,124 +138,142 @@ public class Funcs {
     }
   }
 
-  /**** ARITHMETIC FUNCTIONS ****/
+  //**** ARITHMETIC FUNCTIONS 
 
-  @Arguments(spec={ArgSpec.ARG_REST,"args"})
-  public static abstract class ABSTRACT_ADD extends FuncExp implements AbstractOp {
+  /**
+   * Abstract class for addition type arithmetic functions.
+   */
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  public abstract static class ABSTRACTADDOP extends FuncExp implements AbstractOp {
     protected abstract Number getNeutral();
+
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Number result = getNeutral();
-      Promotion p = new Promotion();
+      Promotion promo = new Promotion();
       List<?> rest = (List<?>) eargs.get(0, backtrace);
       if (rest.size() == 0) {
-        p.promote(result);
+        promo.promote(result);
       } else {
         for (Object earg : rest) {
           Number arg = Utils.asNumber(earg);
-          p.promote(arg);
-          result = p.callOP(this, result, arg);
+          promo.promote(arg);
+          result = promo.callOP(this, result, arg);
         }
       }
-      return p.returnResult(result);
+      return promo.returnResult(result);
     }
   }
 
-  @Docstring(text="Compute Sum. "+
-             "Returns the sum of numeric values of it's arguments, " +
-             "performing any necessary type conversions in the process. " +
-             "If no numbers are supplied, 0 is returned.")
-  @Package(name=Package.BASE_ARITHMENTICS)
-  public static class ADDOP extends ABSTRACT_ADD {
+  @Docstring(
+      text =
+          "Compute Sum. "
+              + "Returns the sum of numeric values of it's arguments, "
+              + "performing any necessary type conversions in the process. "
+              + "If no numbers are supplied, 0 is returned.")
+  @Package(name = Package.BASE_ARITHMENTICS)
+  public static class ADDOP extends ABSTRACTADDOP {
     @Override
     protected Number getNeutral() {
       return Integer.valueOf(0);
     }
+
     @Override
-    public  Number doIntOp(Number result, Number arg) {
+    public Number doIntOp(Number result, Number arg) {
       return result.longValue() + arg.longValue();
     }
+
     @Override
     public Float doFloatOp(Number result, Number arg) {
       return result.floatValue() + arg.floatValue();
     }
+
     @Override
     public Double doDoubleOp(Number result, Number arg) {
       return result.doubleValue() + arg.doubleValue();
     }
+
     @Override
     public Version doVersionOp(Number result, Number arg) {
       if (result instanceof Version) {
-        Version vResult = (Version)result;
+        Version verResult = (Version) result;
         if (arg instanceof Version) {
-          return vResult.add((Version) arg);
+          return verResult.add((Version) arg);
         }
-        return vResult.add(arg);
+        return verResult.add(arg);
       } else if (arg instanceof Version) {
-        return ((Version)arg).add(result);
+        return ((Version) arg).add(result);
       } else {
         return Version.fromDouble(result.doubleValue() + arg.doubleValue());
       }
     }
   }
 
-  @Docstring(text="Compute Product. "+
-             "Returns the product of it's arguments , "+
-             "performing any necessary type conversions in the process. "+
-             "If no numbers are supplied, 1 is returned.")
-  @Package(name=Package.BASE_ARITHMENTICS)
-  public static class MULOP extends ABSTRACT_ADD {
+  @Docstring(
+      text =
+          "Compute Product. "
+              + "Returns the product of it's arguments , "
+              + "performing any necessary type conversions in the process. "
+              + "If no numbers are supplied, 1 is returned.")
+  @Package(name = Package.BASE_ARITHMENTICS)
+  public static class MULOP extends ABSTRACTADDOP {
     @Override
     protected Number getNeutral() {
-      return  Integer.valueOf(1);
+      return Integer.valueOf(1);
     }
+
     @Override
     public Number doIntOp(Number result, Number arg) {
       return result.longValue() * arg.longValue();
     }
+
     @Override
     public Double doDoubleOp(Number result, Number arg) {
       return result.doubleValue() * arg.doubleValue();
     }
+
     @Override
     public Float doFloatOp(Number result, Number arg) {
       return result.floatValue() * arg.floatValue();
     }
+
     public Double doVersionOp(Number result, Number arg) {
       return result.doubleValue() * arg.doubleValue();
     }
   }
-    
 
-  @Arguments(spec={ArgSpec.ARG_REST,"args"})
-  public abstract static class ABSTRACT_SUB extends FuncExp implements  AbstractOp {
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  public abstract static class ABSTRACT_SUB extends FuncExp implements AbstractOp {
     protected abstract Number getNeutral();
+
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       List<?> rest = (List<?>) eargs.get(0, backtrace);
       Number num = Utils.asNumber(rest.get(0));
-      Promotion p = new Promotion();
-      p.promote(num);
+      Promotion promo = new Promotion();
+      promo.promote(num);
       if (rest.size() == 1) {
-        num = p.callOP(this, getNeutral(), num);
+        num = promo.callOP(this, getNeutral(), num);
       } else {
         for (int i = 1; i < rest.size(); i++) {
           Number arg = Utils.asNumber(rest.get(i));
-          p.promote(arg);
-          num = p.callOP(this, num, arg);
+          promo.promote(arg);
+          num = promo.callOP(this, num, arg);
         }
       }
-      return p.returnResult(num);
+      return promo.returnResult(num);
     }
   }
-    
-  @Docstring(text="Performs subtraction or negation. "+
-             "If only one number is supplied, the negation of that "+
-             "number is returned. If more than one argument is given, "+
-             "it subtracts rest of the arguments from the first one "+
-             "and returns the result. The function performs necessary "+
-             "type conversions.")
-  @Package(name=Package.BASE_ARITHMENTICS)
+
+  @Docstring(
+      text =
+          "Performs subtraction or negation. "
+              + "If only one number is supplied, the negation of that "
+              + "number is returned. If more than one argument is given, "
+              + "it subtracts rest of the arguments from the first one "
+              + "and returns the result. The function performs necessary "
+              + "type conversions.")
+  @Package(name = Package.BASE_ARITHMENTICS)
   public static class SUBOP extends ABSTRACT_SUB {
     @Override
     public Number doIntOp(Number arg1, Number arg2) {
@@ -275,33 +293,35 @@ public class Funcs {
     @Override
     public Version doVersionOp(Number arg1, Number arg2) {
       if (arg1 instanceof Version) {
-        Version vResult = (Version)arg1;
+        Version verResult = (Version) arg1;
         if (arg2 instanceof Version) {
-          return vResult.sub((Version) arg2);
+          return verResult.sub((Version) arg2);
         }
-        return vResult.sub(arg2);
+        return verResult.sub(arg2);
       } else if (arg2 instanceof Version) {
-        return Version.fromDouble(arg1.doubleValue()).sub((Version)arg2);
+        return Version.fromDouble(arg1.doubleValue()).sub((Version) arg2);
       } else {
-        return Version.fromDouble(arg1.doubleValue() -
-                                  arg2.doubleValue());
+        return Version.fromDouble(arg1.doubleValue() - arg2.doubleValue());
       }
     }
+
     @Override
     protected Number getNeutral() {
       return Integer.valueOf(0);
     }
   }
 
-  @Docstring(text="Performs Division or Reciprocation. "+
-             "If no denominators are supplied, the function / returns "+
-             "the reciprocal of number. " +
-             "If at least one denominator is supplied, the function / "+
-             "divides the numerator by all of the denominators and returns"+
-             " the resulting quotient. If each argument is either an integer"+
-             " or a ratio, and the result is not an integer, then it is a ratio."+
-             " The function / performs necessary type conversions. ")
-  @Package(name=Package.BASE_ARITHMENTICS)
+  @Docstring(
+      text =
+          "Performs Division or Reciprocation. "
+              + "If no denominators are supplied, the function / returns "
+              + "the reciprocal of number. "
+              + "If at least one denominator is supplied, the function / "
+              + "divides the numerator by all of the denominators and returns"
+              + " the resulting quotient. If each argument is either an integer"
+              + " or a ratio, and the result is not an integer, then it is a ratio."
+              + " The function / performs necessary type conversions. ")
+  @Package(name = Package.BASE_ARITHMENTICS)
   public static class DIVOP extends ABSTRACT_SUB {
     @Override
     public Number doIntOp(Number arg1, Number arg2) {
@@ -322,66 +342,71 @@ public class Funcs {
     public Float doFloatOp(Number arg1, Number arg2) {
       return arg1.floatValue() / arg2.floatValue();
     }
-        
+
     @Override
     protected Number getNeutral() {
       return Integer.valueOf(1);
     }
-
   }
 
-  @Arguments(spec={"x",ArgSpec.ARG_REST,"args"})
-  @Docstring(text="Find maximum. "+
-             "Returns the maximum of numeric values of it's arguments, " +
-             "performing any necessary type conversions in the process. ")
-  @Package(name=Package.BASE_ARITHMENTICS)
+  @Arguments(spec = {"x", ArgSpec.ARG_REST, "args"})
+  @Docstring(
+      text =
+          "Find maximum. "
+              + "Returns the maximum of numeric values of it's arguments, "
+              + "performing any necessary type conversions in the process. ")
+  @Package(name = Package.BASE_ARITHMENTICS)
   public static class MAXOP extends NUMGE {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Promotion p = new Promotion();
+      Promotion promo = new Promotion();
       Number result = Utils.asNumber(eargs.get(0, backtrace));
-      List<?> rest = (List<?>)eargs.get(1, backtrace);
-      p.promote(result);
-      for (int i=0; i< rest.size() ; i++) {
+      List<?> rest = (List<?>) eargs.get(1, backtrace);
+      promo.promote(result);
+      for (int i = 0; i < rest.size(); i++) {
         Number val = Utils.asNumber(rest.get(i));
-        p.promote(val);
-        Integer dif = p.callOP(this, result, val).intValue();
+        promo.promote(val);
+        Integer dif = promo.callOP(this, result, val).intValue();
         result = compareResult(dif) ? result : val;
       }
       return result;
     }
   }
 
-  @Arguments(spec={"x",ArgSpec.ARG_REST,"args"})
-  @Docstring(text="Find minimum. "+
-             "Returns the maximum of numeric values of it's arguments, " +
-             "performing any necessary type conversions in the process. ")
-  @Package(name=Package.BASE_ARITHMENTICS)
+  @Arguments(spec = {"x", ArgSpec.ARG_REST, "args"})
+  @Docstring(
+      text =
+          "Find minimum. "
+              + "Returns the maximum of numeric values of it's arguments, "
+              + "performing any necessary type conversions in the process. ")
+  @Package(name = Package.BASE_ARITHMENTICS)
   public static class MINOP extends NUMLE {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Promotion p = new Promotion();
+      Promotion promo = new Promotion();
       Number result = Utils.asNumber(eargs.get(0, backtrace));
-      List<?> rest = (List<?>)eargs.get(1, backtrace);
-      p.promote(result);
-      for (int i=0; i< rest.size() ; i++) {
+      List<?> rest = (List<?>) eargs.get(1, backtrace);
+      promo.promote(result);
+      for (int i = 0; i < rest.size(); i++) {
         Number val = Utils.asNumber(rest.get(i));
-        p.promote(val);
-        Integer dif = p.callOP(this, result, val).intValue();
+        promo.promote(val);
+        Integer dif = promo.callOP(this, result, val).intValue();
         result = compareResult(dif) ? result : val;
       }
       return result;
     }
   }
 
-  @Arguments(spec={"x","y"})
-  @Docstring(text="Compute Remainder. "+
-             "Generalizations of the remainder function. When both operands are integer "+
-             "returns result of the remainder operation . If one of them is floating point "+
-             "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "+
-             "(same semantic as for the Java % operator.")
-  @Package(name=Package.BASE_ARITHMENTICS)
-  public  static class REMOP extends FuncExp implements  AbstractOp {
+  @Arguments(spec = {"x", "y"})
+  @Docstring(
+      text =
+          "Compute Remainder. "
+              + "Generalizations of the remainder function. When both operands are integer "
+              + "returns result of the remainder operation . If one of them is floating point "
+              + "returns result of \n\t number - truncate_to_zero (number / divisor) * divisor "
+              + "(same semantic as for the Java % operator.")
+  @Package(name = Package.BASE_ARITHMENTICS)
+  public static class REMOP extends FuncExp implements AbstractOp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Number first = Utils.asNumber(eargs.get(0, backtrace));
@@ -393,7 +418,7 @@ public class Funcs {
     }
 
     @Override
-    public  Number doIntOp(Number arg1, Number arg2) {
+    public Number doIntOp(Number arg1, Number arg2) {
       return arg1.longValue() % arg2.longValue();
     }
 
@@ -406,20 +431,22 @@ public class Funcs {
     public Double doVersionOp(Number arg1, Number arg2) {
       return arg1.doubleValue() % arg2.doubleValue();
     }
-        
+
     @Override
-    public  Float doFloatOp(Number arg1, Number arg2) {
+    public Float doFloatOp(Number arg1, Number arg2) {
       return arg1.floatValue() % arg2.floatValue();
     }
   }
 
-  @Arguments(spec={"number","divisor"})
-  @Docstring(text="Compute Modulus. "+
-             "Generalizations of the modulus function. When both operands are integer "+
-             "returns result of the modulus operation. If one of them is floating point "+
-             "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
-  @Package(name=Package.BASE_ARITHMENTICS)
-  public  static class MODOP extends FuncExp implements  AbstractOp {
+  @Arguments(spec = {"number", "divisor"})
+  @Docstring(
+      text =
+          "Compute Modulus. "
+              + "Generalizations of the modulus function. When both operands are integer "
+              + "returns result of the modulus operation. If one of them is floating point "
+              + "returns result of \n\t number - ⌊ (number / divisor) ⌋ * divisor ")
+  @Package(name = Package.BASE_ARITHMENTICS)
+  public static class MODOP extends FuncExp implements AbstractOp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Number first = Utils.asNumber(eargs.get(0, backtrace));
@@ -429,46 +456,50 @@ public class Funcs {
       p.promote(second);
       return p.returnResult(p.callOP(this, first, second));
     }
-        
+
     @Override
     public Number doIntOp(Number arg1, Number arg2) {
-      return arg1.longValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.longValue();
-    }
-        
-    @Override
-    public  Double doDoubleOp(Number arg1, Number arg2) {
-      return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
+      return arg1.longValue()
+          - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.longValue();
     }
 
-    public  Double doVersionOp(Number arg1, Number arg2) {
-      return arg1.doubleValue() - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
+    @Override
+    public Double doDoubleOp(Number arg1, Number arg2) {
+      return arg1.doubleValue()
+          - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
     }
-        
+
+    public Double doVersionOp(Number arg1, Number arg2) {
+      return arg1.doubleValue()
+          - Math.floor(arg1.doubleValue() / arg2.doubleValue()) * arg2.doubleValue();
+    }
+
     @Override
     public Float doFloatOp(Number arg1, Number arg2) {
-      return arg1.floatValue() - ((float)Math.floor(arg1.doubleValue() / arg2.doubleValue())) * arg2.floatValue();
+      return arg1.floatValue()
+          - ((float) Math.floor(arg1.doubleValue() / arg2.doubleValue())) * arg2.floatValue();
     }
   }
 
-    
-    
-  /**** BOOLEAN FUNCTIONS ****/
-  @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
-  @Docstring(text="Logical AND. "+
-             "Function AND lazily evaluates each argument form, "+
-             "one at a time from left to right. " +
-             "As soon as any form evaluates to NIL, "+
-             "AND returns NIL without evaluating the remaining forms. " +
-             "If all forms but the last evaluate to true values, "+
-             "AND returns the results " +
-             "produced by evaluating the last form. " +
-             "If no forms are supplied, (AND) returns true.")
-  @Package(name=Package.BASE_LOGIC)
+  //**** BOOLEAN FUNCTIONS 
+  @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
+  @Docstring(
+      text =
+          "Logical AND. "
+              + "Function AND lazily evaluates each argument form, "
+              + "one at a time from left to right. "
+              + "As soon as any form evaluates to NIL, "
+              + "AND returns NIL without evaluating the remaining forms. "
+              + "If all forms but the last evaluate to true values, "
+              + "AND returns the results "
+              + "produced by evaluating the last form. "
+              + "If no forms are supplied, (AND) returns true.")
+  @Package(name = Package.BASE_LOGIC)
   public static class AND extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object andVal = true;
-      for (Object  val : (List<?>)eargs.get(0, backtrace)) {
+      for (Object val : (List<?>) eargs.get(0, backtrace)) {
         andVal = val;
         if (!Utils.asBoolean(val)) {
           break;
@@ -478,20 +509,22 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
-  @Docstring(text ="Logical OR. "+
-             "Function OR lazily evaluates each form, "+
-             "one at a time, from left to right. "+
-             "The evaluation of all forms terminates when a form evaluates to true "+
-             "(i.e., something other than nil) "+
-             "and OR immediately returns that value "+
-             "without evaluating the remaining forms.")
-  @Package(name=Package.BASE_LOGIC)
+  @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
+  @Docstring(
+      text =
+          "Logical OR. "
+              + "Function OR lazily evaluates each form, "
+              + "one at a time, from left to right. "
+              + "The evaluation of all forms terminates when a form evaluates to true "
+              + "(i.e., something other than nil) "
+              + "and OR immediately returns that value "
+              + "without evaluating the remaining forms.")
+  @Package(name = Package.BASE_LOGIC)
   public static class OR extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object orVal = false;
-      for (Object val : (List<?>)eargs.get(0, backtrace)) {
+      for (Object val : (List<?>) eargs.get(0, backtrace)) {
         if (Utils.asBoolean(val)) {
           orVal = val;
           break;
@@ -501,13 +534,15 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"x"})
-  @Docstring(text="Logical Negation. "+
-             "Returns True if x has false logical value; otherwise, returns False."+
-             "Parameter x can be any object. Only NIL, the empty list (), "+
-             "the empty String \"\", 0  and FALSE have false logical value. "+
-             "All other objects have true logical value")
-  @Package(name=Package.BASE_LOGIC)
+  @Arguments(spec = {"x"})
+  @Docstring(
+      text =
+          "Logical Negation. "
+              + "Returns True if x has false logical value; otherwise, returns False."
+              + "Parameter x can be any object. Only NIL, the empty list (), "
+              + "the empty String \"\", 0  and FALSE have false logical value. "
+              + "All other objects have true logical value")
+  @Package(name = Package.BASE_LOGIC)
   public static class NOT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -516,31 +551,33 @@ public class Funcs {
     }
   }
 
-  /**** COMPARISON ****/
-  @Arguments(spec={"x","y"})
-  @Docstring(text="Check Object Equality. "+
-             "Returns true if x equal to y according to call to Java method "+
-             "x.equals(y) or if both objects are NIL.")
-  @Package(name=Package.BASE_LOGIC)
+  //**** COMPARISON 
+  @Arguments(spec = {"x", "y"})
+  @Docstring(
+      text =
+          "Check Object Equality. "
+              + "Returns true if x equal to y according to call to Java method "
+              + "x.equals(y) or if both objects are NIL.")
+  @Package(name = Package.BASE_LOGIC)
   public static class EQUAL extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object v1 = eargs.get(0, backtrace);
       final Object v2 = eargs.get(1, backtrace);
-      return (v1==null) ? (v2==null) : v1.equals(v2);
+      return (v1 == null) ? (v2 == null) : v1.equals(v2);
     }
   }
 
-   
-  @Arguments(spec={"x","y"})
-  @Docstring(text="Check Value Equality. "+
-             "Returns true if x equal to y according to call to Java method "+
-             "x.equals(y) or if both objects are NIL. If they are not, it  returns true if  thy are "+
-             "equal numerically or structurally.")
-  @Package(name=Package.BASE_LOGIC)
+  @Arguments(spec = {"x", "y"})
+  @Docstring(
+      text =
+          "Check Value Equality. Returns true if x equal to y according to call to Java method"
+              + " x.equals(y) or if both objects are NIL. If they are not, it  returns true if  thy"
+              + " are equal numerically or structurally.")
+  @Package(name = Package.BASE_LOGIC)
   public static class SEQUAL extends FuncExp {
     NumCompOp nc = new NumCompOp();
-        
+
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object v1 = eargs.get(0, backtrace);
@@ -549,12 +586,14 @@ public class Funcs {
     }
   }
 
-  /**** COMPARISON ****/
-  @Arguments(spec={"x","y"})
-  @Docstring(text="Check Object Equality. "+
-             "Objects identity check: returns true if Object x is same as Object y. " +
-             "Uses java operator == to check objects identity")
-  @Package(name=Package.BASE_LOGIC)
+  //**** COMPARISON 
+  @Arguments(spec = {"x", "y"})
+  @Docstring(
+      text =
+          "Check Object Equality. "
+              + "Objects identity check: returns true if Object x is same as Object y. "
+              + "Uses java operator == to check objects identity")
+  @Package(name = Package.BASE_LOGIC)
   public static class EQ extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -564,32 +603,34 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"x",ARG_REST,"args"})
-  public static abstract class NUMCOMP extends FuncExp implements AbstractOp    {
+  @Arguments(spec = {"x", ARG_REST, "args"})
+  public abstract static class NUMCOMP extends FuncExp implements AbstractOp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       boolean result = true;
-      Promotion p = new Promotion();
+      Promotion promo = new Promotion();
       Number prevVal = Utils.asNumber(eargs.get(0, backtrace));
-      List<?> rest = (List<?>)eargs.get(1, backtrace);
-      p.promote(prevVal);
-      for (int i=0; i< rest.size() ; i++) {
+      List<?> rest = (List<?>) eargs.get(1, backtrace);
+      promo.promote(prevVal);
+      for (int i = 0; i < rest.size(); i++) {
         Number val = Utils.asNumber(rest.get(i));
-        p.promote(val);
-        Integer dif = p.callOP(this, prevVal, val).intValue();
+        promo.promote(val);
+        Integer dif = promo.callOP(this, prevVal, val).intValue();
         result &= compareResult(dif);
         prevVal = val;
       }
       return result;
     }
+
     @Override
     public Number doIntOp(Number arg1, Number arg2) {
-      return  arg1.longValue() - arg2.longValue();
+      return arg1.longValue() - arg2.longValue();
     }
+
     @Override
     public Number doDoubleOp(Number arg1, Number arg2) {
       final Double compRes = arg1.doubleValue() - arg2.doubleValue();
-      return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
+      return compRes < 0.0 ? -1 : (compRes > 0.0 ? 1 : 0);
     }
 
     @Override
@@ -597,37 +638,41 @@ public class Funcs {
       if (arg1 instanceof Version) {
         return ((Version) arg1).compareTo(Version.fromNumber(arg2));
       } else if (arg2 instanceof Version) {
-        return - ((Version) arg2).compareTo(Version.fromNumber(arg1));
+        return -((Version) arg2).compareTo(Version.fromNumber(arg1));
       } else {
         final Double compRes = arg1.doubleValue() - arg2.doubleValue();
         return compRes < 0.0 ? -1 : (compRes > 0.0 ? 1 : 0);
       }
     }
-        
+
     @Override
     public Number doFloatOp(Number arg1, Number arg2) {
       final float compRes = arg1.floatValue() - arg2.floatValue();
-      return compRes < 0.0f ? -1 : (compRes>0.0f ? 1 : 0);
+      return compRes < 0.0f ? -1 : (compRes > 0.0f ? 1 : 0);
     }
+
     protected abstract boolean compareResult(int res);
   }
 
-  @Arguments(spec={"x",ARG_REST,"args"})
-  @Docstring(text="Test numeric equality. Returns True if all arguments are numerically equal. "
-             + "Returns True if only one argument is given")
-  @Package(name=Package.BASE_LOGIC)
-  public  static class NUMEQ extends NUMCOMP {
+  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Docstring(
+      text =
+          "Test numeric equality. Returns True if all arguments are numerically equal. "
+              + "Returns True if only one argument is given")
+  @Package(name = Package.BASE_LOGIC)
+  public static class NUMEQ extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
       return 0 == res;
     }
-        
   }
 
-  @Arguments(spec={"x",ARG_REST,"args"})
-  @Docstring(text="Greater Than - Numeric comparison. Returns True if all arguments are monotonically "
-             + "decreasing order.  Returns True if only one argument is given")
-  @Package(name=Package.BASE_LOGIC)
+  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Docstring(
+      text =
+          "Greater Than - Numeric comparison. Returns True if all arguments are monotonically "
+              + "decreasing order.  Returns True if only one argument is given")
+  @Package(name = Package.BASE_LOGIC)
   public static class NUMGT extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
@@ -635,11 +680,13 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"x",ARG_REST,"args"})
-  @Docstring(text="Greater or Equal - Numeric comparison. "
-             + "Returns True if all arguments are monotonically non-increasing order. "
-             + "Returns True if only one argument is given")
-  @Package(name=Package.BASE_LOGIC)
+  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Docstring(
+      text =
+          "Greater or Equal - Numeric comparison. "
+              + "Returns True if all arguments are monotonically non-increasing order. "
+              + "Returns True if only one argument is given")
+  @Package(name = Package.BASE_LOGIC)
   public static class NUMGE extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
@@ -647,36 +694,42 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"x",ARG_REST,"args"})
-  @Package(name=Package.BASE_LOGIC)
-  @Docstring(text="Less Than - Numeric Comparison. "
-             + "Returns True if all arguments are monotonically increasing order.  "
-             + "Returns True if only one argument is given")
-  public static  class NUMLT extends NUMCOMP {
+  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Package(name = Package.BASE_LOGIC)
+  @Docstring(
+      text =
+          "Less Than - Numeric Comparison. "
+              + "Returns True if all arguments are monotonically increasing order.  "
+              + "Returns True if only one argument is given")
+  public static class NUMLT extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
       return res < 0;
     }
   }
 
-  @Arguments(spec={"x",ARG_REST,"args"})
-  @Package(name=Package.BASE_LOGIC)
-  @Docstring(text="Less or Equal - Numeric comparison. "
-             + "Returns True if all arguments are monotonically non-decreasing order.  "
-             + "Returns True if only one argument is given")
-  public static  class NUMLE extends NUMCOMP {
+  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Package(name = Package.BASE_LOGIC)
+  @Docstring(
+      text =
+          "Less or Equal - Numeric comparison. "
+              + "Returns True if all arguments are monotonically non-decreasing order.  "
+              + "Returns True if only one argument is given")
+  public static class NUMLE extends NUMCOMP {
     @Override
     protected boolean compareResult(int res) {
       return res <= 0;
     }
   }
 
-  @Arguments(spec={"x"})
-  @Docstring(text="Return Number Sign. "
-             + "Determines a numerical value that indicates whether number is negative, zero, or positive. "
-             + "Returns one of -1, 0, or 1 according to whether number is negative, zero, or positive. "
-             + "The type of the result is of the same numeric type as x")
-  @Package(name=Package.BASE_ARITHMENTICS)
+  @Arguments(spec = {"x"})
+  @Docstring(
+      text =
+          "Return Number Sign. Determines a numerical value that indicates whether number is"
+              + " negative, zero, or positive. Returns one of -1, 0, or 1 according to whether"
+              + " number is negative, zero, or positive. The type of the result is of the same"
+              + " numeric type as x")
+  @Package(name = Package.BASE_ARITHMENTICS)
   public static class SIGNUM extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -684,34 +737,33 @@ public class Funcs {
 
       if (val instanceof Double) {
         final double dv = val.doubleValue();
-        return  dv > 0.0 ? 1.0 : (dv < 0.0 ?  -1.0 : 0);
+        return dv > 0.0 ? 1.0 : (dv < 0.0 ? -1.0 : 0);
       } else if (val instanceof Float) {
         final float fv = val.floatValue();
-        return  fv > (float)0.0
-          ? (float) 1.0
-          : (fv < (float)0.0 ?  (float)-1.0 : (float)0);
+        return fv > (float) 0.0 ? (float) 1.0 : (fv < (float) 0.0 ? (float) -1.0 : (float) 0);
       } else {
         final Promotion p = new Promotion();
         p.promote(val);
         final long lv = val.longValue();
-        return p.returnResult(lv > 0 ? (byte) 1
-                              : (lv < 0 ? (byte) -1 : (byte) 0));
+        return p.returnResult(lv > 0 ? (byte) 1 : (lv < 0 ? (byte) -1 : (byte) 0));
       }
     }
   }
 
-  /**** COERCION *****/
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Boolean. "
-             + "Value may be a Character, a Number, a Boolean, a Byte, a String, any object or NIL:\n" +
-             "* Boolean value will be returned as is\n"+
-             "* NIL is false\n"+
-             "* Character  \u0000 is false.\n"+
-             "* any Number which is equal to zero is false\n"+
-             "* an empty String is false\n"+
-             "* An empty collection is false \n"+
-             "* Any other object is true.\n")
-  @Package(name=Package.BASE_COERCION)
+  //**** COERCION 
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Boolean. Value may be a Character, a Number, a Boolean, a Byte, a"
+              + " String, any object or NIL:\n"
+              + "* Boolean value will be returned as is\n"
+              + "* NIL is false\n"
+              + "* Character  \u0000 is false.\n"
+              + "* any Number which is equal to zero is false\n"
+              + "* an empty String is false\n"
+              + "* An empty collection is false \n"
+              + "* Any other object is true.\n")
+  @Package(name = Package.BASE_COERCION)
   public static class BOOL extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -719,19 +771,23 @@ public class Funcs {
       return Utils.asBoolean(val);
     }
   }
-    
 
-    
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Character. Value may be a Character, a Number, a Boolean, a Byte, a Stringor NIL:\n" +
-             "* Character value will be returned as is.\n"+
-             "* NIL will be converted to unicode value #\u0000.\n"+
-             "* a Boolean True value will be returned as character 'T', False as '\0'.\n"+
-             "* a Number (other than Byte) will be truncated to short (if needed) and the character at corresponding Unicode code unit will be returned.\n"+
-             "* a Byte value will be treated as unsigned integer value and processed as described above.\n"+
-             "* a String will be parsed as number using same rules as numeric literals and the resulting value will be used as described above. Conversion to number may fail.\n"+
-             "* Any other object will cause conversion error.\n")
-  @Package(name=Package.BASE_COERCION)
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Character. Value may be a Character, a Number, a Boolean, a Byte, a"
+              + " Stringor NIL:\n"
+              + "* Character value will be returned as is.\n"
+              + "* NIL will be converted to unicode value #\u0000.\n"
+              + "* a Boolean True value will be returned as character 'T', False as '\0'.\n"
+              + "* a Number (other than Byte) will be truncated to short (if needed) and the"
+              + " character at corresponding Unicode code unit will be returned.\n"
+              + "* a Byte value will be treated as unsigned integer value and processed as"
+              + " described above.\n"
+              + "* a String will be parsed as number using same rules as numeric literals and the"
+              + " resulting value will be used as described above. Conversion to number may fail.\n"
+              + "* Any other object will cause conversion error.\n")
+  @Package(name = Package.BASE_COERCION)
   public static class CHAR extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -740,12 +796,13 @@ public class Funcs {
     }
   }
 
-    
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce value to Integer. Value may be a Number, String, any object or NIL." +
-             "String will be parsed as number using same rules as numeric literals. "+
-             "The floating point value will be truncated.")
-  @Package(name=Package.BASE_COERCION)
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce value to Integer. Value may be a Number, String, any object or NIL."
+              + "String will be parsed as number using same rules as numeric literals. "
+              + "The floating point value will be truncated.")
+  @Package(name = Package.BASE_COERCION)
   public static class INT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -754,11 +811,13 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to String. Value may be any object or NIL: "+
-             "NIL is converted to String \"NIL\", any other object converted "+
-             "using it's toString() method")
-  @Package(name=Package.BASE_COERCION)
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to String. Value may be any object or NIL: "
+              + "NIL is converted to String \"NIL\", any other object converted "
+              + "using it's toString() method")
+  @Package(name = Package.BASE_COERCION)
   public static class STRING extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -767,24 +826,28 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Long. Value may be a Number, String, any object or NIL." +
-             "String will be parsed as number using same rules as numeric literals. "+
-             "The floating point values will be truncated.")
-  @Package(name=Package.BASE_COERCION)
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Long. Value may be a Number, String, any object or NIL."
+              + "String will be parsed as number using same rules as numeric literals. "
+              + "The floating point values will be truncated.")
+  @Package(name = Package.BASE_COERCION)
   public static class LONG extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return  Utils.asNumberOrParse(val).longValue();
+      return Utils.asNumberOrParse(val).longValue();
     }
   }
 
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Short. Value may be a Number, String, any object or NIL." +
-             "String will be parsed as number using same rules as numeric literals. "+
-             "The floating point values will be truncated.")
-  @Package(name=Package.BASE_COERCION)
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Short. Value may be a Number, String, any object or NIL."
+              + "String will be parsed as number using same rules as numeric literals. "
+              + "The floating point values will be truncated.")
+  @Package(name = Package.BASE_COERCION)
   public static class SHORT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -793,11 +856,13 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Byte. Value may be a Number, String, any object or NIL." +
-             "String will be parsed as number using same rules as numeric literals. "+
-             "The floating point values will be truncated.")
-  @Package(name=Package.BASE_COERCION)
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Byte. Value may be a Number, String, any object or NIL."
+              + "String will be parsed as number using same rules as numeric literals. "
+              + "The floating point values will be truncated.")
+  @Package(name = Package.BASE_COERCION)
   public static class BYTE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -805,11 +870,14 @@ public class Funcs {
       return Utils.asNumberOrParse(val).byteValue();
     }
   }
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Double. Value may be a Number, String, any object or NIL." +
-             "String will be parsed as number using same rules as numeric literals. "+
-             "The floating point values will be truncated.")
-  @Package(name=Package.BASE_COERCION)
+
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Double. Value may be a Number, String, any object or NIL."
+              + "String will be parsed as number using same rules as numeric literals. "
+              + "The floating point values will be truncated.")
+  @Package(name = Package.BASE_COERCION)
   public static class DOUBLE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -817,11 +885,14 @@ public class Funcs {
       return Utils.asNumberOrParse(val).doubleValue();
     }
   }
-  @Arguments(spec={"value"})
-  @Docstring(text="Coerce Value to Float. Value may be a Number, String, any object or NIL." +
-             "String will be parsed as number using same rules as numeric literals. "+
-             "The floating point values will be truncated.")
-  @Package(name=Package.BASE_COERCION)
+
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+          "Coerce Value to Float. Value may be a Number, String, any object or NIL."
+              + "String will be parsed as number using same rules as numeric literals. "
+              + "The floating point values will be truncated.")
+  @Package(name = Package.BASE_COERCION)
   public static class FLOAT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -830,70 +901,76 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"limit"})
-  @Docstring(text="Produce Pseudo-Random Number. Returns a pseudo-random number that is a non-negative number less than limit and of the same numeric type as limit. Implemented uding Java Math.random()")
-  @Package(name=Package.BASE_MATH)
+  @Arguments(spec = {"limit"})
+  @Docstring(
+      text =
+          "Produce Pseudo-Random Number. Returns a pseudo-random number that is a non-negative"
+              + " number less than limit and of the same numeric type as limit. Implemented uding"
+              + " Java Math.random()")
+  @Package(name = Package.BASE_MATH)
   public static class RANDOM extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object numberObj = eargs.get(0, backtrace);
-      if (! (numberObj  instanceof Number)) {
+      if (!(numberObj instanceof Number)) {
         throw new ExecutionException(backtrace, getName() + " argument must be a number");
       }
       final double val = java.lang.Math.random();
       final Number number = (Number) numberObj;
       if (number instanceof Integer) {
-        return  (int) (val * number.intValue());
+        return (int) (val * number.intValue());
       } else if (numberObj instanceof Long) {
-        return  (long) (val * number.longValue());
+        return (long) (val * number.longValue());
       } else if (numberObj instanceof Short) {
-        return  (short) (val * number.shortValue());
+        return (short) (val * number.shortValue());
       } else if (numberObj instanceof Float) {
-        return  (float) (val * number.floatValue());
+        return (float) (val * number.floatValue());
       } else if (numberObj instanceof Double) {
-        return  (double) (val * number.doubleValue());
+        return (double) (val * number.doubleValue());
       } else if (numberObj instanceof Byte) {
-        return  (byte) (val * number.byteValue());
+        return (byte) (val * number.byteValue());
       } else {
-        throw new ExecutionException(backtrace, "Unsupported argument numeric type: "+ numberObj.getClass());
+        throw new ExecutionException(
+            backtrace, "Unsupported argument numeric type: " + numberObj.getClass());
       }
     }
   }
 
-  @Arguments(spec={"x"})
-  @Docstring(text="Computes square root of the argument. Returns double value.")
-  @Package(name=Package.BASE_MATH)
+  @Arguments(spec = {"x"})
+  @Docstring(text = "Computes square root of the argument. Returns double value.")
+  @Package(name = Package.BASE_MATH)
   public static class SQRT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object numberObj = eargs.get(0, backtrace);
-      if (! (numberObj  instanceof Number)) {
+      if (!(numberObj instanceof Number)) {
         throw new ExecutionException(backtrace, getName() + " argument must be a number");
       }
-      final double val =
-        java.lang.Math.sqrt(((Number)numberObj).doubleValue());
+      final double val = java.lang.Math.sqrt(((Number) numberObj).doubleValue());
       return val;
     }
   }
 
-  @Arguments(spec={"x","&OPTIONAL","base"})
-  @Docstring(text="Computes logarithm. If base is not given it computes natural logarithm. Returns a Double value.")
-  @Package(name=Package.BASE_MATH)
+  @Arguments(spec = {"x", "&OPTIONAL", "base"})
+  @Docstring(
+      text =
+          "Computes logarithm. If base is not given it computes natural logarithm. Returns a Double"
+              + " value.")
+  @Package(name = Package.BASE_MATH)
   public static class LOG extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object numberObj = eargs.get(0, backtrace);
-      if (! (numberObj  instanceof Number)) {
+      if (!(numberObj instanceof Number)) {
         throw new ExecutionException(backtrace, getName() + " argument must be a number");
       }
-      double val =
-        java.lang.Math.log(((Number)numberObj).doubleValue());
-      if (eargs.size() > 1 ) {
+      double val = java.lang.Math.log(((Number) numberObj).doubleValue());
+      if (eargs.size() > 1) {
         final Object baseObj = eargs.get(1, backtrace);
         if (null != baseObj) {
           if (!(baseObj instanceof Number)) {
-            throw new ExecutionException(backtrace, getName()
-                                         + " logarithmm base must be a number, but got " + baseObj);
+            throw new ExecutionException(
+                backtrace, getName() + " logarithmm base must be a number, but got " + baseObj);
           }
           val = val / java.lang.Math.log(((Number) baseObj).doubleValue());
         }
@@ -901,23 +978,27 @@ public class Funcs {
       return val;
     }
   }
-  @Arguments(spec={"x","&OPTIONAL","base"})
-  @Docstring(text="Perform exponentiation. If base is not given it returns e raised to power x. Returns a Double value.")
-  @Package(name=Package.BASE_MATH)
+
+  @Arguments(spec = {"x", "&OPTIONAL", "base"})
+  @Docstring(
+      text =
+          "Perform exponentiation. If base is not given it returns e raised to power x. Returns a"
+              + " Double value.")
+  @Package(name = Package.BASE_MATH)
   public static class EXP extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object numberObj = eargs.get(0, backtrace);
-      if (! (numberObj  instanceof Number)) {
+      if (!(numberObj instanceof Number)) {
         throw new ExecutionException(backtrace, getName() + " argument must be a number");
       }
       double base = Math.E;
-      if (eargs.size() > 1 ) {
+      if (eargs.size() > 1) {
         final Object baseObj = eargs.get(1, backtrace);
         if (null != baseObj) {
           if (!(baseObj instanceof Number)) {
-            throw new ExecutionException(backtrace, getName()
-                                         + " logarithmm base must be a number, but got " + baseObj);
+            throw new ExecutionException(
+                backtrace, getName() + " logarithmm base must be a number, but got " + baseObj);
           }
           base = ((Number) baseObj).doubleValue();
         }
@@ -926,32 +1007,37 @@ public class Funcs {
     }
   }
 
-    
-    
-  /**** VARIABLES, DATATYPES AND FUNCTIONS ****/
+  //**** VARIABLES, DATATYPES AND FUNCTIONS 
   // FIXME: are array types supported?
-  @Arguments(spec={"object","type-specifier"})
-  @Docstring(text="Check if Object is of Specified Type. Returns True if object is of the specified type. Type specifier may be a Class object or string or symbol which is a valid type-specifier.")
-  @Package(name=Package.BASE_TYPES)
+  @Arguments(spec = {"object", "type-specifier"})
+  @Docstring(
+      text =
+          "Check if Object is of Specified Type. Returns True if object is of the specified type."
+              + " Type specifier may be a Class object or string or symbol which is a valid"
+              + " type-specifier.")
+  @Package(name = Package.BASE_TYPES)
   public static class TYPEP extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
       final Object tspec = eargs.get(1, backtrace);
       if (null == tspec) {
         return null == val;
       }
       final Class<?> tclass = Utils.tspecToClass(tspec);
-      return tclass.isInstance(val);          
+      return tclass.isInstance(val);
     }
   }
 
-  @Arguments(spec={"object"})
-  @Docstring(text="Return Object Type. Returns type (as class) of the given object. For NIL argument return NIL.")
-  @Package(name=Package.BASE_TYPES)
+  @Arguments(spec = {"object"})
+  @Docstring(
+      text =
+          "Return Object Type. Returns type (as class) of the given object. For NIL argument return"
+              + " NIL.")
+  @Package(name = Package.BASE_TYPES)
   public static class TYPE_OF extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
       if (null != val) {
         return val.getClass();
@@ -960,16 +1046,18 @@ public class Funcs {
       }
     }
   }
-    
-  @Arguments(spec={ARG_REST,"symbols"})
-  @Docstring(text="Check if Symbols are Bound. Returns True if all the arguments are bound symbols or names of bound symbols; otherwise, returns False.")
-  @Package(name=Package.BASE_BINDINGS)
+
+  @Arguments(spec = {ARG_REST, "symbols"})
+  @Docstring(
+      text =
+          "Check if Symbols are Bound. Returns True if all the arguments are bound symbols or names"
+              + " of bound symbols; otherwise, returns False.")
+  @Package(name = Package.BASE_BINDINGS)
   public static class BOUNDP extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      for (Object arg : (List<?>)eargs.get(0, backtrace)) {
-        if ((null == arg) ||
-            (! eargs.contains(Utils.asString(arg)))) {
+      for (Object arg : (List<?>) eargs.get(0, backtrace)) {
+        if ((null == arg) || (!eargs.contains(Utils.asString(arg)))) {
           return false;
         }
       }
@@ -977,55 +1065,56 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_REST,"pairs"})
-  @Docstring(text="Create a HashMap. Returns new HashMap filled with given keys and values. "
-             + "Throws InvalidParametersException if non-even number of arguments is given.")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {ArgSpec.ARG_REST, "pairs"})
+  @Docstring(
+      text =
+          "Create a HashMap. Returns new HashMap filled with given keys and values. "
+              + "Throws InvalidParametersException if non-even number of arguments is given.")
+  @Package(name = Package.BASE_SEQ)
   public static class HASHMAP extends FuncExp {
     @Override
-    public void checkParamsList(List <ICompiled> params)
-      throws InvalidParametersException {
+    public void checkParamsList(List<ICompiled> params) throws InvalidParametersException {
       super.checkParamsList(params);
-      if (0 != (params.size() % 2 )) {
-        throw new InvalidParametersException(String.format("%s expects even number of parameters, but got %d",
-                                                           getName(), params.size()));
+      if (0 != (params.size() % 2)) {
+        throw new InvalidParametersException(
+            String.format(
+                "%s expects even number of parameters, but got %d", getName(), params.size()));
       }
     }
+
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Map<Object,Object> map = new HashMap<Object,Object>();
-      List<?> rest = (List<?>)eargs.get(0, backtrace);
-      for (int i = 0; i < rest.size(); i+=2) {
-        map.put(rest.get(i), rest.get(i+1));
+      Map<Object, Object> map = new HashMap<Object, Object>();
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
+      for (int i = 0; i < rest.size(); i += 2) {
+        map.put(rest.get(i), rest.get(i + 1));
       }
       return map;
     }
   }
 
   // FIXME: allow function be symbol (or function name?)
-  @Arguments(spec={"function", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
-  @Docstring(text="Apply Arguments to a Function. Function must be a function object")
-  @Package(name=Package.BASE_FUNCS)
+  @Arguments(spec = {"function", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "arguments"})
+  @Docstring(text = "Apply Arguments to a Function. Function must be a function object")
+  @Package(name = Package.BASE_FUNCS)
   public static class FUNCALL extends AbstractExpr {
     private List<ICompiled> params = null;
-    //private ICode  code = null;
-    //private ICompiled func = null;
-        
+    // private ICode  code = null;
+    // private ICompiled func = null;
+
     @Override
-    public void setParams(List<ICompiled> params)
-      throws InvalidParametersException {
-      if (params.size()==0) {
-        throw new InvalidParametersException(debugInfo, this.getName() +
-                                             " requires at least one argument");
+    public void setParams(List<ICompiled> params) throws InvalidParametersException {
+      if (params.size() == 0) {
+        throw new InvalidParametersException(
+            debugInfo, this.getName() + " requires at least one argument");
       }
       if (null != this.params) {
-        throw new InvalidParametersException(this.getDebugInfo(),
-                                             "internal exception: parameters already set");
-      }       
+        throw new InvalidParametersException(
+            this.getDebugInfo(), "internal exception: parameters already set");
+      }
       this.params = params;
     }
 
-    
     // public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
     //     Object val = eargs.get(0, backtrace);
     //     if (!(val  instanceof ICode)) {
@@ -1037,9 +1126,11 @@ public class Funcs {
     //      try {
     //          instance.setParams(params.subList(1, params.size()));
     //      } catch (InvalidParametersException e) {
-    //          throw new RuntimeException(String.format("%s: called function at %s: does not take parameter: %s",
+    //          throw new RuntimeException(String.format("%s: called function at %s: does not take
+    // parameter: %s",
     //                                                   this.getName(),
-    //                                                   (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+    //                                                   (null == e.getParseCtx() ? "?" :
+    // e.getParseCtx().toString()),
     //                                                   e.getMessage()));
     //      }
     //      synchronized (this) {
@@ -1050,131 +1141,138 @@ public class Funcs {
     //     return this.func.evaluate(backtrace, eargs);
     // }
 
-    //@Override
-    //public Eargs evaluateParameters(Backtrace backtrace, ICtx ctx) {
+    // @Override
+    // public Eargs evaluateParameters(Backtrace backtrace, ICtx ctx) {
     //    Object eargs[] = new Object[1];
     //    eargs[0]=params.get(0).evaluate(backtrace, ctx);
     //    return ctx.getCompiler().newEargs(eargs, ctx);
-    //}
+    // }
 
     @Override
-    public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
-      final Object functionObj  = params.get(0).evaluate(backtrace, ctx);
+    public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
+      final Object functionObj = params.get(0).evaluate(backtrace, ctx);
       // if (functionObj instanceof Symbol) {
       //  functionObj = params.get(0)eargs.getCompiler().functab.get(fname);
       // } else if (functionObj instanceof String) {
       // }
-            
-      if (!(functionObj  instanceof ICode)) {
+
+      if (!(functionObj instanceof ICode)) {
         throw new RuntimeException("Expected ICode object, but got " + functionObj);
-      } 
+      }
       ICode function = (ICode) Utils.asObject(functionObj);
-      //if (code != this.code) {
-      IExpr instance = (IExpr)function.getInstance();
+      // if (code != this.code) {
+      IExpr instance = (IExpr) function.getInstance();
       try {
         instance.setParams(params.subList(1, params.size()));
       } catch (InvalidParametersException e) {
-        throw new RuntimeException(String.format("%s: called function at %s: does not take parameter: %s",
-                                                 this.getName(),
-                                                 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-                                                 e.getMessage()));
+        throw new RuntimeException(
+            String.format(
+                "%s: called function at %s: does not take parameter: %s",
+                this.getName(),
+                (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+                e.getMessage()));
       }
       // FIXME: put back  optimization!
-            
-      //synchronized (this) {
+
+      // synchronized (this) {
       //    this.code = code;
       //    this.func = instance;
-      //}
-      //}
-      //return this.func.evaluate(backtrace, ctx);
+      // }
+      // }
+      // return this.func.evaluate(backtrace, ctx);
       return instance.evaluate(backtrace, ctx);
-      //return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx));
+      // return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx));
     }
-
   }
 
-
-
-  /****** MAPPING OPERATIONS ******/
+  //****** MAPPING OPERATIONS 
   // args is a spreadable list designator
-  @Arguments(spec={"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"arguments"})
-  @Docstring(text="Apply function to arguments. arguments must be a spreadable list designator, i.e. if the last argument is a list, it contents will be appended to the list of arguments.")
-  @Package(name=Package.BASE_FUNCS)
-  public static class APPLY extends FuncExp  {
+  @Arguments(spec = {"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "arguments"})
+  @Docstring(
+      text =
+          "Apply function to arguments. arguments must be a spreadable list designator, i.e. if the"
+              + " last argument is a list, it contents will be appended to the list of arguments.")
+  @Package(name = Package.BASE_FUNCS)
+  public static class APPLY extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Object val = eargs.get(0, backtrace);
-      ICode lambda = (ICode) Utils.asObject(val);
-      IExpr instance = (IExpr)lambda.getInstance();
-      List<?> fArgs = (List<?>) eargs.get(1, backtrace);
+      final Object val = eargs.get(0, backtrace);
+      final ICode lambda = (ICode) Utils.asObject(val);
+      final IExpr instance = (IExpr) lambda.getInstance();
+      final List<?> funcArgs = (List<?>) eargs.get(1, backtrace);
 
-      ICtx applyCtx = eargs.getCompiler().newCtx(eargs);
-      
+      final ICtx applyCtx = eargs.getCompiler().newCtx(eargs);
+
       List<?> rest = null;
       int restSize;
-      int headSize;  
-      if ((fArgs.size()>0) && ((fArgs.get(fArgs.size()-1)) instanceof List)) {
-        rest = (List<?>) fArgs.get(fArgs.size()-1);
+      int headSize;
+      if ((funcArgs.size() > 0) && ((funcArgs.get(funcArgs.size() - 1)) instanceof List)) {
+        rest = (List<?>) funcArgs.get(funcArgs.size() - 1);
         restSize = rest.size();
-        headSize = fArgs.size() - 1;
+        headSize = funcArgs.size() - 1;
       } else {
         restSize = 0;
-        headSize = fArgs.size();
+        headSize = funcArgs.size();
       }
       List<ICompiled> callParams = new ArrayList<ICompiled>(restSize + headSize);
-      for (int i=0; i < headSize; i++) {
-        callParams.add(new ObjectExp(fArgs.get(i)));
+      for (int i = 0; i < headSize; i++) {
+        callParams.add(new ObjectExp(funcArgs.get(i)));
       }
-      for (int i = 0; i < restSize ; i++) {
+      for (int i = 0; i < restSize; i++) {
         callParams.add(new ObjectExp(rest.get(i)));
       }
       try {
         instance.setParams(callParams);
       } catch (InvalidParametersException e) {
-        throw new RuntimeException(String.format("%s: called function at %s: does not take provided parameters: %s",
-                                                 this.getName(),
-                                                 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-                                                 e.getMessage()));
+        throw new RuntimeException(
+            String.format(
+                "%s: called function at %s: does not take provided parameters: %s",
+                this.getName(),
+                (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+                e.getMessage()));
       }
       return instance.evaluate(backtrace, applyCtx);
     }
   }
 
-
-  protected static List<ICompiled>  setFuncPosParams(IExpr instance, int cnt) {
+  protected static List<ICompiled> setFuncPosParams(IExpr instance, int cnt) {
     final List<ICompiled> callParams = Utils.newPosArgsList(cnt);
     try {
       instance.setParams((List<ICompiled>) callParams);
     } catch (InvalidParametersException e) {
-      throw new RuntimeException(String.format("lambda at %s: does not take parameter: %s",
-                                               (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-                                               e.getMessage()));
+      throw new RuntimeException(
+          String.format(
+              "lambda at %s: does not take parameter: %s",
+              (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()), e.getMessage()));
     }
     return callParams;
   }
-    
-  @Docstring(text="Reduce operation.\n func is a function of 2 arguments, "+
-             "value - optional starting value, seq is input sequence.\n"+
-             "When val is not given:  apply func to the first 2 items in the seq, "+
-             "then to the result and 3rd, etc. "+
-             "If seq contains no items, func must accept no arguments, return (func)."+
-             "If seq has 1 item, return it without calling func;\n"+
-             "If value is supplied, apply func on value and the first seq element, then "+ 
-             "on the result and the second element, etc. If there is no elements - return val;")
-  @Arguments(spec={"func",ArgSpec.ARG_OPTIONAL, "val", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "seq"})
-  @Package(name=Package.BASE_SEQ)
-  public static  class REDUCE extends FuncExp {
+
+  @Docstring(
+      text =
+          "Reduce operation.\n func is a function of 2 arguments, "
+              + "value - optional starting value, seq is input sequence.\n"
+              + "When val is not given:  apply func to the first 2 items in the seq, "
+              + "then to the result and 3rd, etc. "
+              + "If seq contains no items, func must accept no arguments, return (func)."
+              + "If seq has 1 item, return it without calling func;\n"
+              + "If value is supplied, apply func on value and the first seq element, then "
+              + "on the result and the second element, etc. If there is no elements - return val;")
+  @Arguments(
+      spec = {"func", ArgSpec.ARG_OPTIONAL, "val", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "seq"})
+  @Package(name = Package.BASE_SEQ)
+  public static class REDUCE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
       ICode lambda = (ICode) Utils.asObject(val);
-      IExpr instance = (IExpr)lambda.getInstance();
+      IExpr instance = (IExpr) lambda.getInstance();
 
-      List<?> list = (List<?>)eargs.get(2, backtrace);
+      List<?> list = (List<?>) eargs.get(2, backtrace);
       Object startVal = eargs.get(1, backtrace);
       // FIXME
       boolean haveStartVal = null != startVal;
-            
+
       if (null == list || 0 == list.size()) {
         if (haveStartVal) {
           return startVal;
@@ -1184,34 +1282,37 @@ public class Funcs {
           return instance.evaluate(backtrace, newCtx);
         }
       }
-      int i = 0;
+      int idx = 0;
       Object result;
       if (haveStartVal) {
         result = startVal;
       } else {
-        result = list.get(i++);
+        result = list.get(idx++);
       }
       setFuncPosParams(instance, 2);
-      for (; i < list.size(); i++) {
+      for (; idx < list.size(); idx++) {
         ICtx newCtx = eargs.getCompiler().newCtx(eargs);
-        newCtx.getMappings().put("%1",  result);
-        newCtx.getMappings().put("%2",  list.get(i));
+        newCtx.getMappings().put("%1", result);
+        newCtx.getMappings().put("%2", list.get(idx));
         result = instance.evaluate(backtrace, newCtx);
       }
       return result;
     }
   }
 
-  @Docstring(text="Filter operation. test is a function of one argument that returns boolean, seq is input sequence. "+
-             "Return a sequence from which the elements that do not satisfy the test have been removed.")
-  @Arguments(spec={"test",  ArgSpec.ARG_PIPE, "sequence"})
-  @Package(name=Package.BASE_SEQ)
-  public static  class FILTER extends FuncExp {
+  @Docstring(
+      text =
+          "Filter operation. test is a function of one argument that returns boolean, seq is input"
+              + " sequence. Return a sequence from which the elements that do not satisfy the test"
+              + " have been removed.")
+  @Arguments(spec = {"test", ArgSpec.ARG_PIPE, "sequence"})
+  @Package(name = Package.BASE_SEQ)
+  public static class FILTER extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
       ICode lambda = (ICode) Utils.asObject(val);
-      IExpr instance = (IExpr)lambda.getInstance();
+      IExpr instance = (IExpr) lambda.getInstance();
       List<?> list = (List<?>) eargs.get(1, backtrace);
       final String argname = "arg#0";
       final List<ICompiled> callParams = new ArrayList<ICompiled>(1);
@@ -1219,9 +1320,10 @@ public class Funcs {
       try {
         instance.setParams((List<ICompiled>) callParams);
       } catch (InvalidParametersException e) {
-        throw new RuntimeException(String.format("FILTER: lambda at %s: does not take parameter: %s",
-                                                 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-                                                 e.getMessage()));
+        throw new RuntimeException(
+            String.format(
+                "FILTER: lambda at %s: does not take parameter: %s",
+                (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()), e.getMessage()));
       }
       List<Object> results = new ArrayList<Object>();
       for (int i = 0; i < list.size(); i++) {
@@ -1236,12 +1338,12 @@ public class Funcs {
     }
   }
   // f &rest args
-  public static abstract class ABSTRACTMAPOP extends FuncExp {
+  public abstract static class ABSTRACTMAPOP extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
       ICode lambda = (ICode) Utils.asObject(val);
-      IExpr instance = (IExpr)lambda.getInstance();
+      IExpr instance = (IExpr) lambda.getInstance();
 
       List<?> rest = (List<?>) eargs.get(1, backtrace);
       final int numLists = rest.size();
@@ -1250,44 +1352,56 @@ public class Funcs {
       }
       final List<ICompiled> callParams = new ArrayList<ICompiled>(numLists);
       // evaluated lists that were given as parameters
-      Object seqs[] = new Object[numLists];
-      for (int i=0; i < seqs.length; i++) {
-        Object seq =  rest.get(i);
+      Object []seqs = new Object[numLists];
+      for (int i = 0; i < seqs.length; i++) {
+        Object seq = rest.get(i);
         if (seq instanceof Map) {
           seq = Seq.valuesList(seq);
         }
         seqs[i] = null == seq ? new ArrayList<Object>() : seq;
-        callParams.add(new VarExp("arg#"+i));
+        callParams.add(new VarExp("arg#" + i));
       }
       try {
-        instance.setParams((List<ICompiled>)callParams);
+        instance.setParams((List<ICompiled>) callParams);
       } catch (InvalidParametersException e) {
-        throw new RuntimeException(String.format("%s: lambda at %s: does not take parameter: %s",
-                                                 this.getName(),
-                                                 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
-                                                 e.getMessage()));
+        throw new RuntimeException(
+            String.format(
+                "%s: lambda at %s: does not take parameter: %s",
+                this.getName(),
+                (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
+                e.getMessage()));
       }
-        
 
       List<Object> results = new ArrayList<Object>();
       callfuncs(backtrace, results, seqs, instance, callParams, eargs);
       return results;
     }
 
-    abstract protected void callfuncs(Backtrace backtrace, List<Object> results, Object seqs[], 
-                                      IExpr instance, List<ICompiled> callParams, ICtx ctx);
-        
-    protected int callfunc(Backtrace backtrace, List<Object> results,
-                           Object seqs[], int indices[],
-                           IExpr instance, List<ICompiled> callParams, ICtx ctx) {
+    protected abstract void callfuncs(
+        Backtrace backtrace,
+        List<Object> results,
+        Object []seqs,
+        IExpr instance,
+        List<ICompiled> callParams,
+        ICtx ctx);
+
+    protected int callfunc(
+        Backtrace backtrace,
+        List<Object> results,
+        Object []seqs,
+        int []indices,
+        IExpr instance,
+        List<ICompiled> callParams,
+        ICtx ctx) {
       ICtx loopCtx = ctx.getCompiler().newCtx(ctx);
       for (int seqNo = 0; seqNo < seqs.length; seqNo++) {
         Object seq = seqs[seqNo];
         int seqSize = Seq.getLength(seq, false);
         if (indices[seqNo] < seqSize) {
-          loopCtx.put(((VarExp)callParams.get(seqNo)).getName(),
-                      // seq.get(indices[seqNo])
-                      Seq.getElement(seq, indices[seqNo]));
+          loopCtx.put(
+              ((VarExp) callParams.get(seqNo)).getName(),
+              // seq.get(indices[seqNo])
+              Seq.getElement(seq, indices[seqNo]));
         } else {
           return seqNo;
         }
@@ -1299,67 +1413,82 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"func",  ArgSpec.ARG_PIPE, ArgSpec.ARG_REST,"lists"})
-  @Docstring(text="Apply function on elements of collections. "+
-             "Returns a sequence consisting of the result of applying func to "+
-             "the set of first items of each list, followed by applying func to the "+
-             "set of second items in each list, until any one of the lists is "+
-             "exhausted.  Any remaining items in other lists are ignored. Function "+
-             "func should accept number arguments that is equal to number of lists.")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"func", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "lists"})
+  @Docstring(
+      text =
+          "Apply function on elements of collections. "
+              + "Returns a sequence consisting of the result of applying func to "
+              + "the set of first items of each list, followed by applying func to the "
+              + "set of second items in each list, until any one of the lists is "
+              + "exhausted.  Any remaining items in other lists are ignored. Function "
+              + "func should accept number arguments that is equal to number of lists.")
+  @Package(name = Package.BASE_SEQ)
   public static class MAP extends ABSTRACTMAPOP {
-    protected void callfuncs(Backtrace backtrace, List<Object> results, Object seqs[], 
-                             IExpr instance, List<ICompiled> callParams, ICtx ctx) {
-      int indices[] = new int[seqs.length];
-      int overflow=-1;
+    protected void callfuncs(
+        Backtrace backtrace,
+        List<Object> results,
+        Object []seqs,
+        IExpr instance,
+        List<ICompiled> callParams,
+        ICtx ctx) {
+      int []indices = new int[seqs.length];
+      int overflow = -1;
       while (true) {
         overflow = callfunc(backtrace, results, seqs, indices, instance, callParams, ctx);
-        if (overflow >=0) {
+        if (overflow >= 0) {
           break;
         }
-        for (int i=0; i<indices.length; i++) {
+        for (int i = 0; i < indices.length; i++) {
           indices[i]++;
         }
       }
     }
   }
 
-  @Arguments(spec={"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "lists"})
-  @Docstring(text="Apply function on cartesioan product of lists. Returns a sequence consisting of the result of applying func to "+
-             "the cartesian product of the lists. Function func should accept number "+
-             "arguments that is equal to number of lists.")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "lists"})
+  @Docstring(
+      text =
+          "Apply function on cartesioan product of lists. Returns a sequence consisting of the"
+              + " result of applying func to the cartesian product of the lists. Function func"
+              + " should accept number arguments that is equal to number of lists.")
+  @Package(name = Package.BASE_SEQ)
   public static class MAPPROD extends ABSTRACTMAPOP {
-    protected void callfuncs(Backtrace backtrace, List<Object> results, Object seqs[], 
-                             IExpr instance, List<ICompiled> callParams, ICtx ctx) {
-      int indices[] = new int[seqs.length];
-      int overflow=-1;
+    protected void callfuncs(
+        Backtrace backtrace,
+        List<Object> results,
+        Object []seqs,
+        IExpr instance,
+        List<ICompiled> callParams,
+        ICtx ctx) {
+      int []indices = new int[seqs.length];
+      int overflow = -1;
       while (true) {
         overflow = callfunc(backtrace, results, seqs, indices, instance, callParams, ctx);
         if (overflow < 0) {
           indices[0]++;
           continue;
         }
-        if (overflow >= indices.length-1) {
-          //overflow in eldest list, END
+        if (overflow >= indices.length - 1) {
+          // overflow in eldest list, END
           return;
         }
-        if (Seq.getLength(seqs[overflow],false) == 0) {
+        if (Seq.getLength(seqs[overflow], false) == 0) {
           // one of lists is empty
           return;
         }
-        indices[overflow+1]++;
-        for (int i =0; i <= overflow; i++) { 
-          indices[i]=0;
+        indices[overflow + 1]++;
+        for (int i = 0; i <= overflow; i++) {
+          indices[i] = 0;
         }
       }
     }
   }
-  /***** VARIABLE PROPERTIES HANDLING ******/
+  
+  //***** VARIABLE PROPERTIES HANDLING 
   @Arguments(spec = {"symbol", "property-key"})
-  @Docstring(text = "Get Variable Property. "+
-             "Returns value of a property from variable property map")
-  @Package(name=Package.BASE_BINDINGS)
+  @Docstring(
+      text = "Get Variable Property. " + "Returns value of a property from variable property map")
+  @Package(name = Package.BASE_BINDINGS)
   public static class GETPROP extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1368,12 +1497,13 @@ public class Funcs {
       if (null == symbolObj) {
         return null;
       }
-      return eargs.getProp(Utils.asString(symbolObj),propKey, backtrace);
+      return eargs.getProp(Utils.asString(symbolObj), propKey, backtrace);
     }
   }
-  @Arguments(spec = {"symbol","property-key","property-value"})
+
+  @Arguments(spec = {"symbol", "property-key", "property-value"})
   @Docstring(text = "Set variable property. Sets property value in variable property map")
-  @Package(name=Package.BASE_BINDINGS)
+  @Package(name = Package.BASE_BINDINGS)
   public static class SETPROP extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1390,7 +1520,7 @@ public class Funcs {
 
   @Arguments(spec = {"symbol"})
   @Docstring(text = "Get Properties Map for a Variable.")
-  @Package(name=Package.BASE_BINDINGS)
+  @Package(name = Package.BASE_BINDINGS)
   public static class GETPROPS extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1401,9 +1531,10 @@ public class Funcs {
       return eargs.getProps(Utils.asString(symbolObj), backtrace);
     }
   }
-  @Arguments(spec = {"symbol","properties-map"})
+
+  @Arguments(spec = {"symbol", "properties-map"})
   @Docstring(text = "Set Properties Map for a Variable")
-  @Package(name=Package.BASE_BINDINGS)
+  @Package(name = Package.BASE_BINDINGS)
   @SuppressWarnings("unchecked")
   public static class SETPROPS extends FuncExp {
     @Override
@@ -1416,15 +1547,15 @@ public class Funcs {
       if (null != propsObj && !(propsObj instanceof Map)) {
         throw new RuntimeException("properties-map must be a java.util.Map");
       }
-      eargs.putProps(Utils.asString(symbolObj), (Map<Object,Object>)propsObj);
+      eargs.putProps(Utils.asString(symbolObj), (Map<Object, Object>) propsObj);
       return null;
     }
   }
-    
-  /***** CONTEXT HANDLING ******/
+
+  //***** CONTEXT HANDLING 
   @Arguments(spec = {})
   @Docstring(text = "Create New Empty Context")
-  @Package(name=Package.BASE_BINDINGS)
+  @Package(name = Package.BASE_BINDINGS)
   public static class NEW_CTX extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1432,12 +1563,12 @@ public class Funcs {
     }
   }
 
-  /***** JAVA INTEROP *****/
-  public static class FilteredMap implements Map<Object,Object> {
-    protected Map<Object,Object> src;
+  //***** JAVA INTEROP 
+  public static class FilteredMap implements Map<Object, Object> {
+    protected Map<Object, Object> src;
     protected Set<?> filterSet;
 
-    public FilteredMap(Map<Object,Object> src, Object filter) {
+    public FilteredMap(Map<Object, Object> src, Object filter) {
       this.src = src;
       this.filterSet = Seq.asSet(filter);
     }
@@ -1501,8 +1632,8 @@ public class Funcs {
     }
 
     @Override
-    public void putAll(Map<?,?> m) {
-      src.putAll(m);
+    public void putAll(Map<?, ?> map) {
+      src.putAll(map);
     }
 
     @Override
@@ -1526,54 +1657,57 @@ public class Funcs {
 
     @Override
     public Set<Map.Entry<Object, Object>> entrySet() {
-      Set<Map.Entry<Object,Object>> entries = new HashSet<Map.Entry<Object,Object>>();
+      Set<Map.Entry<Object, Object>> entries = new HashSet<Map.Entry<Object, Object>>();
       for (Object key : this.keySet()) {
         final Object entryKey = key;
-        entries.add(new Map.Entry<Object,Object>() {
-            @Override
-            public Object getKey() {
-              return entryKey;
-            }
+        entries.add(
+            new Map.Entry<Object, Object>() {
+              @Override
+              public Object getKey() {
+                return entryKey;
+              }
 
-            @Override
-            public Object getValue() {
-              return get(entryKey);
-            }
+              @Override
+              public Object getValue() {
+                return get(entryKey);
+              }
 
-            @Override
-            public Object setValue(Object value) {
-              return put(entryKey, value);
-            }
-          });
+              @Override
+              public Object setValue(Object value) {
+                return put(entryKey, value);
+              }
+            });
       }
       return entries;
     }
 
     @Override
     public String toString() {
-      Iterator<Entry<Object,Object>> i = entrySet().iterator();
-      if (!i.hasNext())
+      Iterator<Entry<Object, Object>> iter = entrySet().iterator();
+      if (!iter.hasNext()) {
         return "{}";
+      }
 
       StringBuilder sb = new StringBuilder();
       sb.append('{');
-      for (;;) {
-        Entry<Object,Object> e = i.next();
-        Object key = e.getKey();
-        Object value = e.getValue();
+      for (; ; ) {
+        Entry<Object, Object> entry = iter.next();
+        Object key = entry.getKey();
+        Object value = entry.getValue();
         sb.append(key == this ? "(this Map)" : key);
         sb.append('=');
         sb.append(value == this ? "(this Map)" : value);
-        if (!i.hasNext())
+        if (!iter.hasNext()) {
           return sb.append('}').toString();
+        }
         sb.append(',').append(' ');
       }
     }
   }
-    
-  public static class BeanMap implements Map<String,Object> {
+
+  public static class BeanMap implements Map<String, Object> {
     protected Object obj;
-    //protected Backtrace backtrace;
+    // protected Backtrace backtrace;
     protected String prefix;
     protected String suffix;
     // collection of fields names
@@ -1583,42 +1717,57 @@ public class Funcs {
       this(obj, null, null);
     }
 
+    /**
+     * Construct bean map from bean object.
+     *
+     * @param obj base object
+     * @param prefix map keys prefix
+     * @param suffix map keys suffix
+     */
     public BeanMap(Object obj, String prefix, String suffix) {
       this.obj = obj;
-      //this.backtrace = backtrace;
+      // this.backtrace = backtrace;
       this.prefix = Utils.asStringOrEmpty(prefix);
       this.suffix = Utils.asStringOrEmpty(suffix);
       this.getters = getGettersMap();
     }
 
-    public BeanMap(Object obj, String prefix, String suffix, Object  fields) {
+    /**
+     * Construct bean map from bean object.
+     *
+     * @param obj base object
+     * @param prefix map keys prefix
+     * @param suffix map keys suffix
+     * @param fields sequence of allowed fields    
+     */
+    public BeanMap(Object obj, String prefix, String suffix, Object fields) {
       this.obj = obj;
-      //this.backtrace = backtrace;
+      // this.backtrace = backtrace;
       this.prefix = Utils.asStringOrEmpty(prefix);
       this.suffix = Utils.asStringOrEmpty(suffix);
       this.fields = fields;
       this.getters = getGettersMap();
     }
 
-    protected Map<String,Method> getGettersMap() {
-      Map<String,Method> result = new HashMap<String,Method>();
+    protected Map<String, Method> getGettersMap() {
+      Map<String, Method> result = new HashMap<String, Method>();
       Method[] methods = null == obj ? new Method[0] : obj.getClass().getMethods();
-      for(int i = 0; i < methods.length; i++) {
-        Method m = methods[i];
-        //if (m.getParameterCount()>0) {
-        if (m.getParameterTypes().length > 0) {
+      for (int i = 0; i < methods.length; i++) {
+        Method method = methods[i];
+        // if (m.getParameterCount()>0) {
+        if (method.getParameterTypes().length > 0) {
           continue;
         }
-        final String methodName = m.getName();
-        if (null==methodName || null == m.getReturnType()) {
+        final String methodName = method.getName();
+        if (null == methodName || null == method.getReturnType()) {
           continue;
         }
-        StringBuilder kb =  new StringBuilder();
+        StringBuilder kb = new StringBuilder();
         kb.append(prefix);
         String fieldName = null;
-        if (methodName.startsWith("get") && (methodName.length()>=4)) {
+        if (methodName.startsWith("get") && (methodName.length() >= 4)) {
           fieldName = methodName.substring(3, 4).toLowerCase() + methodName.substring(4);
-        } else if (methodName.startsWith("is") && (methodName.length()>=3)) {
+        } else if (methodName.startsWith("is") && (methodName.length() >= 3)) {
           fieldName = methodName.substring(2, 3).toLowerCase() + methodName.substring(3);
         } else {
           continue;
@@ -1630,12 +1779,12 @@ public class Funcs {
         }
         kb.append(fieldName);
         kb.append(suffix);
-        result.put(kb.toString(),m);
+        result.put(kb.toString(), method);
       }
       return result;
     }
-                
-    protected Map<String,Method> getters;
+
+    protected Map<String, Method> getters;
 
     @Override
     public int size() {
@@ -1668,7 +1817,7 @@ public class Funcs {
         } catch (InvocationTargetException ex) {
           throw new RuntimeException(ex);
         }
-      } 
+      }
       return null;
     }
 
@@ -1683,7 +1832,7 @@ public class Funcs {
     }
 
     @Override
-    public void putAll(Map<? extends String, ? extends Object> m) {
+    public void putAll(Map<? extends String, ? extends Object> methods) {
       throw new RuntimeException("putAll is not implemented");
     }
 
@@ -1707,82 +1856,81 @@ public class Funcs {
     }
 
     @Override
-    public Set<Map.Entry<String,Object>> entrySet() {
-      Set<Map.Entry<String,Object>> entries = new HashSet<Map.Entry<String, Object>>();
+    public Set<Map.Entry<String, Object>> entrySet() {
+      Set<Map.Entry<String, Object>> entries = new HashSet<Map.Entry<String, Object>>();
       for (String key : getters.keySet()) {
         final String entryKey = key;
-        entries.add(new Map.Entry<String, Object>() {
-            @Override
-            public String getKey() {
-              return entryKey;
-            }
+        entries.add(
+            new Map.Entry<String, Object>() {
+              @Override
+              public String getKey() {
+                return entryKey;
+              }
 
-            @Override
-            public Object getValue() {
-              return get(entryKey);
-            }
+              @Override
+              public Object getValue() {
+                return get(entryKey);
+              }
 
-            @Override
-            public Object setValue(Object value) {
-              return put(entryKey, value);
-            }
-          });
+              @Override
+              public Object setValue(Object value) {
+                return put(entryKey, value);
+              }
+            });
       }
       return entries;
     }
 
     @Override
     public String toString() {
-      Iterator<Entry<String,Object>> i = entrySet().iterator();
-      if (!i.hasNext())
+      Iterator<Entry<String, Object>> iter = entrySet().iterator();
+      if (!iter.hasNext()) {
         return "{}";
+      }
       StringBuilder sb = new StringBuilder();
       sb.append('{');
-      for (;;) {
-        Entry<String,Object> e = i.next();
-        Object key = e.getKey();
-        Object value = e.getValue();
+      for (; ; ) {
+        Entry<String, Object> entry = iter.next();
+        Object key = entry.getKey();
+        Object value = entry.getValue();
         sb.append(key == this ? "(this Map)" : key);
         sb.append('=');
         sb.append(value == this ? "(this Map)" : value);
-        if (!i.hasNext())
+        if (!iter.hasNext()) {
           return sb.append('}').toString();
+        } 
         sb.append(',').append(' ');
       }
-      //return sb.toString();
+      // return sb.toString();
     }
   }
 
   @SuppressWarnings("unchecked")
   protected static Object doSelectKeys(Object obj, Object ksObj) {
-    if (obj == null || ksObj== null) {
+    if (obj == null || ksObj == null) {
       return Utils.map();
     } else if (obj instanceof Map) {
-      return new FilteredMap((Map<Object,Object>)obj, ksObj);
+      return new FilteredMap((Map<Object, Object>) obj, ksObj);
     } else {
-      return new BeanMap(obj,
-                         null,
-                         null,
-                         ksObj);
+      return new BeanMap(obj, null, null, ksObj);
     }
   }
 
-    
-  @Arguments(spec = {"object",  "keyseq"})
+  @Arguments(spec = {"object", "keyseq"})
   @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
-  @Package(name=Package.BASE_SEQ)
+  @Package(name = Package.BASE_SEQ)
   public static class SELECT_KEYS extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
       final Object ksObj = eargs.get(1, backtrace);
       return doSelectKeys(obj, ksObj);
-    }        
+    }
   }
 
-  @Arguments(spec = {"object",  "keyseq"})
+  @Arguments(spec = {"object", "keyseq"})
   @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
-  @Package(name=Package.DWIM)
+  @Package(name = Package.DWIM)
   public static class DWIM_FIELDS extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -1790,13 +1938,16 @@ public class Funcs {
       final Object ksObj = eargs.get(1, backtrace);
       if (Seq.isSequence(obj) && !(obj instanceof Map)) {
         final List<Object> result = Utils.list();
-        Seq.forEach(obj, new Seq.Operation() {
-            @Override
-            public boolean perform(Object obj) {
-              result.add(doSelectKeys(obj, ksObj));
-              return false;
-            }
-          }, true);
+        Seq.forEach(
+            obj,
+            new Seq.Operation() {
+              @Override
+              public boolean perform(Object obj) {
+                result.add(doSelectKeys(obj, ksObj));
+                return false;
+              }
+            },
+            true);
         return result;
       } else {
         return doSelectKeys(obj, ksObj);
@@ -1804,49 +1955,54 @@ public class Funcs {
     }
   }
 
-    
   @Arguments(spec = {"object", ARG_OPTIONAL, "prefix", "suffix"})
-  @Docstring(text = "Convert Java Bean to a Map. "
-             + "Returns a Map based on getters in the passed java object. "
-             + "Accepts optional prefix and suffics arguments that are used "
-             + "to modify the generated keys.")
-  @Package(name=Package.BASE_BINDINGS)
+  @Docstring(
+      text =
+          "Convert Java Bean to a Map. "
+              + "Returns a Map based on getters in the passed java object. "
+              + "Accepts optional prefix and suffics arguments that are used "
+              + "to modify the generated keys.")
+  @Package(name = Package.BASE_BINDINGS)
   public static class BEAN extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
-      return new BeanMap(obj, 
-                         (String) ((eargs.size() > 1) ? eargs.get(1, backtrace) : null),
-                         (String) ((eargs.size() > 2) ? eargs.get(2, backtrace) : null));
+      return new BeanMap(
+          obj,
+          (String) ((eargs.size() > 1) ? eargs.get(1, backtrace) : null),
+          (String) ((eargs.size() > 2) ? eargs.get(2, backtrace) : null));
     }
   }
 
-  @Arguments(spec={"class-spec"})
-  @Docstring(text="Return Class by Class Name."+
-             "Return class object according to it's fully qualified class name. " +
-             "class-spec may be string, symbol or any object,"+
-             "which string representation will be used")
-  @Package(name=Package.FFI)
+  @Arguments(spec = {"class-spec"})
+  @Docstring(
+      text =
+          "Return Class by Class Name."
+              + "Return class object according to it's fully qualified class name. "
+              + "class-spec may be string, symbol or any object,"
+              + "which string representation will be used")
+  @Package(name = Package.FFI)
   public static class CLASS extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       return Utils.strToClass(Utils.asString(eargs.get(0, backtrace)));
     }
-    
   }
-    
-  @Arguments(spec={"class", ArgSpec.ARG_OPTIONAL, "arglist", "typeslist"})
-  @Docstring(text="Return New Class Instance. Optional arglist and typeslist "+
-             "parameters specify parameters to be passed to cosnstructor "+
-             "and their types. When typelist not given it tries to find "+
-             "most narrowly matching constructor on the basis of types of "+
-             "the arguments in arglist. If typeslist is provided exactly "+
-             "matching constructor will be used.")
-  @Package(name=Package.FFI)
+
+  @Arguments(spec = {"class", ArgSpec.ARG_OPTIONAL, "arglist", "typeslist"})
+  @Docstring(
+      text =
+          "Return New Class Instance. Optional arglist and typeslist "
+              + "parameters specify parameters to be passed to cosnstructor "
+              + "and their types. When typelist not given it tries to find "
+              + "most narrowly matching constructor on the basis of types of "
+              + "the arguments in arglist. If typeslist is provided exactly "
+              + "matching constructor will be used.")
+  @Package(name = Package.FFI)
   public static class DOTN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Class <?>cls = Utils.tspecToClass(eargs.get(0, backtrace));
+      final Class<?> cls = Utils.tspecToClass(eargs.get(0, backtrace));
       final List<?> constrArgs = (eargs.size() > 1) ? (List<?>) eargs.get(1, backtrace) : null;
       final List<?> tspecs = (eargs.size() > 2) ? (List<?>) eargs.get(2, backtrace) : null;
       final Class<?>[] paramsClasses = Utils.getMethodParamsClasses(constrArgs, tspecs);
@@ -1862,70 +2018,68 @@ public class Funcs {
         throw new RuntimeException(ex);
       }
       try {
-        Object obj = (null == constrArgs)
-          ? constr.newInstance() 
-          : constr.newInstance(constrArgs.toArray());
+        Object obj =
+            (null == constrArgs) ? constr.newInstance() : constr.newInstance(constrArgs.toArray());
         return obj;
       } catch (InstantiationException ex) {
         throw new RuntimeException(ex);
-      }  catch (InvocationTargetException ex) {
+      } catch (InvocationTargetException ex) {
         throw new RuntimeException(ex);
-      }  catch (IllegalAccessException ex) {
+      } catch (IllegalAccessException ex) {
         throw new RuntimeException(ex);
       }
     }
   }
-    
-  public static abstract class FFI extends FuncExp {
+
+  public abstract static class FFI extends FuncExp {
     protected Object javaCall(Object object, List<?> parts) {
       try {
-        for(int i=0; i<parts.size(); i++) {
+        for (int i = 0; i < parts.size(); i++) {
           String partname = Utils.asString(parts.get(i));
           boolean isMethod = false;
           List<?> methodParams = null;
           List<?> paramsTypesSpec = null;
-          //List<?> methodParams = null;
+          // List<?> methodParams = null;
           if (partname.endsWith("()")) {
             isMethod = true;
-            partname = partname.substring(0, partname.length()-2);
-            //methodParams = new ArrayList<Object>();
-          } else if (!Utils.isLast(parts, i) &&
-                     (parts.get(i+1) instanceof List)) {
+            partname = partname.substring(0, partname.length() - 2);
+            // methodParams = new ArrayList<Object>();
+          } else if (!Utils.isLast(parts, i) && (parts.get(i + 1) instanceof List)) {
             isMethod = true;
-            methodParams = (List<?>)parts.get(i+1);
+            methodParams = (List<?>) parts.get(i + 1);
             i++;
-            if ((parts.size()>i+1) &&
-                (parts.get(i+1) instanceof List)) {
-              paramsTypesSpec = (List<?>)parts.get(i+1);
+            if ((parts.size() > i + 1) && (parts.get(i + 1) instanceof List)) {
+              paramsTypesSpec = (List<?>) parts.get(i + 1);
               i++;
             }
           }
           Class<?> cls;
           if (object instanceof Class) {
-            cls = (Class<?>)object;
+            cls = (Class<?>) object;
             object = null;
           } else {
             cls = object.getClass();
           }
-                    
+
           if (isMethod) {
             if (null != methodParams) {
-              final Class<?> methodParamClasses[] = Utils.getMethodParamsClasses(methodParams, paramsTypesSpec);
-              Method m;
+              final Class<?> []methodParamClasses =
+                  Utils.getMethodParamsClasses(methodParams, paramsTypesSpec);
+              Method method;
               if (null != paramsTypesSpec) {
-                m = cls.getMethod(partname, methodParamClasses);
+                method = cls.getMethod(partname, methodParamClasses);
               } else {
                 BetterMethodFinder finder = new BetterMethodFinder(cls);
-                m = finder.findMethod(partname, methodParamClasses);
+                method = finder.findMethod(partname, methodParamClasses);
               }
-              object = m.invoke(object, methodParams.toArray());
+              object = method.invoke(object, methodParams.toArray());
             } else {
-              Method m = cls.getMethod(partname);
-              object = m.invoke(object);
+              Method method = cls.getMethod(partname);
+              object = method.invoke(object);
             }
           } else {
-            Field f = cls.getField(partname);
-            object = f.get(object);
+            Field field = cls.getField(partname);
+            object = field.get(object);
           }
           if (null == object /*&& isLast(params,i)*/) {
             break;
@@ -1942,18 +2096,16 @@ public class Funcs {
         throw new RuntimeException(nfex);
       }
     }
-        
-    protected List<Object> getCallParts(List<Object>  specArgs) {
+
+    protected List<Object> getCallParts(List<Object> specArgs) {
       final List<Object> parts = new ArrayList<Object>(specArgs.size());
-      for(Object val : specArgs) {
+      for (Object val : specArgs) {
         if (val instanceof List) {
           parts.add(val);
         } else {
-          String spec = (val instanceof Symbol) 
-            ? ((Symbol)val).getName() 
-            : Utils.asString(val);
-          String [] subparts = spec.split("\\.");
-          for (String subpart: subparts) {
+          String spec = (val instanceof Symbol) ? ((Symbol) val).getName() : Utils.asString(val);
+          String[] subparts = spec.split("\\.");
+          for (String subpart : subparts) {
             parts.add(subpart);
           }
         }
@@ -1965,63 +2117,72 @@ public class Funcs {
   // /** Usage:
   //  * (. obj "getList" () "get" (0) "field1" )
   //  * (. obj "get(0).toString()" )
-  //  * 
+  //  *
   //  */
   // FIXME: proper docstring
-  @Arguments(spec={"object", ArgSpec.ARG_REST, "call-args"})
-  @Docstring(text="Call Java Object Method/Read Field"+
-             "Call method of java object or read contend of object field. ")
-  @Package(name=Package.FFI)
+  @Arguments(spec = {"object", ArgSpec.ARG_REST, "call-args"})
+  @Docstring(
+      text =
+          "Call Java Object Method/Read Field"
+              + "Call method of java object or read contend of object field. ")
+  @Package(name = Package.FFI)
   @SuppressWarnings("unchecked")
   public static class DOT extends FFI {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object object = eargs.get(0, backtrace);
-      final List<Object> parts = super.getCallParts((List<Object>)eargs.get(1, backtrace));
+      final List<Object> parts = super.getCallParts((List<Object>) eargs.get(1, backtrace));
       final Object result = javaCall(object, parts);
       return result;
     }
   }
 
-  @Arguments(spec={"class", ArgSpec.ARG_REST, "call-args"})
-  @Docstring(text="Call Static Java Method/Read Static Field"+
-             "Call method of java object or read contend of object field. ")
-  @Package(name=Package.FFI)
+  @Arguments(spec = {"class", ArgSpec.ARG_REST, "call-args"})
+  @Docstring(
+      text =
+          "Call Static Java Method/Read Static Field"
+              + "Call method of java object or read contend of object field. ")
+  @Package(name = Package.FFI)
   @SuppressWarnings("unchecked")
   public static class DOTS extends FFI {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final List<Object> rest = (List<Object>)eargs.get(1, backtrace);
+      final List<Object> rest = (List<Object>) eargs.get(1, backtrace);
       final Object tspec = eargs.get(0, backtrace);
       final Class<?> cls = Utils.tspecToClass(tspec);
-      //final StringBuilder trail = new StringBuilder();
+      // final StringBuilder trail = new StringBuilder();
       final List<Object> parts = super.getCallParts(rest);
-      final Object result = javaCall(cls, parts);          
+      final Object result = javaCall(cls, parts);
       return result;
     }
   }
 
-
-  /***** EXCEPTION HANDLING AND DEBUGGING *****/
-  @Package(name=Package.BASE_FUNCS)
-  @Arguments(spec={})
-  @Docstring(text="Return callstack backtrace. "+
-             "Returns string representation of current stack frame.")
+  //***** EXCEPTION HANDLING AND DEBUGGING 
+  @Package(name = Package.BASE_FUNCS)
+  @Arguments(spec = {})
+  @Docstring(
+      text =
+          "Return callstack backtrace. " + "Returns string representation of current stack frame.")
   public static class BACKTRACE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      return (null == backtrace) ?
-        "* BACKTRACE: Call backtrace is not available, please call evaluate() with the backtrace parameter *\n":
-        backtrace.toString();
+      return (null == backtrace)
+          ? "* BACKTRACE: Call backtrace is not available, please call evaluate() with the"
+                + " backtrace parameter *\n"
+          : backtrace.toString();
     }
   }
 
-  @Arguments(spec={"exception"})
-  @Docstring(text="Throw Java Exception. The exception may be a java Throwable object or String. In the latter case a new ExecutionException with given message will be created and thrown.")
-  @Package(name=Package.BASE_CONTROL)
+  @Arguments(spec = {"exception"})
+  @Docstring(
+      text =
+          "Throw Java Exception. The exception may be a java Throwable object or String. In the"
+              + " latter case a new ExecutionException with given message will be created and"
+              + " thrown.")
+  @Package(name = Package.BASE_CONTROL)
   public static class THROW extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
       ExecutionException ex;
       if (val instanceof ExecutionException) {
@@ -2030,19 +2191,22 @@ public class Funcs {
           ex.setBacktrace(backtrace);
         }
       } else if (val instanceof Throwable) {
-        ex = new ExecutionException(backtrace, (Throwable)val);
+        ex = new ExecutionException(backtrace, (Throwable) val);
       } else {
-        ex = new ExecutionException(backtrace, Utils. asString(val));
+        ex = new ExecutionException(backtrace, Utils.asString(val));
       }
       throw ex;
     }
   }
-    
-  /**** STRING HANDLING ****/
-  @Arguments(spec={"pattern"})
-  @Docstring(text="Compile A Regexp Pattern. On success returns a java.util.regex.Pattern objec. On error raises exception.")
-  @Package(name=Package.BASE_REGEX)
-  public static  class RE_PATTERN extends FuncExp {
+
+  //**** STRING HANDLING 
+  @Arguments(spec = {"pattern"})
+  @Docstring(
+      text =
+          "Compile A Regexp Pattern. On success returns a java.util.regex.Pattern objec. On error"
+              + " raises exception.")
+  @Package(name = Package.BASE_REGEX)
+  public static class RE_PATTERN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final String patternStr = Utils.asString(eargs.get(0, backtrace));
@@ -2051,12 +2215,14 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"pattern"})
-  @Docstring(text="Compile a Globbing Pattern. "+
-             "On success returns a java.util.regex.Pattern object. "+
-             "On error raises exception.")
-  @Package(name=Package.BASE_REGEX)
-  public static  class RE_GLOB extends FuncExp {
+  @Arguments(spec = {"pattern"})
+  @Docstring(
+      text =
+          "Compile a Globbing Pattern. "
+              + "On success returns a java.util.regex.Pattern object. "
+              + "On error raises exception.")
+  @Package(name = Package.BASE_REGEX)
+  public static class RE_GLOB extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final String patternStr = Utils.asString(eargs.get(0, backtrace));
@@ -2065,70 +2231,79 @@ public class Funcs {
     }
   }
 
-    
-  public static Matcher getMatcher(Eargs eargs, Backtrace backtrace) {
+  protected static Matcher getMatcher(Eargs eargs, Backtrace backtrace) {
     final Object obj0 = eargs.get(0, backtrace);
     final Object obj1 = eargs.get(1, backtrace);
     if (null == obj1) {
-      return (Matcher)obj0;
+      return (Matcher) obj0;
     } else {
-      return  ((Pattern)obj0).matcher((CharSequence)obj1);
+      return ((Pattern) obj0).matcher((CharSequence) obj1);
     }
   }
 
-  public static Object returnGroups(Matcher m) {
-    if (m.groupCount()>0) {
-      final List<Object> glist = new ArrayList<Object>(m.groupCount() + 1);
-      glist.add (m.group());
-      for (int i = 1; i <= m.groupCount(); i++) {
-        glist.add(m.group(i));
+  protected static Object returnGroups(Matcher matcher) {
+    if (matcher.groupCount() > 0) {
+      final List<Object> glist = new ArrayList<Object>(matcher.groupCount() + 1);
+      glist.add(matcher.group());
+      for (int i = 1; i <= matcher.groupCount(); i++) {
+        glist.add(matcher.group(i));
       }
       return glist;
     } else {
-      return m.group();
+      return matcher.group();
     }
   }
 
-  @Arguments(spec={"matcher"})
-  @Docstring(text="Return Groups for a Regexp Match. "+
-             "Returns the groups from the most recent match/find.\n"+
-             "If there are no nested groups, returns a string of the entire\n"+
-             "match. If there are nested groups, returns a list of the groups,\n"+
-             "the first element being the entire match.")
-  @Package(name=Package.BASE_REGEX)
-  public static  class RE_GROUPS extends FuncExp {
+  @Arguments(spec = {"matcher"})
+  @Docstring(
+      text =
+          "Return Groups for a Regexp Match. "
+              + "Returns the groups from the most recent match/find.\n"
+              + "If there are no nested groups, returns a string of the entire\n"
+              + "match. If there are nested groups, returns a list of the groups,\n"
+              + "the first element being the entire match.")
+  @Package(name = Package.BASE_REGEX)
+  public static class RE_GROUPS extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      return returnGroups((Matcher)eargs.get(0, backtrace));
+      return returnGroups((Matcher) eargs.get(0, backtrace));
     }
   }
 
-  @Arguments(spec={"pattern",ArgSpec.ARG_PIPE, "char-seq"})
-  @Docstring(text="Return Regexp Matcher. "+
-             "Returns an instance of java.util.regex.Matcher, "+
-             "for use, e.g. in RE-FIND.")
-  @Package(name=Package.BASE_REGEX)
-  public static  class RE_MATCHER extends FuncExp {
+  @Arguments(spec = {"pattern", ArgSpec.ARG_PIPE, "char-seq"})
+  @Docstring(
+      text =
+          "Return Regexp Matcher. "
+              + "Returns an instance of java.util.regex.Matcher, "
+              + "for use, e.g. in RE-FIND.")
+  @Package(name = Package.BASE_REGEX)
+  public static class RE_MATCHER extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Pattern pattern = (Pattern)eargs.get(0, backtrace);
-      final CharSequence charSeq = (CharSequence)eargs.get(1, backtrace);
+      final Pattern pattern = (Pattern) eargs.get(0, backtrace);
+      final CharSequence charSeq = (CharSequence) eargs.get(1, backtrace);
       return pattern.matcher(charSeq);
     }
   }
 
-  @Arguments(spec={"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
-  @Docstring(text="Perform regexp match. When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
-             "When called with one arguments it uses given Matcher. \n "+
-             "Returns the match, if any, of string to pattern, using Matcher.matches(). \n "+
-             "if no groups were defined it returns the matched string.\n "+
-             "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-             "If there is no match NIL is returned")
-  @Package(name=Package.BASE_REGEX)
-  public static  class RE_MATCHES extends FuncExp {
+  @Arguments(
+      spec = {"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL, "arg2"},
+      text = "{pattern schar-seq | matcher}")
+  @Docstring(
+      text =
+          "Perform regexp match. When called With two arguments created java.util.regex.Matcher"
+              + " using pattern and char-seq.\n"
+              + "  When called with one arguments it uses given Matcher. \n"
+              + " Returns the match, if any, of string to pattern, using Matcher.matches(). \n"
+              + " if no groups were defined it returns the matched string.\n"
+              + " If groups were defined it returns a list consisting of the full match and matched"
+              + " groups\n"
+              + " If there is no match NIL is returned")
+  @Package(name = Package.BASE_REGEX)
+  public static class RE_MATCHES extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Matcher m = getMatcher(eargs,  backtrace);
+      final Matcher m = getMatcher(eargs, backtrace);
       if (m.matches()) {
         return returnGroups(m);
       } else {
@@ -2137,20 +2312,24 @@ public class Funcs {
     }
   }
 
-    
-  @Arguments(spec={"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
-  @Docstring(text="Perform Regexp Find. "+
-             "When called With two arguments creates java.util.regex.Matcher using pattern and char-seq.\n  "+
-             "When called with one arguments it uses given Matcher. \n "+
-             "Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n "+
-             "if no groups were defined it returns the matched string.\n "+
-             "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-             "If there is no match NIL is returned")
-  @Package(name=Package.BASE_REGEX)
-  public static  class RE_FIND extends FuncExp {
+  @Arguments(
+      spec = {"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL, "arg2"},
+      text = "{pattern schar-seq | matcher}")
+  @Docstring(
+      text =
+          "Perform Regexp Find. When called With two arguments creates java.util.regex.Matcher"
+              + " using pattern and char-seq.\n"
+              + "  When called with one arguments it uses given Matcher. \n"
+              + " Returns the next ,match, if any, of string to pattern, using Matcher.find(). \n"
+              + " if no groups were defined it returns the matched string.\n"
+              + " If groups were defined it returns a list consisting of the full match and matched"
+              + " groups\n"
+              + " If there is no match NIL is returned")
+  @Package(name = Package.BASE_REGEX)
+  public static class RE_FIND extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Matcher m = getMatcher(eargs,  backtrace);
+      final Matcher m = getMatcher(eargs, backtrace);
       if (m.find()) {
         return returnGroups(m);
       } else {
@@ -2159,16 +2338,21 @@ public class Funcs {
     }
   }
 
-    
-  @Arguments(spec={"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL,"arg2"}, text="{pattern schar-seq | matcher}")
-  @Docstring(text="Return Results of Regexp Find as a Lazy Sequence. "+
-             "When called With two arguments created java.util.regex.Matcher using pattern and char-seq.\n  "+
-             "Returns lazy iterable sequence (instance of Iterable) of matches of string to pattern, using Matcher.find(). \n "+
-             "When called with one arguments it uses given Matcher. \n "+
-             "if no groups were defined the elements of the sequence are the matched string.\n "+
-             "If groups were defined it returns a list consisting of the full match and matched groups\n "+
-             "If there is no match empty sequence is returned")
-  @Package(name=Package.BASE_REGEX)
+  @Arguments(
+      spec = {"arg0", ArgSpec.ARG_PIPE, ArgSpec.ARG_OPTIONAL, "arg2"},
+      text = "{pattern schar-seq | matcher}")
+  @Docstring(
+      text =
+          "Return Results of Regexp Find as a Lazy Sequence. When called With two arguments created"
+              + " java.util.regex.Matcher using pattern and char-seq.\n"
+              + "  Returns lazy iterable sequence (instance of Iterable) of matches of string to"
+              + " pattern, using Matcher.find(). \n"
+              + " When called with one arguments it uses given Matcher. \n"
+              + " if no groups were defined the elements of the sequence are the matched string.\n"
+              + " If groups were defined it returns a list consisting of the full match and matched"
+              + " groups\n"
+              + " If there is no match empty sequence is returned")
+  @Package(name = Package.BASE_REGEX)
   public static class RE_SEQ extends FuncExp {
     @Override
     protected Iterable<Object> evalWithArgs(final Backtrace backtrace, final Eargs eargs) {
@@ -2177,21 +2361,22 @@ public class Funcs {
         public Iterator<Object> iterator() {
 
           return new Iterator<Object>() {
-            final Matcher m = getMatcher(eargs,  backtrace);
-            boolean findResult = m.find();
+            final Matcher matcher = getMatcher(eargs, backtrace);
+            boolean findResult = matcher.find();
 
             @Override
             public boolean hasNext() {
-              synchronized (m) {
+              synchronized (matcher) {
                 return findResult;
               }
             }
+
             @Override
             public synchronized Object next() {
-              synchronized (m) {
-                final Object result = returnGroups(m);
+              synchronized (matcher) {
+                final Object result = returnGroups(matcher);
                 // FIXME: call only if requested
-                findResult = m.find();
+                findResult = matcher.find();
                 return result;
               }
             }
@@ -2201,41 +2386,42 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"elt",  ArgSpec.ARG_PIPE, "sequence"})
+  @Arguments(spec = {"elt", ArgSpec.ARG_PIPE, "sequence"})
   @Docstring(text = "Check if an element is contained in a sequence. ")
-  @Package(name=Package.BASE_SEQ)
-  public static  class IN extends FuncExp {
+  @Package(name = Package.BASE_SEQ)
+  public static class IN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       if (2 != eargs.size()) {
-        throw new ExecutionException(backtrace,
-                                     "Unexpected number of arguments: expected 2 but got "
-                                     +eargs.size());
+        throw new ExecutionException(
+            backtrace, "Unexpected number of arguments: expected 2 but got " + eargs.size());
       }
       Object elt = eargs.get(0, backtrace);
       Object seq = eargs.get(1, backtrace);
       final boolean[] holder = new boolean[1];
-      Seq.forEach(seq, new Operation() {
-          public boolean perform(Object obj) {
-            if (null != obj && obj.equals(elt)) {
-              return (holder[0]=true);
-            } else if (null == obj && null == elt) {
-              return (holder[0]=true);
+      Seq.forEach(
+          seq,
+          new Operation() {
+            public boolean perform(Object obj) {
+              if (null != obj && obj.equals(elt)) {
+                return (holder[0] = true);
+              } else if (null == obj && null == elt) {
+                return (holder[0] = true);
+              }
+              return false;
             }
-            return false;
-          }
-        }, false);
+          },
+          false);
       return holder[0];
     }
   }
-
 
   // FIXME: produce specific retriever before starting the iterations
   // no need to check object type ons each level
   // FIXME: allow use other sequences, including lazy ones
   protected static Object getKeyByIndex(Object ksObj, int ksIdx) {
     if (ksObj instanceof List) {
-      if (ksIdx < 0 || ksIdx >= ((List<?>)ksObj).size()) {
+      if (ksIdx < 0 || ksIdx >= ((List<?>) ksObj).size()) {
         return null;
       }
       return ((List<?>) ksObj).get(ksIdx);
@@ -2247,11 +2433,10 @@ public class Funcs {
       if (ksIdx < 0 || ksIdx >= Array.getLength(ksObj)) {
         return null;
       }
-      return Array.get(ksObj,ksIdx);
+      return Array.get(ksObj, ksIdx);
     }
-    throw new ExecutionException("Cannot use the provided "+
-                                 ksObj.getClass()+
-                                 " value as list of indexes");
+    throw new ExecutionException(
+        "Cannot use the provided " + ksObj.getClass() + " value as list of indexes");
   }
 
   protected static int getIntIdx(Object key) {
@@ -2263,13 +2448,11 @@ public class Funcs {
   }
 
   @SuppressWarnings("unchecked")
-  protected static boolean doGet(final Object obj,
-                                 final Object[] result,
-                                 final Object keyObj
-                                 /*final Backtrace bt*/) {
+  protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj
+      /*final Backtrace bt*/ ) {
     result[0] = null;
     if (obj instanceof Map) {
-      final Map<Object,Object> map = (Map<Object,Object>) obj;
+      final Map<Object, Object> map = (Map<Object, Object>) obj;
       result[0] = map.get(keyObj);
       if (null == result[0]) {
         if (!map.containsKey(keyObj)) {
@@ -2285,7 +2468,7 @@ public class Funcs {
       }
     } else if (obj instanceof Set) {
       final Set<Object> s = (Set<Object>) obj;
-      if (! s.contains(keyObj) ) {
+      if (!s.contains(keyObj)) {
         return false;
       }
       result[0] = keyObj;
@@ -2305,13 +2488,14 @@ public class Funcs {
         return false;
       }
     } else {
-      final String keyStr=Utils.asStringOrEmpty(keyObj).trim();
+      final String keyStr = Utils.asStringOrEmpty(keyObj).trim();
       if (keyStr.length() == 0) {
         return false;
       }
       // FIXME: better check for method name?
       try {
-        final String getName = Utils.concat("get",keyStr.substring(0,1).toUpperCase(),keyStr.substring(1));
+        final String getName =
+            Utils.concat("get", keyStr.substring(0, 1).toUpperCase(), keyStr.substring(1));
         final Method m = obj.getClass().getMethod(getName);
         if (null == m.getReturnType()) {
           return false;
@@ -2324,13 +2508,14 @@ public class Funcs {
     }
     return true;
   }
-    
-  protected static Object doGetIn(final Object obj,
-                                  final Object ksObj,
-                                  final int ksIdx,
-                                  final Object notDefined,
-                                  final Backtrace bt) {
-    Object result[] = new Object[1];
+
+  protected static Object doGetIn(
+      final Object obj,
+      final Object ksObj,
+      final int ksIdx,
+      final Object notDefined,
+      final Backtrace bt) {
+    Object []result = new Object[1];
     final Object key = getKeyByIndex(ksObj, ksIdx);
     if (null == key) {
       return obj;
@@ -2339,78 +2524,23 @@ public class Funcs {
       return doGetIn(result[0], ksObj, ksIdx + 1, notDefined, bt);
     }
     return notDefined;
-    /*
-      if (obj instanceof Map) {
-      final Map<Object,Object> map = (Map<Object,Object>) obj;
-      result = map.get(key);
-      if (null == result) {
-      if (!map.containsKey(key)) {
-      return notDefined;
-      }
-      }
-      } else if (obj instanceof List) {
-      final List<Object> lst = (List<Object>) obj;
-      try {
-      result = lst.get(getIntIdx(key));
-      } catch (IndexOutOfBoundsException ex) {
-      return notDefined;
-      }
-      } else if (obj instanceof Set) {
-      final Set<Object> s = (Set<Object>) obj;
-      if (! s.contains(key) ) {
-      return notDefined;
-      }
-      result = key;
-      } else if (obj == null) {
-      return notDefined;
-      } else if (obj instanceof CharSequence) {
-      final CharSequence s = (CharSequence) obj;
-      try {
-      result = s.charAt(getIntIdx(key));
-      } catch (IndexOutOfBoundsException ex) {
-      return notDefined;
-      }
-      } else if (obj.getClass().isArray()) {
-      try {
-      result = Array.get(obj, getIntIdx(key));
-      } catch (ArrayIndexOutOfBoundsException ex) {
-      return notDefined;
-      }
-      } else {
-      final String keyStr=Utils.asStringOrEmpty(key).trim();
-      if (keyStr.length() == 0) {
-      return notDefined;
-      }
-      // FIXME: better check for method name?
-      try {
-      final String getName = Utils.concat("get",keyStr.substring(0,1).toUpperCase(),keyStr.substring(1));
-      final Method m = obj.getClass().getMethod(getName);
-      if (null == m.getReturnType()) {
-      return notDefined;
-      }
-      result = m.invoke(obj);
-      } catch (Exception ex) {
-      return notDefined;
-      }
-      // FIXME: if ICtx object
-      }*/
-    //return doGetIn(result[0], ksObj, ksIdx + 1, notDefined, bt);
   }
 
-  @Arguments(spec={"structure", "ks", "&OPTIONAL", "not-found"})
-  @Docstring(text = "Returns the value from an associative structure. \n" +
-             "Return value from an associative structure struct, \n" + 
-             "where ks is a sequence of keys. Returns NIL if the key\n " +
-             "is not present, or the not-found value if supplied.")
-  @Package(name=Package.BASE_SEQ)
-  public static  class GET_IN extends FuncExp {
+  @Arguments(spec = {"structure", "ks", "&OPTIONAL", "not-found"})
+  @Docstring(
+      text =
+          "Returns the value from an associative structure. \n"
+              + "Return value from an associative structure struct, \n"
+              + "where ks is a sequence of keys. Returns NIL if the key\n "
+              + "is not present, or the not-found value if supplied.")
+  @Package(name = Package.BASE_SEQ)
+  public static class GET_IN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int argsnum = eargs.size();
       if (argsnum != 2 && argsnum != 3) {
-        throw new ExecutionException(backtrace,
-                                     "Unexpected number of arguments: expected 2 or 3, but got "
-                                     +eargs.size());
+        throw new ExecutionException(
+            backtrace, "Unexpected number of arguments: expected 2 or 3, but got " + eargs.size());
       }
       final Object obj = eargs.get(0, backtrace);
       final Object ksObj = eargs.get(1, backtrace);
@@ -2420,82 +2550,92 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"structure", "key", "&OPTIONAL", "not-found"})
-  @Docstring(text = "Returns the value from an associative structure. \n" +
-             "Return value from an associative structure struct, \n" + 
-             " Returns NIL if the key is not present, or the not-found value if supplied.")
-  @Package(name=Package.BASE_SEQ)
-  public static  class GET extends FuncExp {
+  @Arguments(spec = {"structure", "key", "&OPTIONAL", "not-found"})
+  @Docstring(
+      text =
+          "Returns the value from an associative structure. \n"
+              + "Return value from an associative structure struct, \n"
+              + " Returns NIL if the key is not present, or the not-found value if supplied.")
+  @Package(name = Package.BASE_SEQ)
+  public static class GET extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int argsnum = eargs.size();
       if (argsnum != 2 && argsnum != 3) {
-        throw new ExecutionException(backtrace,
-                                     "Unexpected number of arguments: expected 2 or 3, but got "
-                                     +eargs.size());
+        throw new ExecutionException(
+            backtrace, "Unexpected number of arguments: expected 2 or 3, but got " + eargs.size());
       }
       final Object obj = eargs.get(0, backtrace);
       final Object keyObj = eargs.get(1, backtrace);
       final Object notDefined = argsnum > 2 ? eargs.get(2, backtrace) : null;
-      final Object result[] = new Object[1];
+      final Object []result = new Object[1];
       return doGet(obj, result, keyObj) ? result[0] : notDefined;
     }
   }
-    
-  @Arguments(text = "map {key val}+", spec = {"map", "key", "val",ArgSpec.ARG_REST, "kvpairs"})
-  @Docstring(text = "Associates value with key in an map structure. \n" +
-             "Return new instance of the structure, the original is left unchanged.")
-  @Package(name=Package.BASE_SEQ)
+
+  @Arguments(
+      text = "map {key val}+",
+      spec = {"map", "key", "val", ArgSpec.ARG_REST, "kvpairs"})
+  @Docstring(
+      text =
+          "Associates value with key in an map structure. \n"
+              + "Return new instance of the structure, the original is left unchanged.")
+  @Package(name = Package.BASE_SEQ)
   @SuppressWarnings("unchecked")
-  public static  class ASSOC extends FuncExp {
+  public static class ASSOC extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Map<Object,Object> result = null;
+      Map<Object, Object> result = null;
       final int argsnum = eargs.size();
       if (argsnum < 1) {
-        throw new ExecutionException(backtrace,
-                                     "Unexpected number of arguments: expected at least one argument, but got "
-                                     +eargs.size());
+        throw new ExecutionException(
+            backtrace,
+            "Unexpected number of arguments: expected at least one argument, but got "
+                + eargs.size());
       }
       final Object obj = eargs.get(0, backtrace);
       // FIXME: use same type?
       // FIXME: data sharing?
-      result = new HashMap<Object,Object>();
+      result = new HashMap<Object, Object>();
       if (null != obj) {
-        result.putAll((Map<Object,Object>)obj);
+        result.putAll((Map<Object, Object>) obj);
       }
       doMapAssoc(result, eargs, backtrace);
       return result;
     }
   }
 
-   
-  @Arguments(text = "map {key val}+", spec = {"map", "key", "val",ArgSpec.ARG_REST, "kvpairs"})
-  @Docstring(text = "Associates value with key in an map structure. \n" +
-             "Modifies the object and returns it as the result.")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(
+      text = "map {key val}+",
+      spec = {"map", "key", "val", ArgSpec.ARG_REST, "kvpairs"})
+  @Docstring(
+      text =
+          "Associates value with key in an map structure. \n"
+              + "Modifies the object and returns it as the result.")
+  @Package(name = Package.BASE_SEQ)
   @SuppressWarnings("unchecked")
-  public static  class NASSOC extends FuncExp {
+  public static class NASSOC extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Map<Object,Object> result = null;
+      Map<Object, Object> result = null;
       if (eargs.size() < 1) {
-        throw new ExecutionException(backtrace,
-                                     "Unexpected number of arguments: expected at least one argument, but got "
-                                     +eargs.size());
+        throw new ExecutionException(
+            backtrace,
+            "Unexpected number of arguments: expected at least one argument, but got "
+                + eargs.size());
       }
       final Object obj = eargs.get(0, backtrace);
-      result = null == obj ? new HashMap<Object,Object>() : (Map<Object,Object>) obj;
+      result = null == obj ? new HashMap<Object, Object>() : (Map<Object, Object>) obj;
       doMapAssoc(result, eargs, backtrace);
       return result;
     }
   }
 
-  protected static void doMapAssoc(Map<Object,Object> target, Eargs eargs,Backtrace backtrace) {
+  protected static void doMapAssoc(Map<Object, Object> target, Eargs eargs, Backtrace backtrace) {
     final int argsnum = eargs.size();
-    target.put(eargs.get(1,backtrace), eargs.get(2,backtrace));
+    target.put(eargs.get(1, backtrace), eargs.get(2, backtrace));
     if (argsnum > 3) {
-      List<?> rest = (List<?>)eargs.get(3,backtrace);
+      List<?> rest = (List<?>) eargs.get(3, backtrace);
       for (int i = 0; i < rest.size(); i += 2) {
         final Object k = rest.get(i);
         final Object v = i + 1 < rest.size() ? rest.get(i + 1) : null;
@@ -2503,83 +2643,86 @@ public class Funcs {
       }
     }
   }
-    
-  @Arguments(spec={"format", ArgSpec.ARG_REST, "values"})
-  @Docstring(text="Format String. "+
-             "Returns a formatted string using the specified format string (in the "+
-             "format of java.util.Formatter) and arguments. Arguments referenced by " +
-             "the format specifiers in the format string. If there are more " +
-             "arguments than format specifiers, the extra arguments are " +
-             "ignored. Throws IllegalFormatException - If a format string contains " +
-             "an illegal syntax, a format specifier that is incompatible with the " +
-             "given arguments, insufficient arguments given the format string, or "+
-             "other illegal conditions.")
-  @Package(name=Package.BASE_TEXT)
-  public static  class FORMAT extends FuncExp {
+
+  @Arguments(spec = {"format", ArgSpec.ARG_REST, "values"})
+  @Docstring(
+      text =
+          "Format String. "
+              + "Returns a formatted string using the specified format string (in the "
+              + "format of java.util.Formatter) and arguments. Arguments referenced by "
+              + "the format specifiers in the format string. If there are more "
+              + "arguments than format specifiers, the extra arguments are "
+              + "ignored. Throws IllegalFormatException - If a format string contains "
+              + "an illegal syntax, a format specifier that is incompatible with the "
+              + "given arguments, insufficient arguments given the format string, or "
+              + "other illegal conditions.")
+  @Package(name = Package.BASE_TEXT)
+  public static class FORMAT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       String format = (String) eargs.get(0, backtrace);
-      return String.format(format, ((List<?>)eargs.get(1, backtrace)).toArray());
+      return String.format(format, ((List<?>) eargs.get(1, backtrace)).toArray());
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_REST, "args"})
-  @Docstring(text="Print Arguments on standard output.")
-  @Package(name=Package.IO)
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Docstring(text = "Print Arguments on standard output.")
+  @Package(name = Package.IO)
   public static class PRINT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      StringBuffer buf=new StringBuffer();
-      for (Object val : (List<?>)eargs.get(0, backtrace)) {
+      StringBuffer buf = new StringBuffer();
+      for (Object val : (List<?>) eargs.get(0, backtrace)) {
         buf.append(Utils.asString(val));
       }
       System.out.print(buf.toString());
       return buf.toString();
     }
   }
-    
-  @Arguments(spec={ArgSpec.ARG_REST,"values"})
-  @Docstring(text="Concatenate Strings. Returns concatenation "+
-             "of string representationx of the function arguments")
-  @Package(name=Package.BASE_TEXT)
+
+  @Arguments(spec = {ArgSpec.ARG_REST, "values"})
+  @Docstring(
+      text =
+          "Concatenate Strings. Returns concatenation "
+              + "of string representationx of the function arguments")
+  @Package(name = Package.BASE_TEXT)
   public static class STR extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      StringBuffer buf=new StringBuffer();
-      for (Object val : (List<?>)eargs.get(0, backtrace)) {
+      StringBuffer buf = new StringBuffer();
+      for (Object val : (List<?>) eargs.get(0, backtrace)) {
         buf.append(Utils.asString(val));
       }
       return buf.toString();
     }
   }
 
-  /****** SEQUENCES ******/
-  @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
-  @Docstring(text="Concatenate sequences (destructive). "+
-             "Adds to the first given sequence (target sequence) all the elements of" +
-             "all of the following sequences and return the target sequence.  If no " +
-             "sequences were given an empty list will be returned. Target sequence " +
-             "must be extendable, that means that objects like Arrays or String " +
-             "cannot be target of this operation")
-  @Package(name=Package.BASE_SEQ)
+  //****** SEQUENCES
+  @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
+  @Docstring(
+      text =
+          "Concatenate sequences (destructive). "
+              + "Adds to the first given sequence (target sequence) all the elements of"
+              + "all of the following sequences and return the target sequence.  If no "
+              + "sequences were given an empty list will be returned. Target sequence "
+              + "must be extendable, that means that objects like Arrays or String "
+              + "cannot be target of this operation")
+  @Package(name = Package.BASE_SEQ)
   public static class NAPPEND extends APPEND {
     public NAPPEND() {
       super();
       isDestructive = true;
     }
   }
-    
-  private static Seq.Operation mkArraySetter(final Object arr,
-                                             final int[] counter,
-                                             Class<?> componentType) {
+
+  private static Seq.Operation mkArraySetter(
+      final Object arr, final int[] counter, Class<?> componentType) {
     if (componentType.isPrimitive()) {
       if (componentType.equals(Character.TYPE)) {
         return new Seq.Operation() {
           @Override
           public boolean perform(Object obj) {
-            Utils.aset(arr,
-                       counter[0]++,
-                       Utils.asChar(obj));
+            Utils.aset(arr, counter[0]++, Utils.asChar(obj));
             return false;
           }
         };
@@ -2587,9 +2730,7 @@ public class Funcs {
         return new Seq.Operation() {
           @Override
           public boolean perform(Object obj) {
-            Utils.aset(arr,
-                       counter[0]++,
-                       Utils.asBoolean(obj));
+            Utils.aset(arr, counter[0]++, Utils.asBoolean(obj));
             return false;
           }
         };
@@ -2598,9 +2739,7 @@ public class Funcs {
         return new Seq.Operation() {
           @Override
           public boolean perform(Object obj) {
-            Utils.aset(arr,
-                       counter[0]++,
-                       Utils.asNumber(obj));
+            Utils.aset(arr, counter[0]++, Utils.asNumber(obj));
             return false;
           }
         };
@@ -2616,30 +2755,30 @@ public class Funcs {
     }
   }
 
-  private static Object charSeqSubseq(Class<?> clz, Backtrace bt,
-                                      CharSequence seq,
-                                      int start,
-                                      Integer end) {
+  private static Object charSeqSubseq(
+      Class<?> clz, Backtrace bt, CharSequence seq, int start, Integer end) {
     final int siz = seq.length();
     return seq.subSequence(start, null == end ? siz : (end >= siz ? siz : end));
   }
 
-  private static Object arraySubseq(Class<?> clz, Backtrace bt, Object arrayObj, int start, Integer end) {
+  private static Object arraySubseq(
+      Class<?> clz, Backtrace bt, Object arrayObj, int start, Integer end) {
     final Class<?> componentType = clz.getComponentType();
     final int siz = Array.getLength(arrayObj);
     final int endPos = null == end ? siz : (end >= siz ? siz : end);
     final Object result = Array.newInstance(componentType, endPos - start);
     final int[] counter = new int[1];
     final Operation setter = mkArraySetter(result, counter, componentType);
-    for (int i = start; i < endPos ; i++) {
+    for (int i = start; i < endPos; i++) {
       setter.perform(Array.get(arrayObj, i));
     }
     return result;
   }
 
-  protected static List<?> listSubseq(Class<?> clz, Backtrace bt, List<?> lst, int start, Integer end) {
+  protected static List<?> listSubseq(
+      Class<?> clz, Backtrace bt, List<?> lst, int start, Integer end) {
     final int siz = lst.size();
-    return lst.subList(start,  null == end ? siz : (end >= siz ? siz : end));
+    return lst.subList(start, null == end ? siz : (end >= siz ? siz : end));
   }
 
   protected static Object seqSubseq(Object seqObj, Backtrace backtrace, int start, Integer end) {
@@ -2649,73 +2788,80 @@ public class Funcs {
     } else if (CharSequence.class.isAssignableFrom(clz)) {
       return charSeqSubseq(clz, backtrace, (CharSequence) seqObj, start, end);
     } else if (List.class.isAssignableFrom(clz)) {
-      return listSubseq(clz, backtrace, (List<?>)seqObj, start, end);
+      return listSubseq(clz, backtrace, (List<?>) seqObj, start, end);
     } else {
       throw new ExecutionException(backtrace, "SUBSEQ: Unsupported sequence type: " + clz);
     }
   }
 
-  @Arguments(spec = {"n",  ArgSpec.ARG_PIPE, "seq"})
-  @Docstring(text = "Return  first n elements of a sequence. "
-             + "take creates new sequence with first n elements of seq. "
-             + "If n is bigger than length of the sequence all the elements"
-             + "are returned. The result subsequence is of the same kind as sequence.")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"n", ArgSpec.ARG_PIPE, "seq"})
+  @Docstring(
+      text =
+          "Return  first n elements of a sequence. "
+              + "take creates new sequence with first n elements of seq. "
+              + "If n is bigger than length of the sequence all the elements"
+              + "are returned. The result subsequence is of the same kind as sequence.")
+  @Package(name = Package.BASE_SEQ)
   public static class TAKE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int size = eargs.size();
       if (2 != size) {
-        throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
+        throw new ExecutionException(backtrace, "Unexpected number of arguments: " + size);
       }
-      final Object seqObj  =  eargs.get(1, backtrace);
+      final Object seqObj = eargs.get(1, backtrace);
       if (null == seqObj) {
         throw new ExecutionException("sequence parameter cannot be NIL");
       }
-      final Object endObj  = eargs.get(0, backtrace);
+      final Object endObj = eargs.get(0, backtrace);
       final int end = (null == endObj) ? 0 : Utils.asNumber(endObj).intValue();
       return seqSubseq(seqObj, backtrace, 0, end);
     }
   }
 
-  @Arguments(spec={"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
-  @Docstring(text="Return subsequnce of a sequence. "+
-             "subseq creates a sequence that is a copy of the subsequence of " +
-             "sequence bounded by start and end. Start specifies an offset into the " +
-             "original sequence and marks the beginning position of the " +
-             "subsequence. end marks the position following the last element of the " +
-             "subsequence. subseq always allocates a new sequence for a result; it " +
-             "never shares storage with an old sequence. The result subsequence is " +
-             "of the same kind as sequence.")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
+  @Docstring(
+      text =
+          "Return subsequnce of a sequence. "
+              + "subseq creates a sequence that is a copy of the subsequence of "
+              + "sequence bounded by start and end. Start specifies an offset into the "
+              + "original sequence and marks the beginning position of the "
+              + "subsequence. end marks the position following the last element of the "
+              + "subsequence. subseq always allocates a new sequence for a result; it "
+              + "never shares storage with an old sequence. The result subsequence is "
+              + "of the same kind as sequence.")
+  @Package(name = Package.BASE_SEQ)
   public static class SUBSEQ extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int size = eargs.size();
       if (3 != size) {
-        throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
+        throw new ExecutionException(backtrace, "Unexpected number of arguments: " + size);
       }
-      final Object seqObj  =  eargs.get(0, backtrace);
+      final Object seqObj = eargs.get(0, backtrace);
       if (null == seqObj) {
         throw new ExecutionException("sequence parameter cannot be NIL");
       }
       final int start = Utils.asNumber(eargs.get(1, backtrace)).intValue();
-      final Object endObj  = eargs.get(2, backtrace);
+      final Object endObj = eargs.get(2, backtrace);
       final Integer end = (null == endObj) ? null : Utils.asNumber(endObj).intValue();
       return seqSubseq(seqObj, backtrace, start, end);
     }
   }
-    
-  @Arguments(spec={ArgSpec.ARG_REST,"sequences"})
-  @Docstring(text="Concatenate sequences (non-destructive). " +
-             "append returns a new sequence that is the concatenation of the " +
-             "elements of the arguments. All the argument remain unchanged. The " +
-             "resulting sequence is of the same type as the first argument. In no " +
-             "arguments were given an empty list is returned. If target sequence is " +
-             "an array necessary coercions will be performed automatically.")
-  @Package(name=Package.BASE_SEQ)
+
+  @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
+  @Docstring(
+      text =
+          "Concatenate sequences (non-destructive). "
+              + "append returns a new sequence that is the concatenation of the "
+              + "elements of the arguments. All the argument remain unchanged. The "
+              + "resulting sequence is of the same type as the first argument. In no "
+              + "arguments were given an empty list is returned. If target sequence is "
+              + "an array necessary coercions will be performed automatically.")
+  @Package(name = Package.BASE_SEQ)
   public static class APPEND extends FuncExp {
     protected boolean isDestructive;
+
     public APPEND() {
       isDestructive = false;
     }
@@ -2724,9 +2870,9 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int size = eargs.size();
       if (1 != size) {
-        throw new ExecutionException(backtrace, "Unexpected number of arguments: "+size);
+        throw new ExecutionException(backtrace, "Unexpected number of arguments: " + size);
       }
-      List<?> seqs = (List<?>)eargs.get(0, backtrace);
+      List<?> seqs = (List<?>) eargs.get(0, backtrace);
       if (seqs.size() == 0) {
         return Utils.list();
       }
@@ -2747,33 +2893,44 @@ public class Funcs {
       // FIXME: support other types but StringBuilder
       Object target = seqs.get(0);
       if (isDestructive && !(target instanceof StringBuilder)) {
-        throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of destructive operation");
+        throw new ExecutionException(
+            bt, "Unsupported sequence type " + clz + " for being target of destructive operation");
       }
-      final StringBuilder result = isDestructive ?
-        (StringBuilder)target: new StringBuilder();
+      final StringBuilder result = isDestructive ? (StringBuilder) target : new StringBuilder();
       final int numArgs = seqs.size();
       for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
         Object seq = seqs.get(i);
-        Seq.forEach(seq, new Seq.Operation() {
-            @Override
-            public boolean perform(Object obj) {
-              result.append(Utils.asChar(obj));
-              return false;
-            }
-          }, true);
+        Seq.forEach(
+            seq,
+            new Seq.Operation() {
+              @Override
+              public boolean perform(Object obj) {
+                result.append(Utils.asChar(obj));
+                return false;
+              }
+            },
+            true);
       }
-      final CharSequence cs =  StringBuilder.class.isAssignableFrom(clz) ? result :
-        (StringBuffer.class.isAssignableFrom(clz) ? new StringBuffer(result) :
-         ((String.class == clz ) ? result.toString() : null));
+      final CharSequence cs =
+          StringBuilder.class.isAssignableFrom(clz)
+              ? result
+              : (StringBuffer.class.isAssignableFrom(clz)
+                  ? new StringBuffer(result)
+                  : ((String.class == clz) ? result.toString() : null));
       if (null == cs) {
-        throw new ExecutionException(bt,"Unsupported CharSequence type: "+clz+" only String, StringBuilder, StringBuffer are supported");
+        throw new ExecutionException(
+            bt,
+            "Unsupported CharSequence type: "
+                + clz
+                + " only String, StringBuilder, StringBuffer are supported");
       }
       return cs;
     }
 
     private Object arrayAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       if (isDestructive) {
-        throw new ExecutionException(bt, "Unsupported sequence type " + clz +" for being target of sequence extension");
+        throw new ExecutionException(
+            bt, "Unsupported sequence type " + clz + " for being target of sequence extension");
       }
       int totalLength = 0;
       final int numArgs = seqs.size();
@@ -2788,17 +2945,15 @@ public class Funcs {
 
       for (int i = 0; i < numArgs; i++) {
         final Object seq = seqs.get(i);
-        Seq.forEach(seq, mkArraySetter(result, counter, componentType),
-                    true);
+        Seq.forEach(seq, mkArraySetter(result, counter, componentType), true);
       }
       return result;
     }
 
-
     protected Collection<?> colAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       Object result = null;
       try {
-        //result = isDestructive ? seqs.get(0) : clz.newInstance();
+        // result = isDestructive ? seqs.get(0) : clz.newInstance();
         result = isDestructive ? seqs.get(0) : clz.getConstructor().newInstance();
       } catch (InstantiationException ex) {
         throw new ExecutionException(bt, ex);
@@ -2811,37 +2966,40 @@ public class Funcs {
       }
 
       @SuppressWarnings("unchecked")
-        final Collection<Object> resultCol = (Collection<Object>)result;
+      final Collection<Object> resultCol = (Collection<Object>) result;
       final int numArgs = seqs.size();
       for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
         Object seq = seqs.get(i);
-        Seq.forEach(seq, new Seq.Operation() {
-            @Override
-            public boolean perform(Object obj) {
-              resultCol.add(obj);
-              return false;
-            }
-          }, true);
+        Seq.forEach(
+            seq,
+            new Seq.Operation() {
+              @Override
+              public boolean perform(Object obj) {
+                resultCol.add(obj);
+                return false;
+              }
+            },
+            true);
       }
       return resultCol;
     }
   }
-    
-  @Arguments(spec={"object-1", "object-2"})
-  @Docstring(text="Prepend element to a sequence.")
-  @Package(name=Package.BASE_SEQ)
+
+  @Arguments(spec = {"object-1", "object-2"})
+  @Docstring(text = "Prepend element to a sequence.")
+  @Package(name = Package.BASE_SEQ)
   public static class CONS extends FuncExp {
     @Override
     @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object  v1 = eargs.get(0, backtrace);
-      final Object  v2 = eargs.get(1, backtrace);
+      final Object v1 = eargs.get(0, backtrace);
+      final Object v2 = eargs.get(1, backtrace);
       List<Object> resultList;
       if (Utils.asObject(v2) instanceof List) {
-        final List<Object> l2 = (List<Object>)Utils.asObject(v2);
-        resultList = new ArrayList<Object>(l2.size()+1);
+        final List<Object> l2 = (List<Object>) Utils.asObject(v2);
+        resultList = new ArrayList<Object>(l2.size() + 1);
         resultList.add(0, v1);
-        resultList.addAll(1, (List<Object>)Utils.asObject(v2));
+        resultList.addAll(1, (List<Object>) Utils.asObject(v2));
       } else {
         resultList = new ArrayList<Object>(2);
         resultList.add(0, v1);
@@ -2851,22 +3009,27 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"sequence"})
-  @Docstring(text="Returns the first element of the sequence. Returns NIL when " +
-             "sequence is NIL or empty")
-  @Package(name=Package.BASE_SEQ)
-  public static class FIRST extends  NTH {
+  @Arguments(spec = {"sequence"})
+  @Docstring(
+      text =
+          "Returns the first element of the sequence. Returns NIL when "
+              + "sequence is NIL or empty")
+  @Package(name = Package.BASE_SEQ)
+  public static class FIRST extends NTH {
     @Override
-    //@SuppressWarnings("unchecked")
+    // @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object seq = eargs.get(0, backtrace);
       return Seq.getElement(seq, 0);
     }
   }
 
-  @Arguments(spec={"sequence"})
-  @Docstring(text="Return length of a sequence. Parameter may be any supported sequence (collection, array, character sequence) or NIL (0 will be returned).")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"sequence"})
+  @Docstring(
+      text =
+          "Return length of a sequence. Parameter may be any supported sequence (collection, array,"
+              + " character sequence) or NIL (0 will be returned).")
+  @Package(name = Package.BASE_SEQ)
   public static class LENGTH extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -2874,13 +3037,13 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_REST,"args"})
-  @Docstring(text="Create a list. Returns a list containing the supplied objects. ")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Docstring(text = "Create a list. Returns a list containing the supplied objects. ")
+  @Package(name = Package.BASE_SEQ)
   public static class LIST extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      List<?> rest = (List<?>)eargs.get(0, backtrace);
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
       final List<Object> lst = new ArrayList<Object>(rest.size());
       for (Object val : rest) {
         lst.add(val);
@@ -2889,13 +3052,13 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_REST,"args"})
-  @Docstring(text="Create a HashSet. Returns a set containing the supplied objects. ")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Docstring(text = "Create a HashSet. Returns a set containing the supplied objects. ")
+  @Package(name = Package.BASE_SEQ)
   public static class HASHSET extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      List<?> rest = (List<?>)eargs.get(0, backtrace);
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
       final Set<Object> set = new HashSet<Object>(rest.size());
       for (Object val : rest) {
         set.add(val);
@@ -2904,42 +3067,42 @@ public class Funcs {
     }
   }
 
-
-    
-  @Arguments(spec={"n", ArgSpec.ARG_PIPE, "sequence"})
-  @Docstring(text="Locates the nth element of a sequence. n may be any non-negative number. Returns NIL when sequence is NIL or n is out of bounds")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"n", ArgSpec.ARG_PIPE, "sequence"})
+  @Docstring(
+      text =
+          "Locates the nth element of a sequence. n may be any non-negative number. Returns NIL"
+              + " when sequence is NIL or n is out of bounds")
+  @Package(name = Package.BASE_SEQ)
   public static class NTH extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object seq = Utils.asObject(eargs.get(1, backtrace));
       final int index = Utils.asNumber(eargs.get(0, backtrace)).intValue();
       if (index < 0) {
-        throw new RuntimeException(getName() +
-                                   "expected non-negative index index, but got"
-                                   + index);
+        throw new RuntimeException(
+            getName() + "expected non-negative index index, but got" + index);
       }
       return Seq.getElement(seq, index);
     }
   }
 
-  @Arguments(spec={"sequence"})
-  @Docstring(text="Return 2nd and further elements of sqeuence.")
-  @Package(name=Package.BASE_SEQ)
-  public static  class REST extends FuncExp {
+  @Arguments(spec = {"sequence"})
+  @Docstring(text = "Return 2nd and further elements of sqeuence.")
+  @Package(name = Package.BASE_SEQ)
+  public static class REST extends FuncExp {
     @Override
     @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
-      final List<Object> list = (List<Object>)Utils.asObject(val);
+      final List<Object> list = (List<Object>) Utils.asObject(val);
       return list.subList(1, list.size());
     }
   }
 
-  @Arguments(spec={"object"})
-  @Docstring(text="Check if an object is a sequence.")
-  @Package(name=Package.BASE_SEQ)
-  public static  class SEQUENCEP extends FuncExp {
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is a sequence.")
+  @Package(name = Package.BASE_SEQ)
+  public static class SEQUENCEP extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
@@ -2947,15 +3110,17 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"sequence"})
-  @Docstring(text="Reverse a sequence (destructive).")
-  @Package(name=Package.BASE_SEQ)
-  public static  class NREVERSE extends FuncExp {
+  @Arguments(spec = {"sequence"})
+  @Docstring(text = "Reverse a sequence (destructive).")
+  @Package(name = Package.BASE_SEQ)
+  public static class NREVERSE extends FuncExp {
     @Override
     @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
-      if (null == val) return null;
+      if (null == val) {
+        return null;
+      }
       return reverseList((List<Object>) val);
     }
 
@@ -2964,121 +3129,127 @@ public class Funcs {
       return list;
     }
   }
-  
-  @Arguments(spec={"sequence"})
-  @Docstring(text="Reverse a sequence (non-destructive).")
-  @Package(name=Package.BASE_SEQ)
-  public static  class REVERSE extends NREVERSE {
+
+  @Arguments(spec = {"sequence"})
+  @Docstring(text = "Reverse a sequence (non-destructive).")
+  @Package(name = Package.BASE_SEQ)
+  public static class REVERSE extends NREVERSE {
     @Override
     @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      if (null == val) return null;
-      return super.reverseList((List<Object>)Utils.copySeq((List<Object>)val));
+      if (null == val) {
+        return null;
+      }
+      return super.reverseList((List<Object>) Utils.copySeq((List<Object>) val));
     }
   }
 
-  @Arguments(spec={"start",  "stop", ArgSpec.ARG_OPTIONAL,  "step"})
-  @Docstring(text="Return sequence of numbers." +
-             " Returns sequence of numbers  from start to stop (inclusively) with .")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"start", "stop", ArgSpec.ARG_OPTIONAL, "step"})
+  @Docstring(
+      text =
+          "Return sequence of numbers."
+              + " Returns sequence of numbers  from start to stop (inclusively) with .")
+  @Package(name = Package.BASE_SEQ)
   public static class RANGE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace bt, Eargs eargs) {
-      //final Promotion prom = new Promotion();
+      // final Promotion prom = new Promotion();
 
       // 0 is default
       final Number start = Utils.asNumber(eargs.get(0, bt));
-      //prom.promote(start);
+      // prom.promote(start);
 
-      final Number to =  Utils.asNumber(eargs.get(1, bt));
+      final Number to = Utils.asNumber(eargs.get(1, bt));
 
       // 1 is default
-      final Number step = (null == eargs.get(2, bt)) ?
-        1 : Utils.asNumber(eargs.get(2, bt)) ;
-      //prom.promote(step);
+      final Number step = (null == eargs.get(2, bt)) ? 1 : Utils.asNumber(eargs.get(2, bt));
+      // prom.promote(step);
 
-            
-      final Collection <?> resultSeq = new RangeList(start, to, step);
+      final Collection<?> resultSeq = new RangeList(start, to, step);
       return resultSeq;
     }
   }
-    
-  @Arguments(spec={"object"})
-  @Docstring(text="Coerce object into a sequence.")
-  @Package(name=Package.BASE_SEQ)
+
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Coerce object into a sequence.")
+  @Package(name = Package.BASE_SEQ)
   public static class SEQ extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object val = eargs.get(0, backtrace);
       List<?> result = null;
       if ((null == val) || (val instanceof List)) {
-        result = (List<?>)val;
+        result = (List<?>) val;
       } else if (val instanceof String) {
         // FIXME: split to chars
-        result =  Arrays.asList(((String)val).split(""));
+        result = Arrays.asList(((String) val).split(""));
       } else if (val.getClass().isArray()) {
-        result =  Arrays.asList((Object[])val);
+        result = Arrays.asList((Object[]) val);
       } else {
-        throw new ExecutionException(backtrace, "Do not know how to sequence "+val);
+        throw new ExecutionException(backtrace, "Do not know how to sequence " + val);
       }
       return result;
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
-  @Docstring(text="Sort a sequence (non destructively).")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(
+      spec = {ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
+  @Docstring(text = "Sort a sequence (non destructively).")
+  @Package(name = Package.BASE_SEQ)
   public static class SORT extends NSORT {
     protected Object doSort(Object seq, ICode lambda, Backtrace bt, ICtx ctx) {
       return super.doSort(Utils.copySeq(seq), lambda, bt, ctx);
     }
   }
 
-  @Arguments(spec={ArgSpec.ARG_OPTIONAL, "f",  ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
-  @Docstring(text="Sort a sequence (destructively).")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(
+      spec = {ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
+  @Docstring(text = "Sort a sequence (destructively).")
+  @Package(name = Package.BASE_SEQ)
   public static class NSORT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object seq =     (eargs.size() == 1 ? eargs.get(0, backtrace) : eargs.get(1, backtrace));
-      final ICode lambda = (ICode) (eargs.size() == 1 ? null         : eargs.get(0, backtrace)) ;
+      final Object seq = (eargs.size() == 1 ? eargs.get(0, backtrace) : eargs.get(1, backtrace));
+      final ICode lambda = (ICode) (eargs.size() == 1 ? null : eargs.get(0, backtrace));
       return doSort(seq, lambda, backtrace, eargs);
     }
-    @SuppressWarnings({"rawtypes","unchecked"})
-    protected Object doSort(final Object seq,
-                            final ICode lambda,
-                            final Backtrace backtrace,
-                            final ICtx ctx) {
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    protected Object doSort(
+        final Object seq, final ICode lambda, final Backtrace backtrace, final ICtx ctx) {
       Comparator<Object> comparator = null;
       if (null != lambda) {
         final ICtx localCtx = ctx.getCompiler().newCtx(ctx);
-        final IExpr compf = (IExpr)lambda.getInstance();
+        final IExpr compf = (IExpr) lambda.getInstance();
         try {
           compf.setParams(Utils.newPosArgsList(2));
         } catch (InvalidParametersException ex) {
-          throw new RuntimeException(String.format("%s: lambda at %s: does not take parameter: %s",
-                                                   this.getName(),
-                                                   (null == ex.getParseCtx() ? "?" : ex.getParseCtx().toString()),
-                                                   ex.getMessage()));
+          throw new RuntimeException(
+              String.format(
+                  "%s: lambda at %s: does not take parameter: %s",
+                  this.getName(),
+                  (null == ex.getParseCtx() ? "?" : ex.getParseCtx().toString()),
+                  ex.getMessage()));
         }
-        comparator = new Comparator<Object>() {
-            @Override
-            public int compare(Object o1, Object o2) {
-              localCtx.getMappings().put("%1", o1);
-              localCtx.getMappings().put("%2", o2);
-              return (Integer)compf.evaluate(backtrace, localCtx);
-            }
-          };
+        comparator =
+            new Comparator<Object>() {
+              @Override
+              public int compare(Object o1, Object o2) {
+                localCtx.getMappings().put("%1", o1);
+                localCtx.getMappings().put("%2", o2);
+                return (Integer) compf.evaluate(backtrace, localCtx);
+              }
+            };
       }
       if (null == seq) {
         return seq;
-      } else if (seq instanceof List)  {
+      } else if (seq instanceof List) {
         List<?> col = (List<?>) seq;
         // FIXME: what if values are not actually Comparable, exceptions will happen
         // need to catch exceptions here
-        if (null==comparator) {
-          Collections.sort((List)col);
+        if (null == comparator) {
+          Collections.sort((List) col);
         } else {
           Collections.sort(col, comparator);
         }
@@ -3092,71 +3263,82 @@ public class Funcs {
         }
         return ar;
       } else {
-        throw new RuntimeException("No idea how to sort object of type "+seq.getClass());
+        throw new RuntimeException("No idea how to sort object of type " + seq.getClass());
       }
     }
   }
 
-    
-  /***** LANGUAGE ****/
-  @Arguments(spec={"fn", ARG_OPTIONAL,"name"})
-  @Docstring(text="Create new Java thread. "+
-             "Creates new Java thread and prepare it for execution of given function fn."+
-             "fn must not require parameters for it's execution. The created thread is not started." )
-  @Package(name=Package.THREADS)
+  //***** LANGUAGE 
+  @Arguments(spec = {"fn", ARG_OPTIONAL, "name"})
+  @Docstring(
+      text =
+          "Create new Java thread. Creates new Java thread and prepare it for execution of given"
+              + " function fn.fn must not require parameters for it's execution. The created thread"
+              + " is not started.")
+  @Package(name = Package.THREADS)
   public static class NEW_THREAD extends FuncExp {
     @Override
     protected Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final IExpr instance = (IExpr) ((ICode)eargs.get(0, backtrace)).getInstance();
+      final IExpr instance = (IExpr) ((ICode) eargs.get(0, backtrace)).getInstance();
       try {
         instance.setParams(new ArrayList<ICompiled>());
       } catch (InvalidParametersException iex) {
         throw new RuntimeException(iex);
       }
-      Runnable r = (Runnable) instance;
-      final Thread t = null == eargs.get(1, backtrace) ?
-        new Thread(r) :
-        new Thread(r,Utils.asString(eargs.get(1, backtrace)));
-      Threads.contexts.put(t,eargs);
+      Runnable runnable = (Runnable) instance;
+      final Thread t =
+          null == eargs.get(1, backtrace)
+              ? new Thread(runnable)
+              : new Thread(runnable, Utils.asString(eargs.get(1, backtrace)));
+      Threads.contexts.put(t, eargs);
       return t;
     }
   }
 
-    
-  @Arguments(spec={"symbol"})
-  @Docstring(text="Returns function bound to given symbol. If no function bound raises an error. The returned object may be a built-in function, compiled function or built-in special form.")
-  @Package(name=Package.BASE_FUNCS)
+  @Arguments(spec = {"symbol"})
+  @Docstring(
+      text =
+          "Returns function bound to given symbol. If no function bound raises an error. The"
+              + " returned object may be a built-in function, compiled function or built-in special"
+              + " form.")
+  @Package(name = Package.BASE_FUNCS)
   public static class SYMBOL_FUNCTION extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       String fname = Utils.asString(eargs.get(0, backtrace));
       Object funcObj = eargs.getCompiler().getFun(fname);
-      if  (null == funcObj) {
-        throw new RuntimeException("Symbol "+fname+" function value is NULL");
+      if (null == funcObj) {
+        throw new RuntimeException("Symbol " + fname + " function value is NULL");
       } else if (funcObj instanceof ICode) {
         return funcObj;
       } else {
-        throw new RuntimeException("Symbol "+fname+" function value is of unsupported type: "+funcObj);
+        throw new RuntimeException(
+            "Symbol " + fname + " function value is of unsupported type: " + funcObj);
       }
     }
   }
 
-  @Arguments(spec={"file-spec"})
-  @Docstring(text="Execute program from a file/stream. "+
-             "Sequentially executes each form it encounters in the input file/or stream named by resource-spec. Returns exception if input could not be read or there were exceptions while compiling or executing forms an exception will be raised. file-spec may be a java.io.File object, file path as String or opened InputStream.")
-  @Package(name=Package.IO)
+  @Arguments(spec = {"file-spec"})
+  @Docstring(
+      text =
+          "Execute program from a file/stream. Sequentially executes each form it encounters in the"
+              + " input file/or stream named by resource-spec. Returns exception if input could not"
+              + " be read or there were exceptions while compiling or executing forms an exception"
+              + " will be raised. file-spec may be a java.io.File object, file path as String or"
+              + " opened InputStream.")
+  @Package(name = Package.IO)
   public static class LOAD extends FuncExp {
     protected InputStream openInput(Object loadObj, Backtrace bt) {
-      File f = null;
+      File file = null;
       if (loadObj instanceof String) {
-        f = new File((String) loadObj);
+        file = new File((String) loadObj);
       } else if (loadObj instanceof File) {
-        f = (File) loadObj;
+        file = (File) loadObj;
       } else if (loadObj instanceof InputStream) {
         return (InputStream) loadObj;
       }
       try {
-        return new FileInputStream(f);
+        return new FileInputStream(file);
       } catch (IOException ex) {
         throw new ExecutionException(bt, "I/O opening stream", ex);
       }
@@ -3170,7 +3352,7 @@ public class Funcs {
       try {
         is = openInput(loadObj, bt);
         ASTNList astns = new ParserWrapper(ctx.getCompiler().getParser()).parse(is);
-        for(ASTN astn : astns) {
+        for (ASTN astn : astns) {
           ICompiled expr = ctx.getCompiler().compile(astn);
           expr.evaluate(bt, ctx);
         }
@@ -3187,43 +3369,52 @@ public class Funcs {
     }
 
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       return load(backtrace, eargs, eargs.get(0, backtrace));
     }
   }
 
-  @Arguments(spec={"resource-spec"})
-  @Docstring(text="Execute program from Java resource. Sequentially executes each form it encounters in the java resource file named by resource-spec. Returns exception if file could not be read or there were exceptions while compiling or executing forms an exception will be raised.")
-  @Package(name=Package.IO)
+  @Arguments(spec = {"resource-spec"})
+  @Docstring(
+      text =
+          "Execute program from Java resource. Sequentially executes each form it encounters in the"
+              + " java resource file named by resource-spec. Returns exception if file could not be"
+              + " read or there were exceptions while compiling or executing forms an exception"
+              + " will be raised.")
+  @Package(name = Package.IO)
   public static class LOADR extends LOAD {
     @Override
     protected InputStream openInput(Object loadObj, Backtrace bt) {
-      if (! (loadObj instanceof CharSequence)) {
-        throw new ExecutionException(bt,
-                                     "Invalid resource path " + loadObj);
+      if (!(loadObj instanceof CharSequence)) {
+        throw new ExecutionException(bt, "Invalid resource path " + loadObj);
       }
       final String srcName = Utils.asString(loadObj);
       final InputStream is = this.getClass().getResourceAsStream(srcName);
       if (null == is) {
-        throw new ExecutionException(bt, "Failed to load '"+srcName+"' as resource");
+        throw new ExecutionException(bt, "Failed to load '" + srcName + "' as resource");
       }
       return is;
     }
   }
 
-  @Docstring(text="Get list of names of defined functions. If names are given use them as filter expressions:  only those which match at least one of filter expressions will be returned. Filters may be strings (substring match) or regular expressions (java.util.regex.Pattern objects).")
-  @Arguments(spec={ARG_REST,"names"})
-  @Package(name=Package.BASE_DOCS)
+  @Docstring(
+      text =
+          "Get list of names of defined functions. If names are given use them as filter"
+              + " expressions:  only those which match at least one of filter expressions will be"
+              + " returned. Filters may be strings (substring match) or regular expressions"
+              + " (java.util.regex.Pattern objects).")
+  @Arguments(spec = {ARG_REST, "names"})
+  @Package(name = Package.BASE_DOCS)
   public static class FUNCTIONS_NAMES extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       List<String> results = new ArrayList<String>();
-      List<?> rest = (List<?>)eargs.get(0, backtrace);
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
       for (String key : eargs.getCompiler().getFunKeys()) {
         if (rest.size() > 0) {
           for (Object obj : rest) {
             if (obj instanceof Pattern) {
-              final Matcher m = ((Pattern)obj).matcher(key);
+              final Matcher m = ((Pattern) obj).matcher(key);
               if (m.matches()) {
                 results.add(key);
               }
@@ -3246,61 +3437,66 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec={"object"})
-  @Docstring(text="Check if object is a function. Returns true if object is a function (built-in or user defined); otherwise, returns false. "+
-             "A function is an object that represents code to be executed when an appropriate number of arguments "+
-             "is supplied. A function can be directly invoked by using it as the first argument to funcall, apply.")
-  @Package(name=Package.BASE_FUNCS)
+  @Arguments(spec = {"object"})
+  @Docstring(
+      text =
+          "Check if object is a function. Returns true if object is a function (built-in or user"
+              + " defined); otherwise, returns false. A function is an object that represents code"
+              + " to be executed when an appropriate number of arguments is supplied. A function"
+              + " can be directly invoked by using it as the first argument to funcall, apply.")
+  @Package(name = Package.BASE_FUNCS)
   public static class FUNCTIONP extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
-      final Object obj  = eargs.get(0, backtrace);
-      if (null!=obj
-          && ICode.class.isAssignableFrom(obj.getClass())) {
-        final String codeType = ((ICode)obj).getCodeType();
-        return  "function".equals(codeType) || "compiled function".equals(codeType);
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object obj = eargs.get(0, backtrace);
+      if (null != obj && ICode.class.isAssignableFrom(obj.getClass())) {
+        final String codeType = ((ICode) obj).getCodeType();
+        return "function".equals(codeType) || "compiled function".equals(codeType);
       }
       return false;
     }
   }
 
-  @Docstring(text="Evaluate a Parsed Expression. Evaluates parsed form in the current dynamic context and return result of evaluation'")
-  @Arguments(spec={"form"})
-  @Package(name=Package.BASE_LANG)
+  @Docstring(
+      text =
+          "Evaluate a Parsed Expression. Evaluates parsed form in the current dynamic context and"
+              + " return result of evaluation'")
+  @Arguments(spec = {"form"})
+  @Package(name = Package.BASE_LANG)
   public static class EVAL extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace backtrace,Eargs eargs) {
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
-      final ASTN astn = (obj instanceof ASTN) ?
-        (ASTN) obj : Utils.ASTNize(obj, new ParseCtx("<EVAL>"));
+      final ASTN astn =
+          (obj instanceof ASTN) ? (ASTN) obj : Utils.ASTNize(obj, new ParseCtx("<EVAL>"));
       final ICompiled expr = eargs.getCompiler().compile(astn);
       final Object result = expr.evaluate(backtrace, eargs);
       return result;
     }
   }
 
-  @Arguments(spec={"string"})
-  @Docstring(text="Parse expression from string. "+
-             "Reads expression from string using default parser. Returns expression or NIL if no expression has been read")
-  @Package(name=Package.IO)
+  @Arguments(spec = {"string"})
+  @Docstring(
+      text =
+          "Parse expression from string. Reads expression from string using default parser. Returns"
+              + " expression or NIL if no expression has been read")
+  @Package(name = Package.IO)
   public static class READ_FROM_STRING extends FuncExp {
     @Override
-    public Object evalWithArgs(Backtrace bt,Eargs eargs) {
-      String str = (String)eargs.get(0, bt);
+    public Object evalWithArgs(Backtrace bt, Eargs eargs) {
+      String str = (String) eargs.get(0, bt);
       ParseCtx pctx = new ParseCtx("<READ_FROM_STRING>");
-      ASTNList  astns = eargs.getCompiler().getParser()
-        .parse(pctx, str);
-      if (null == astns || astns.size() ==0) {
+      ASTNList astns = eargs.getCompiler().getParser().parse(pctx, str);
+      if (null == astns || astns.size() == 0) {
         return null;
       }
       return Utils.unASTN(astns.get(0));
     }
   }
 
-    
-  @Docstring(text="Makes new Symbol for a string")
-  @Arguments(spec={"symbol-name"})
-  @Package(name=Package.BASE_BINDINGS)
+  @Docstring(text = "Makes new Symbol for a string")
+  @Arguments(spec = {"symbol-name"})
+  @Package(name = Package.BASE_BINDINGS)
   public static class SYMBOL extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -3309,16 +3505,16 @@ public class Funcs {
   }
 
   // TODO: support level and uplevel
-  @Docstring(text="Unbind variable given by symbol. Always returns symbol.")
-  @Arguments(spec={"symbol"})
-  @Package(name=Package.BASE_BINDINGS)
+  @Docstring(text = "Unbind variable given by symbol. Always returns symbol.")
+  @Arguments(spec = {"symbol"})
+  @Package(name = Package.BASE_BINDINGS)
   public static class MAKUNBOUND extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Symbol sym = (Symbol) eargs.get(0, backtrace);
       final String name = sym.getName();
       eargs.remove(name);
-      //ICtx ctx = eargs;
+      // ICtx ctx = eargs;
       // while (null != ctx) {
       //  final Map mappings = ctx.getMappings();
       //  if (mappings.containsKey(name)) {
@@ -3326,44 +3522,50 @@ public class Funcs {
       //  }
       //  ctx = ctx.getPrev();
       // }
-            
+
       return sym;
     }
   }
 
-    
-  @Docstring(text="Change variable value in specified context. "+
-             "Set changes the contents of variable symbol in the dynamic context to the given value. If uplevel is set the value will be set in the uplevel-ths previous context. If level is set the value will be changed in the level-th context from the level0 ")
-  @Arguments(spec={"symbol","value",ArgSpec.ARG_KEY,"uplevel", "level"}, text="symbol value { level | uplevel }?")
-  @Package(name=Package.BASE_BINDINGS)
+  @Docstring(
+      text =
+          "Change variable value in specified context. Set changes the contents of variable symbol"
+              + " in the dynamic context to the given value. If uplevel is set the value will be"
+              + " set in the uplevel-ths previous context. If level is set the value will be"
+              + " changed in the level-th context from the level0 ")
+  @Arguments(
+      spec = {"symbol", "value", ArgSpec.ARG_KEY, "uplevel", "level"},
+      text = "symbol value { level | uplevel }?")
+  @Package(name = Package.BASE_BINDINGS)
   public static class SET extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Symbol sym = (Symbol) eargs.get(0, backtrace);
       final Object obj = eargs.get(1, backtrace);
-      final Object uplevelObj =  eargs.get(2, backtrace);
-      final Object  levelObj =  eargs.get(3, backtrace);
-      if (null!=levelObj) {
+      final Object uplevelObj = eargs.get(2, backtrace);
+      final Object levelObj = eargs.get(3, backtrace);
+      if (null != levelObj) {
         // absolute level
         if (null != uplevelObj) {
-          throw new ExecutionException(backtrace, getName() + " only one of two must be set: level | uplevel");
+          throw new ExecutionException(
+              backtrace, getName() + " only one of two must be set: level | uplevel");
         }
         final int level = Utils.asNumber(levelObj).intValue();
         final List<ICtx> parents = eargs.getParentContexts();
-        final int lastIdx = parents.size()-1;
+        final int lastIdx = parents.size() - 1;
         ICtx ctx = parents.get(lastIdx - level);
         ctx.getMappings().put(sym.getName(), obj);
       } else if (null != uplevelObj) {
         final int uplevel = Utils.asNumber(uplevelObj).intValue();
         ICtx ctx = eargs.getPrev();
-        for (int i = 0; i < uplevel && null!=ctx; i++) {
+        for (int i = 0; i < uplevel && null != ctx; i++) {
           ctx = ctx.getPrev();
         }
         if (null != ctx) {
           ctx.getMappings().put(sym.getName(), obj);
         } else {
-          throw new ExecutionException(backtrace,
-                                       getName() + "uplevel value exceeds context depth");
+          throw new ExecutionException(
+              backtrace, getName() + "uplevel value exceeds context depth");
         }
       } else {
         eargs.getPrev().greplace(sym.getName(), obj);
@@ -3372,13 +3574,19 @@ public class Funcs {
     }
   }
 
-  @Docstring(text="Sat array element value. Set value of array element at index to object. If java array is typed (i.e. not array of java.lang.Objects) and object type does not match this function will attempt to perform necessary coercion operations. The coercions work in the same way as INT, FLOAT, STRING and rest of the built-in coercion functions.")
-  @Arguments(spec={"array","index","object"})
-  @Package(name=Package.BASE_SEQ)
+  @Docstring(
+      text =
+          "Sat array element value. Set value of array element at index to object. If java array is"
+              + " typed (i.e. not array of java.lang.Objects) and object type does not match this"
+              + " function will attempt to perform necessary coercion operations. The coercions"
+              + " work in the same way as INT, FLOAT, STRING and rest of the built-in coercion"
+              + " functions.")
+  @Arguments(spec = {"array", "index", "object"})
+  @Package(name = Package.BASE_SEQ)
   public static class ASET extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object arrayObj =  Utils.asObject(eargs.get(0, backtrace));
+      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       final Object obj = Utils.asObject(eargs.get(2, backtrace));
       Utils.aset(arrayObj, index, obj);
@@ -3386,25 +3594,27 @@ public class Funcs {
     }
   }
 
-
-    
-    
-  @Arguments(spec={"array","index"})
-  @Docstring(text="Get Array element value. Return array element at specified index. Throws ArrayOutOfBoundsException if index is invalid")
-  @Package(name=Package.BASE_SEQ)
-  public static class AREF  extends FuncExp {
+  @Arguments(spec = {"array", "index"})
+  @Docstring(
+      text =
+          "Get Array element value. Return array element at specified index. Throws"
+              + " ArrayOutOfBoundsException if index is invalid")
+  @Package(name = Package.BASE_SEQ)
+  public static class AREF extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object arrayObj =  Utils.asObject(eargs.get(0, backtrace));
+      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       return Array.get(arrayObj, index);
     }
   }
 
-  @Arguments(spec={"size", ArgSpec.ARG_KEY, "element-type"})
-  @Docstring(text="Ceate an Array. "+
-             "Creates array of objects of specified size. Optional :element-type argument specifies type of array elements. The default is java.lang.Object")
-  @Package(name=Package.BASE_SEQ)
+  @Arguments(spec = {"size", ArgSpec.ARG_KEY, "element-type"})
+  @Docstring(
+      text =
+          "Ceate an Array. Creates array of objects of specified size. Optional :element-type"
+              + " argument specifies type of array elements. The default is java.lang.Object")
+  @Package(name = Package.BASE_SEQ)
   public static class MAKE_ARRAY extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -3414,16 +3624,16 @@ public class Funcs {
         final Class<?> tclass = Utils.tspecToClass(et);
         return Array.newInstance(tclass, size);
       } else {
-        return  new Object[size];
+        return new Object[size];
       }
     }
   }
 
   protected static Object findFuncObject(Object fobj, Eargs eargs) {
     if ((fobj instanceof Symbol) || (fobj instanceof CharSequence)) {
-      String fName = Utils.asString(fobj);
-      if (null != fName) {
-        return eargs.getCompiler().getFun(fName);
+      String funcName = Utils.asString(fobj);
+      if (null != funcName) {
+        return eargs.getCompiler().getFun(funcName);
       }
     } else {
       return fobj;
@@ -3431,29 +3641,28 @@ public class Funcs {
     return null;
   }
 
-  @Arguments(spec={"spec"})
-  @Docstring(text="Create Version from text specification. ")
-  @Package(name=Package.BASE_VERSION)
-  public static class VERSION  extends FuncExp {
+  @Arguments(spec = {"spec"})
+  @Docstring(text = "Create Version from text specification. ")
+  @Package(name = Package.BASE_VERSION)
+  public static class VERSION extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final String spec  =  Utils.asString(eargs.get(0, backtrace));
+      final String spec = Utils.asString(eargs.get(0, backtrace));
       try {
         return Version.parseVersion(spec);
       } catch (IllegalArgumentException ex) {
-        throw new ExecutionException(backtrace,
-                                     "Failed to parse version spec: " + ex);
+        throw new ExecutionException(backtrace, "Failed to parse version spec: " + ex);
       }
     }
   }
 
-    
-    
-  @Arguments(spec={"function"})
-  @Docstring(text="Describe function. "+
-             "Return textual description of given function or "+
-             "built-in form. function is a symbol or function name or a lambda")
-  @Package(name=Package.BASE_DOCS)
+  @Arguments(spec = {"function"})
+  @Docstring(
+      text =
+          "Describe function. "
+              + "Return textual description of given function or "
+              + "built-in form. function is a symbol or function name or a lambda")
+  @Package(name = Package.BASE_DOCS)
   public static class DESCRIBE_FUNCTION extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -3467,15 +3676,15 @@ public class Funcs {
           ICode codeObj = (ICode) funcObj;
           if (codeObj.isBuiltIn()) {
             buf.append("built-in ");
-          } 
+          }
           buf.append(codeObj.getCodeType());
           buf.append(" defined at ");
           buf.append(codeObj.getDefLocation());
           buf.append("\n");
-          buf.append("Arguments: \n    " + codeObj.getArgDescr()+"\n");
-          buf.append("Documentation: \n    " + codeObj.getDocstring() +"\n");
+          buf.append("Arguments: \n    " + codeObj.getArgDescr() + "\n");
+          buf.append("Documentation: \n    " + codeObj.getDocstring() + "\n");
         } else {
-          buf.append(" is an unknown object of type "+funcObj.getClass());
+          buf.append(" is an unknown object of type " + funcObj.getClass());
         }
       } else {
         buf.append(" is not defined");
@@ -3483,14 +3692,15 @@ public class Funcs {
 
       return buf.toString();
     }
-
   }
-    
-  @Arguments(spec = { "function-name" })
-  @Docstring(text = "Get Function Docstring. "+
-             "Return documentation string of given function or "
-             + "built-in form. function is a symbol or function name or a lambda")
-  @Package(name=Package.BASE_DOCS)
+
+  @Arguments(spec = {"function-name"})
+  @Docstring(
+      text =
+          "Get Function Docstring. "
+              + "Return documentation string of given function or "
+              + "built-in form. function is a symbol or function name or a lambda")
+  @Package(name = Package.BASE_DOCS)
   public static class DOCUMENTATION extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -3508,43 +3718,41 @@ public class Funcs {
     }
   }
 
-  public static class VarExp extends AbstractExpr  {
+  public static class VarExp extends AbstractExpr {
     private final String varname;
 
     public String getName() {
       return varname;
     }
-        
+
     public VarExp(String str) {
       this.varname = str;
     }
 
     @Override
-    protected Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+    protected Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       final Object obj = ctx.get(varname, backtrace);
       if (null == obj) {
         if (ctx.contains(varname)) {
           return null;
         }
         ctx.onMissingVar(varname);
-        //throw new RuntimeException("variable '"+varname+"' does not exist in this context");
+        // throw new RuntimeException("variable '"+varname+"' does not exist in this context");
       }
-      //if (obj instanceof LazyEval) {
+      // if (obj instanceof LazyEval) {
       //  return ((LazyEval)obj).getValue(backtrace);
-      //}
+      // }
       return obj;
     }
 
     @Override
-    public void setParams(List<ICompiled> params)
-      throws InvalidParametersException {
-      throw new InvalidParametersException(debugInfo,
-                                           "setParams called for variable "+varname+
-                                           ": this cannot happen");
+    public void setParams(List<ICompiled> params) throws InvalidParametersException {
+      throw new InvalidParametersException(
+          debugInfo, "setParams called for variable " + varname + ": this cannot happen");
     }
   }
 
-  /****** SELF-EVALUATING OBJECTS ******/
+  //****** SELF-EVALUATING OBJECTS 
   public static class ValueExpr extends AbstractExpr {
     private Object value;
 
@@ -3553,32 +3761,29 @@ public class Funcs {
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (o instanceof ValueExpr) {
-        final ValueExpr v = (ValueExpr) o;
-        return v.getClass().equals(v.getClass()) &&
-          ((null == this.value && null == v.value) ||
-           (null != this.value && this.value.equals(v.value)));
-      } 
+    public boolean equals(Object obj) {
+      if (obj instanceof ValueExpr) {
+        final ValueExpr v = (ValueExpr) obj;
+        return v.getClass().equals(v.getClass())
+            && ((null == this.value && null == v.value)
+                || (null != this.value && this.value.equals(v.value)));
+      }
       return false;
     }
 
     @Override
-    public void setParams(List<ICompiled> params)
-      throws  InvalidParametersException{
-      throw new InvalidParametersException(debugInfo,
-                                           "setParams called for "+
-                                           this.getName()+
-                                           ", this cannot happen!");
+    public void setParams(List<ICompiled> params) throws InvalidParametersException {
+      throw new InvalidParametersException(
+          debugInfo, "setParams called for " + this.getName() + ", this cannot happen!");
     }
 
-    @Override 
+    @Override
     public String toString() {
       return null == value ? "NIL" : value.toString();
     }
 
     @Override
-    public Object doEvaluate(Backtrace backtrace,ICtx  ctx) {
+    public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       return value;
     }
 
@@ -3588,9 +3793,8 @@ public class Funcs {
     }
   }
 
-
   public static class StringExp extends ValueExpr {
-    public StringExp (String str) {
+    public StringExp(String str) {
       super(str);
     }
   }
@@ -3599,28 +3803,26 @@ public class Funcs {
     public EmptyListExp() {
       super(new ArrayList<Object>());
     }
-        
   }
-    
-  public static class NumberExp extends  ValueExpr{
+
+  public static class NumberExp extends ValueExpr {
     public NumberExp(Number value) {
       super(value);
     }
 
     @Override
-    public boolean equals(Object o) {
-      return super.equals(o);
+    public boolean equals(Object obj) {
+      return super.equals(obj);
     }
-        
   }
-    
-  public static class BooleanExp extends  ValueExpr{
+
+  public static class BooleanExp extends ValueExpr {
     public BooleanExp(Boolean value) {
       super(value);
     }
   }
 
-  public static class ObjectExp extends  ValueExpr{
+  public static class ObjectExp extends ValueExpr {
     public ObjectExp(Object value) {
       super(value);
     }
