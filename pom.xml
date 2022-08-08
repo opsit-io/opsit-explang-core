@@ -1,0 +1,57 @@
+<project>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.opsit</groupId>
+    <artifactId>opsit-explang-core</artifactId>
+    <version>0.0.2-SNAPSHOT</version>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <junit.version>4.13.1</junit.version>
+    </properties>
+    <dependencies>
+        <dependency>
+	  <groupId>io.opsit</groupId>
+	  <artifactId>opsit-version-type</artifactId>
+	  <version>0.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <!--distributionManagement>
+      <repository>
+        <id>github</id>
+        <name>GitHub opsit-io Apache Maven Packages</name>
+        <url>https://maven.pkg.github.com/opsit-io/opsit-dsl</url>
+      </repository>
+    </distributionManagement-->
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.0.0-M5</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maaven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>io.opsit.explang.REPL</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
