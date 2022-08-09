@@ -1,17 +1,19 @@
 package io.opsit.explang;
 
-import java.util.Comparator;
 import io.opsit.version.Version;
+
+import java.util.Comparator;
 
 public class NumCompOp implements AbstractOp, Comparator<Number> {
   @Override
   public Number doIntOp(Number arg1, Number arg2) {
-    return  arg1.longValue() - arg2.longValue();
+    return arg1.longValue() - arg2.longValue();
   }
+
   @Override
   public Number doDoubleOp(Number arg1, Number arg2) {
     final Double compRes = arg1.doubleValue() - arg2.doubleValue();
-    return compRes < 0.0 ? -1 : (compRes>0.0 ? 1 : 0);
+    return compRes < 0.0 ? -1 : (compRes > 0.0 ? 1 : 0);
   }
 
   @Override
@@ -19,17 +21,17 @@ public class NumCompOp implements AbstractOp, Comparator<Number> {
     if (arg1 instanceof Version) {
       return ((Version) arg1).compareTo(Version.fromNumber(arg2));
     } else if (arg2 instanceof Version) {
-      return - ((Version) arg2).compareTo(Version.fromNumber(arg1));
+      return -((Version) arg2).compareTo(Version.fromNumber(arg1));
     } else {
       final Double compRes = arg1.doubleValue() - arg2.doubleValue();
       return compRes < 0.0 ? -1 : (compRes > 0.0 ? 1 : 0);
     }
   }
-        
+
   @Override
   public Number doFloatOp(Number arg1, Number arg2) {
     final float compRes = arg1.floatValue() - arg2.floatValue();
-    return compRes < 0.0f ? -1 : (compRes>0.0f ? 1 : 0);
+    return compRes < 0.0f ? -1 : (compRes > 0.0f ? 1 : 0);
   }
 
   @Override

@@ -4,14 +4,15 @@ public class ASTNLeaf extends ASTN {
   public ASTNLeaf(Object object, ParseCtx pctx) {
     super(object, pctx);
   }
+
   public ASTNLeaf(Object object, ParseCtx pctx, boolean isComment) {
     super(object, pctx, isComment);
   }
-    
+
   public ASTNLeaf(Object object, ParseCtx pctx, Exception ex) {
     super(object, pctx, ex);
   }
-    
+
   @Override
   public boolean isList() {
     return false;
@@ -28,6 +29,6 @@ public class ASTNLeaf extends ASTN {
 
   // @Override
   // public List<ASTN> getList() {
-  //    throw new CompilationException(pctx,"internal error: list requested on non-list AST Node");     
+  //    throw new CompilationException(pctx,"internal error: list requested on non-list AST Node");
   // }
 }

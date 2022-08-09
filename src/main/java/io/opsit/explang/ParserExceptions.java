@@ -1,11 +1,10 @@
 package io.opsit.explang;
 
-import java.util.List;
 import java.util.ArrayList;
-
+import java.util.List;
 
 public class ParserExceptions extends ParserException {
-  final protected List<ParserException> errList;
+  protected final List<ParserException> errList;
 
   @Override
   public List<String> getMessages() {
@@ -15,9 +14,11 @@ public class ParserExceptions extends ParserException {
     }
     return result;
   }
-    
-  public ParserExceptions(ParseCtx pctx,
-                          List<ParserException> errList) {
+
+  /**
+   * Make summary exception given list of parser exceptions.
+   */
+  public ParserExceptions(ParseCtx pctx, List<ParserException> errList) {
     super(pctx, mkMessage(pctx, errList));
     this.pctx = pctx;
     this.errList = errList;
@@ -32,7 +33,4 @@ public class ParserExceptions extends ParserException {
     }
     return buf.toString();
   }
-    
 }
-
-
