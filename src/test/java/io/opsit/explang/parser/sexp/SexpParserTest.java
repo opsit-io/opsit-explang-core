@@ -1,4 +1,4 @@
-package io.opsit.explang;
+package io.opsit.explang.parser.sexp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +10,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
-import io.opsit.explang.parser.sexp.SexpParser;
+
+import io.opsit.explang.AbstractTest;
+import io.opsit.explang.Symbol;
+import io.opsit.explang.Keyword;
+import io.opsit.explang.ParseCtx;
+import io.opsit.explang.ASTN;
+import io.opsit.explang.ASTNList;
 
 @RunWith(Parameterized.class)
 public class SexpParserTest extends AbstractTest {

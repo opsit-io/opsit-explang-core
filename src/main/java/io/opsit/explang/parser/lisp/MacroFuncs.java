@@ -1,7 +1,7 @@
 package io.opsit.explang.parser.lisp;
 
-import static io.opsit.explang.parser.lisp.LispParser._readChar;
-import static io.opsit.explang.parser.lisp.LispParser._unreadChar;
+import static io.opsit.explang.parser.lisp.LispParser.doReadChar;
+import static io.opsit.explang.parser.lisp.LispParser.doUnreadChar;
 import static io.opsit.explang.parser.lisp.LispParser.processChar;
 
 import io.opsit.explang.ASTN;
@@ -31,9 +31,7 @@ public class MacroFuncs {
 
   public static class ReadList implements IReaderMacroFunc {
     /**
-     * {@inheritDoc}
-     *
-     * @see IReaderMacroFunc#execute(char,PushbackReader,ReadTable,ParseCtx)
+     * Read list ( ...  ).
      */
     public ASTN execute(char terminator, PushbackReader is, ReadTable rt, ParseCtx pctx) {
       ASTNList lst = new ASTNList(Utils.list(), pctx.clone());
@@ -62,31 +60,15 @@ public class MacroFuncs {
     }
   }
 
-  /*protected static int readNumArg(PushbackReader is, ParseCtx pctx) {
-  int numArg = -1;
-  char c ;
-  try {
-  while (true) {
-  int n = _readChar(is, pctx);
-  if (n < 0) {
-  throw new ReaderEOFException(pctx,  UNEXPECTED_EOF_EXCEPTION);
-  }
-  c = (char) n;
-  if (c < '0' || c > '9') {
-  break;
-  }
-  if (numArg < 0) {
-  numArg = 0;
-  }
-  numArg = numArg * 10 + c - '0';
-  }
-  } catch (IOException e) {
-  throw new ReaderException(pctx,  UNEXPECTED_IO_EXCEPTION, e);
-  }
-  return numArg;
-  }*/
 
+  /**
+   * Handler for read dispatch character.
+   */
   public static class ReadDispatchChar implements IReaderMacroFunc {
+    /**
+     *  Read optional dispatch numeric argument and dispatch
+     *  subcharacter and execute its function if one is defined.
+     */
     public ASTN execute(char dispChar, PushbackReader is, ReadTable rt, ParseCtx pctx) {
       // read optional numeric parameter
       ASTN result = null;
@@ -94,7 +76,7 @@ public class MacroFuncs {
       char c;
       try {
         while (true) {
-          int n = _readChar(is, pctx);
+          int n = doReadChar(is, pctx);
           if (n < 0) {
             return new ASTNLeaf(null, pctx, new ParserEOFException(pctx, UNEXPECTED_EOF_EXCEPTION));
           }
@@ -120,13 +102,20 @@ public class MacroFuncs {
       if (null != fun) {
         result = fun.execute(is, pctx, rt, c, numArg);
       } else {
+        // FIXME: return error if there is no dispatch function defined
         result = new ASTNLeaf(null, pctx.clone());
       }
       return result;
     }
   }
 
+  /**
+   * Handler for quoted (') expressions.
+   */
   public static class ReadQuote implements IReaderMacroFunc {
+    /**
+     * Read quoted expression.
+     */
     public ASTN execute(char terminator, PushbackReader is, ReadTable rt, ParseCtx pctx) {
       ParseCtx startPCtx = pctx.clone();
       ASTN q = new ASTNLeaf(new Symbol("QUOTE"), pctx.clone());
@@ -142,13 +131,16 @@ public class MacroFuncs {
     }
   }
 
+  /**
+   * Read comment expression.
+   */
   public static class ReadComment implements IReaderMacroFunc {
     @Override
     public ASTN execute(char c, PushbackReader is, ReadTable rt, ParseCtx pctx) {
       StringBuilder buf = new StringBuilder(c);
       try {
         while (true) {
-          int n = _readChar(is, pctx);
+          int n = doReadChar(is, pctx);
           if ((n < 0) || (n == '\n')) {
             return new ASTNLeaf(buf.toString(), pctx, true);
           }
@@ -161,20 +153,26 @@ public class MacroFuncs {
     }
   }
 
+  /**
+   * Handler for string literals.
+   */
   public static class ReadString implements IReaderMacroFunc {
+    /**
+     * Read string literals.
+     */
     public ASTN execute(char terminator, PushbackReader is, ReadTable rt, ParseCtx pctx) {
       StringBuilder sb = new StringBuilder();
       try {
         while (true) {
-          int n = _readChar(is, pctx);
+          int n = doReadChar(is, pctx);
           if (n < 0) {
             // return error(new EndOfFile(this));
             return new ASTNLeaf(sb.toString(), pctx, new ParserEOFException(pctx, "unclosed '\"'"));
           }
           char c = (char) n;
           if (rt.getSyntaxType(c) == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
-            // 		    // Single escape.
-            n = _readChar(is, pctx);
+            //          // Single escape.
+            n = doReadChar(is, pctx);
             if (n < 0) {
               return new ASTNLeaf(
                   sb.toString(), pctx, new ParserEOFException(pctx, "unclosed '\"'"));
@@ -219,36 +217,48 @@ public class MacroFuncs {
       throws ParserException {
     try {
       while (true) {
-        int n = _readChar(is, pctx);
+        int n = doReadChar(is, pctx);
         if (n < 0) {
           throw new ParserEOFException(UNEXPECTED_EOF_EXCEPTION);
         }
 
         char c = (char) n; // ### BUG: Codepoint conversion
-        if (!rt.isWhitespace(c)) return c;
+        if (!rt.isWhitespace(c)) {
+          return c;
+        }
       }
     } catch (IOException e) {
       throw new ParserException(pctx, "I/O exception", e);
     }
   }
 
+  /**
+   * Handler for #\ sequence (character literal).
+   */
   public static class ReadSharpBackSlash implements IDispatchMacroFunc {
+    /**
+     * Read Character literal.
+     */
     @Override
     public ASTN execute(PushbackReader is, ParseCtx pctx, ReadTable rt, char quot, int numArg) {
       try {
-        int n = _readChar(is, pctx);
+        int n = doReadChar(is, pctx);
         if (n < 0) {
           return new ASTNLeaf(null, pctx, new ParserEOFException(UNEXPECTED_EOF_EXCEPTION));
         }
         char c = (char) n;
         StringBuilder sb = new StringBuilder(String.valueOf(c));
         while (true) {
-          n = _readChar(is, pctx);
-          if (n < 0) break;
+          n = doReadChar(is, pctx);
+          if (n < 0) {
+            break;
+          }
           c = (char) n;
-          if (rt.isWhitespace(c)) break;
+          if (rt.isWhitespace(c)) {
+            break;
+          }
           if (rt.getSyntaxType(c) == ReadTable.SYNTAX_TYPE_TERMINATING_MACRO) {
-            _unreadChar(is, pctx, c);
+            doUnreadChar(is, pctx, c);
             break;
           }
           sb.append(c);
@@ -270,7 +280,7 @@ public class MacroFuncs {
       }
     }
   }
-  ;
+  
 
   public static class ReadSharpQuote implements IDispatchMacroFunc {
     @Override
@@ -287,8 +297,7 @@ public class MacroFuncs {
       return new ASTNList(Utils.list(f, node), newPctx);
     }
   }
-  ;
-
+  
   public static class ReadSharpQMark implements IDispatchMacroFunc {
     @Override
     public ASTN execute(PushbackReader is, ParseCtx pctx, ReadTable rt, char quot, int numArg) {
@@ -297,7 +306,7 @@ public class MacroFuncs {
         StringBuilder sb = new StringBuilder();
         boolean esc = false;
         while (true) {
-          n = _readChar(is, pctx);
+          n = doReadChar(is, pctx);
           if (n < 0) {
             return new ASTNLeaf(null, pctx, new ParserEOFException(UNEXPECTED_EOF_EXCEPTION));
           }
@@ -326,20 +335,19 @@ public class MacroFuncs {
       // return  new ASTN(p, pctx.clone());
     }
   }
-  ;
 
   // //This will read regexp with java like syntax, i.e. \ escapes any character
   // //and, therefore, double escapes needed to get a regexp escape
   // public static class ReadSharpQMark implements IDispatchMacroFunc {
-  // 	    @Override
-  // 	    public ASTN execute(PushbackReader is,
-  // 				ParseCtx pctx,
-  // 				ReadTable rt,
-  // 				char quot,
-  // 				int numArg) {
-  // 		ASTN strASTN = ((IReaderMacroFunc)LispReader.READ_STRING).execute('"',is,rt,pctx);
-  // 		final Pattern p = Pattern.compile((String)strASTN.getObject());
-  // 		return  new ASTN(p, pctx.clone());
-  // 	    }
+  //        @Override
+  //        public ASTN execute(PushbackReader is,
+  //                ParseCtx pctx,
+  //                ReadTable rt,
+  //                char quot,
+  //                int numArg) {
+  //        ASTN strASTN = ((IReaderMacroFunc)LispReader.READ_STRING).execute('"',is,rt,pctx);
+  //        final Pattern p = Pattern.compile((String)strASTN.getObject());
+  //        return  new ASTN(p, pctx.clone());
+  //        }
   // };
 }

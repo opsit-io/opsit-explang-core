@@ -1,17 +1,11 @@
 package io.opsit.explang.parser.sexp;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import static io.opsit.explang.Utils.list;
 
-import java.util.List;
-
-import io.opsit.explang.IParser;
-import io.opsit.explang.ASTNList;
-import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTN;
+import io.opsit.explang.ASTNLeaf;
+import io.opsit.explang.ASTNList;
+import io.opsit.explang.IParser;
 import io.opsit.explang.ParseCtx;
 import io.opsit.explang.ParserException;
 import io.opsit.explang.atom.AtomParseException;
@@ -25,9 +19,14 @@ import io.opsit.explang.atom.RegexpParser;
 import io.opsit.explang.atom.SymbolParser;
 import io.opsit.explang.atom.VersionParser;
 
-import static io.opsit.explang.Utils.list;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.List;
 
-//@SuppressWarnings({"serial"})
+// @SuppressWarnings({"serial"})
 public class SexpParser implements IParser {
 
   @Override
@@ -39,7 +38,7 @@ public class SexpParser implements IParser {
     final InputStream is = new ByteArrayInputStream(input.getBytes());
     return parse(pctx, is, maxExprs);
   }
-    
+
   public ASTNList parse(ParseCtx pctx, InputStream is, int maxExprs) {
     final Reader reader = new InputStreamReader(is);
     return parse(pctx, reader, maxExprs);
@@ -47,7 +46,7 @@ public class SexpParser implements IParser {
 
   @Override
   public ASTNList parse(ParseCtx pctx, Reader reader, int maxExprs) {
-    final List<ASTN> sexp = list(new ASTNList(list(),pctx.clone()));
+    final List<ASTN> sexp = list(new ASTNList(list(), pctx.clone()));
     boolean inStr = false;
     boolean inComment = false;
     int depth = 0;
@@ -56,45 +55,47 @@ public class SexpParser implements IParser {
     int code;
     ParseCtx spctx = null;
     Exception problem = null;
-    try { 
-      for (int i = 0; true  ;i++) {
-        if (0 == depth && ((ASTNList)sexp.get(0)).size() >= maxExprs) {
+    try {
+      for (int i = 0; true; i++) {
+        if (0 == depth && ((ASTNList) sexp.get(0)).size() >= maxExprs) {
           break;
         }
         code = reader.read();
         if (code < 0) {
           break;
         }
-        pctx.setPos(i-lineStart);
+        pctx.setPos(i - lineStart);
         pctx.setOff(i);
-        char chr = (char)code;
+        char chr = (char) code;
         if (inComment) {
-          if (chr=='\n') {
-            inComment=false;
+          if (chr == '\n') {
+            inComment = false;
           }
         } else {
-          if (chr=='"') {
-            inStr = ! inStr;
+          if (chr == '"') {
+            inStr = !inStr;
             if (buf.length() == 0) {
               spctx = pctx.clone();
             }
             buf.append(chr);
-          } else if ((!inStr) && (chr=='(')) {
+          } else if ((!inStr) && (chr == '(')) {
             if (buf.length() > 0) {
               addParsedAtom(sexp, buf, pctx, spctx);
             }
             depth++;
             sexp.add(new ASTNList(list(), pctx.clone()));
-          } else if ((!inStr) && chr==')') {
+          } else if ((!inStr) && chr == ')') {
             depth--;
-            if (depth<0) {
-              sexp.add(new ASTNLeaf(null, pctx, new ParserException(pctx, "Too many right parentheses")));
+            if (depth < 0) {
+              sexp.add(
+                  new ASTNLeaf(
+                      null, pctx, new ParserException(pctx, "Too many right parentheses")));
             }
-            if (buf.length()>0) {
+            if (buf.length() > 0) {
               addParsedAtom(sexp, buf, pctx, spctx);
             }
-            ASTN tmp =  sexp.remove(sexp.size() - 1);
-            ((ASTNList)sexp.get(sexp.size() - 1)).add(tmp);
+            ASTN tmp = sexp.remove(sexp.size() - 1);
+            ((ASTNList) sexp.get(sexp.size() - 1)).add(tmp);
           } else if ((!inStr) && " \n\r\t".indexOf(chr) > -1) {
             if (buf.length() > 0) {
               addParsedAtom(sexp, buf, pctx, spctx);
@@ -104,7 +105,7 @@ public class SexpParser implements IParser {
           } else {
             if (buf.length() == 0) {
               spctx = pctx.clone();
-            }           
+            }
             buf.append(chr);
           }
         }
@@ -125,53 +126,53 @@ public class SexpParser implements IParser {
     if (buf.length() > 0) {
       addParsedAtom(sexp, buf, pctx, spctx);
     }
-    ASTNList resultList = (ASTNList)sexp.get(0);
+    ASTNList resultList = (ASTNList) sexp.get(0);
     if (null != problem) {
-      resultList.problem =  problem;
+      resultList.problem = problem;
     }
     return resultList;
   }
 
   private void addParsedAtom(List<ASTN> sexp, StringBuffer buf, ParseCtx pctx, ParseCtx spctx) {
-    ((ASTNList)sexp.get(sexp.size() - 1))
-      .add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
+    ((ASTNList) sexp.get(sexp.size() - 1)).add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
     clearBuf(buf);
   }
-    
-  private ASTN parseAtom(String string, ParseCtx pctx)  {
+
+  private ASTN parseAtom(String string, ParseCtx pctx) {
     final Object[] holder = new Object[1];
-    for(AtomParser parser : atomParsers) {
+    for (AtomParser parser : atomParsers) {
       try {
         if (parser.parse(string, holder, pctx)) {
           return new ASTNLeaf(holder[0], pctx);
         }
-      } catch(AtomParseException ex) {
+      } catch (AtomParseException ex) {
         return new ASTNLeaf(string, pctx, ex);
       }
     }
-    return new ASTNLeaf(string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
+    return new ASTNLeaf(
+        string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
   }
 
+  protected AtomParser[] atomParsers =
+      new AtomParser[] {
+        new NullParser(),
+        new BooleanParser(),
+        new NumberParser(),
+        new EscStringParser(),
+        new RegexpParser(),
+        new VersionParser(),
+        new KeywordParser(),
+        new SymbolParser()
+      };
 
-  protected AtomParser[] atomParsers = new AtomParser[] {
-    new NullParser(),
-    new BooleanParser(),
-    new NumberParser(),
-    new EscStringParser(),
-    new RegexpParser(),
-    new VersionParser(),
-    new KeywordParser(),
-    new SymbolParser()
-  };
-    
-  public String sexpToString(Object obj) {
+  protected String sexpToString(Object obj) {
     if (null == obj) {
       return "()";
     } else if (obj instanceof List) {
       StringBuffer str = new StringBuffer();
       str.append('(');
-      for (Object member : ((List<?>)obj)) {
-        if (str.length()>1) {
+      for (Object member : ((List<?>) obj)) {
+        if (str.length() > 1) {
           str.append(" ");
         }
         str.append(sexpToString(member));
@@ -179,7 +180,7 @@ public class SexpParser implements IParser {
       str.append(')');
       return str.toString();
     } else if (obj instanceof String) {
-      return String.format("\"%s\"",obj);
+      return String.format("\"%s\"", obj);
     } else {
       return obj.toString();
     }
@@ -188,11 +189,10 @@ public class SexpParser implements IParser {
   protected void clearBuf(StringBuffer buf) {
     buf.delete(0, buf.length());
   }
-    
-  /*protected List list(Object ... objs) {
-    List lst = new ArrayList();
-    lst.addAll(Arrays.asList(objs));
-    return lst;
-    }*/
-}
 
+  /*protected List list(Object ... objs) {
+  List lst = new ArrayList();
+  lst.addAll(Arrays.asList(objs));
+  return lst;
+  }*/
+}

@@ -1,16 +1,5 @@
 package io.opsit.explang.parser.lisp;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PushbackInputStream;
-import java.io.PushbackReader;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.List;
-
 import io.opsit.explang.ASTN;
 import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTNList;
@@ -28,22 +17,29 @@ import io.opsit.explang.atom.NullParser;
 import io.opsit.explang.atom.NumberParser;
 import io.opsit.explang.atom.SymbolParser;
 
-public class LispParser implements IParser  {
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PushbackInputStream;
+import java.io.PushbackReader;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
+
+public class LispParser implements IParser {
 
   public interface ReaderMacro {
-    public ASTN execute (PushbackInputStream is,
-                         Character chr);
+    public ASTN execute(PushbackInputStream is, Character chr);
   }
-    
-  public static final Object READ_COMMENT =
-    new MacroFuncs.ReadComment();
-  public static final Object READ_STRING =
-    new MacroFuncs.ReadString();
+
+  public static final Object READ_COMMENT = new MacroFuncs.ReadComment();
+  public static final Object READ_STRING = new MacroFuncs.ReadString();
   public static final Object READ_LIST = new MacroFuncs.ReadList();
-  public static final Object READ_RIGHT_PAREN =
-    new MacroFuncs.ReadRightParen();
+  public static final Object READ_RIGHT_PAREN = new MacroFuncs.ReadRightParen();
   public static final Object READ_QUOTE = new MacroFuncs.ReadQuote();
-    
+
   public static final Object READ_DISPATCH_CHAR = new MacroFuncs.ReadDispatchChar();
   public static final Object BACKQUOTE_MACRO = null;
   public static final Object COMMA_MACRO = null;
@@ -59,94 +55,76 @@ public class LispParser implements IParser  {
   public static final Object SHARP_R = null;
   public static final Object SHARP_S = null;
   public static final Object SHARP_X = null;
-    
+
   public static final Object SHARP_QUOTE = new MacroFuncs.ReadSharpQuote();
   public static final Object SHARP_QMARK = new MacroFuncs.ReadSharpQMark();
-    
+
   public static final Object SHARP_BACKSLASH = new MacroFuncs.ReadSharpBackSlash();
   public static final Object SHARP_VERTICAL_BAR = null;
   public static final Object SHARP_ILLEGAL = null;
 
-
-  /**
-   * Parse up to maxExprs from the input stream
-   */
+  /** Parse up to maxExprs from the input stream. */
   @Override
-  public ASTNList parse(ParseCtx pctx, Reader r, int maxExprs)  {
-    final PushbackReader pbr =new PushbackReader(r);
+  public ASTNList parse(ParseCtx pctx, Reader r, int maxExprs) {
+    final PushbackReader pbr = new PushbackReader(r);
     final List<ASTN> lst = new ArrayList<ASTN>();
     ASTN parsed;
-    for(int i = 0;
-        (i < maxExprs) &&
-          (null != (parsed = parse_expr(pctx, pbr)))  ;
-        i++) {
+    for (int i = 0; (i < maxExprs) && (null != (parsed = parse_expr(pctx, pbr))); i++) {
       lst.add(parsed);
     }
     final ASTNList result = new ASTNList(lst, pctx);
     return result;
   }
 
-
-  /**
-   * Parse up to maxExprs from the input string
-   */
+  /** Parse up to maxExprs from the input string. */
   public ASTNList parse(ParseCtx pctx, String str, int maxExprs) {
     final InputStream is = new ByteArrayInputStream(str.getBytes());
     final Reader r = new InputStreamReader(is);
     return parse(pctx, r, maxExprs);
   }
 
-  //@Override
+  // @Override
   public ASTNList parse(ParseCtx pctx, String input) {
-    return parse(pctx, input,Integer.MAX_VALUE);
+    return parse(pctx, input, Integer.MAX_VALUE);
   }
-    
+
   // FIXME
   public final ReadTable rt = new ReadTable();
 
-  /**
-   * parse one expression from input stream
-   */
-  protected ASTN parse_expr(ParseCtx pctx, PushbackReader reader)  {
+  /** parse one expression from input stream. */
+  protected ASTN parse_expr(ParseCtx pctx, PushbackReader reader) {
     while (true) {
       int n = -1;
       try {
-        n = _readChar(reader, pctx);
+        n = doReadChar(reader, pctx);
       } catch (IOException e) {
         return new ASTNLeaf(null, pctx, e);
       }
       if (n < 0) {
         // EOF before start of any expression is OK
-        //throw new ReaderException(pctx, "Unexpected EOF");
+        // throw new ReaderException(pctx, "Unexpected EOF");
         return null;
       }
       char c = (char) n;
       if (rt.isWhitespace(c)) {
         continue;
       }
-        
+
       ASTN result = processChar(pctx, c, reader, rt);
-      if (result != null && !result.isComment())  {
+      if (result != null && !result.isComment()) {
         return result;
       }
     }
   }
 
-
   /**
-   *
-   *
-   * @param pctx
-   * @param c
-   * @param r
-   * @param rt
-   * @return
+   * Process input character.
    */
-  static final ASTN processChar(ParseCtx pctx, char c, PushbackReader r, ReadTable rt)  {
+  static final ASTN processChar(ParseCtx pctx, char c, PushbackReader r, ReadTable rt) {
 
     final IReaderMacroFunc handler = rt.getReaderMacroFunction(c);
     if (null != handler) {
-      return handler.execute(c, r, rt,  pctx);
+      return handler.execute(c, r, rt, pctx);
     }
     // LispObject value;
 
@@ -172,69 +150,53 @@ public class LispParser implements IParser  {
     // return value;
   }
 
-  private static final ASTN readToken(ParseCtx pctx, char c, PushbackReader r, ReadTable rt)   {
+  private static final ASTN readToken(ParseCtx pctx, char c, PushbackReader r, ReadTable rt) {
     StringBuilder sb = new StringBuilder(String.valueOf(c));
-    //final LispThread thread = LispThread.currentThread();
+    // final LispThread thread = LispThread.currentThread();
     BitSet flags = null;
     try {
-      flags = _readToken(pctx, r, sb, rt);
+      flags = doReadToken(pctx, r, sb, rt);
     } catch (ParserException ex) {
       return new ASTNLeaf(null, pctx, ex);
     }
-    return parseToken(sb.toString(), flags, pctx,
-                      null == flags ?
-                      tokenParsers  : escTokenParsers);
+    return parseToken(sb.toString(), flags, pctx, null == flags ? tokenParsers : escTokenParsers);
   }
 
-
-  private static ASTN parseToken(String string,
-                                 BitSet flags,
-                                 ParseCtx pctx,
-                                 AtomParser[] parsers)  {
+  private static ASTN parseToken(String string, BitSet flags, ParseCtx pctx, AtomParser[] parsers) {
     final Object[] holder = new Object[1];
-    for(AtomParser parser : parsers) {
+    for (AtomParser parser : parsers) {
       try {
         if (parser.parse(string, holder, pctx)) {
           return new ASTNLeaf(holder[0], pctx);
         }
-      } catch(AtomParseException ex) {
+      } catch (AtomParseException ex) {
         return new ASTNLeaf(string, pctx, ex);
       }
     }
-    return new ASTNLeaf(string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
+    return new ASTNLeaf(
+        string, pctx, new ParserException(String.format("Failed to parse atom '%s'", string)));
     //  throw new SexpParserException(pctx,
     //                    String.format("Failed to parse atom '%s'", string));
   }
 
-  protected static AtomParser[] tokenParsers = new AtomParser[] {
-    new NullParser(),
-    new BooleanParser(),
-    new NumberParser(),
-    //new StringParser(),
-    new KeywordParser(),
-    new SymbolParser()
-  };
+  protected static AtomParser[] tokenParsers =
+      new AtomParser[] {
+        new NullParser(),
+        new BooleanParser(),
+        new NumberParser(),
+        // new StringParser(),
+        new KeywordParser(),
+        new SymbolParser()
+      };
 
-  protected static AtomParser[] escTokenParsers = new AtomParser[] {
-    //new StringParser(),
-    new KeywordParser(),
-    new SymbolParser()
-  };
+  protected static AtomParser[] escTokenParsers =
+      new AtomParser[] {
+        // new StringParser(),
+        new KeywordParser(), new SymbolParser()
+      };
 
-    
-    
-  /**
-   *
-   *
-   * @param pctx
-   * @param r
-   * @param sb
-   * @param rt
-   * @return
-   */
-  private static  BitSet _readToken(ParseCtx pctx, PushbackReader r, StringBuilder sb, ReadTable rt)
-    throws ParserException 
-  {
+  private static BitSet doReadToken(ParseCtx pctx, PushbackReader r, StringBuilder sb, ReadTable rt)
+      throws ParserException {
     BitSet flags = null;
     final Keyword readtableCase = rt.getReadtableCase();
     if (sb.length() > 0) {
@@ -244,14 +206,14 @@ public class LispParser implements IParser  {
       if (syntaxType == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
         int n = -1;
         try {
-          n = _readChar(r, pctx);
+          n = doReadChar(r, pctx);
         } catch (IOException e) {
-          //error(new StreamError(this, e));
+          // error(new StreamError(this, e));
           throw new ParserException(pctx, e.getMessage(), e);
-          //return flags;
+          // return flags;
         }
         if (n < 0) {
-          //error(new EndOfFile(this));
+          // error(new EndOfFile(this));
           return null; // Not reached
         }
 
@@ -273,27 +235,30 @@ public class LispParser implements IParser  {
     }
     try {
       while (true) {
-        int n = _readChar(r, pctx);
-        if (n < 0)
+        int n = doReadChar(r, pctx);
+        if (n < 0) {
           break;
+        }
         char c = (char) n; // ### BUG: Codepoint conversion
         if (rt.isWhitespace(c)) {
-          _unreadChar(r,pctx, n);
+          doUnreadChar(r, pctx, n);
           break;
         }
         byte syntaxType = rt.getSyntaxType(c);
         if (syntaxType == ReadTable.SYNTAX_TYPE_TERMINATING_MACRO) {
-          _unreadChar(r, pctx, c);
+          doUnreadChar(r, pctx, c);
           break;
         }
         rt.checkInvalid(c);
         if (syntaxType == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
-          n = _readChar(r, pctx);
-          if (n < 0)
+          n = doReadChar(r, pctx);
+          if (n < 0) {
             break;
-          sb.append((char)n); // ### BUG: Codepoint conversion
-          if (flags == null)
+          }
+          sb.append((char) n); // ### BUG: Codepoint conversion
+          if (flags == null) {
             flags = new BitSet(sb.length());
+          }
           flags.set(sb.length() - 1);
           continue;
         }
@@ -301,27 +266,29 @@ public class LispParser implements IParser  {
           int begin = sb.length();
           sb.append(readMultipleEscape(pctx, r, rt));
           int end = sb.length();
-          if (flags == null)
+          if (flags == null) {
             flags = new BitSet(sb.length());
+          }
           flags.set(begin, end);
           continue;
         }
-        if (readtableCase == Keyword.UPCASE)
+        if (readtableCase == Keyword.UPCASE) {
           c = Character.toUpperCase(c);
-        else if (readtableCase == Keyword.DOWNCASE)
+        } else if (readtableCase == Keyword.DOWNCASE) {
           c = Character.toLowerCase(c);
+        }
         sb.append(c);
       }
     } catch (IOException e) {
       throw new ParserException(pctx, e.getMessage(), e);
-      //error(new StreamError(this, e));
-      //return flags;
+      // error(new StreamError(this, e));
+      // return flags;
     }
 
     return flags;
   }
-    
-  protected static int _readChar(PushbackReader reader, ParseCtx pctx) throws IOException {
+
+  protected static int doReadChar(PushbackReader reader, ParseCtx pctx) throws IOException {
     final int n = reader.read();
     if (n < 0) {
       return -1;
@@ -336,56 +303,54 @@ public class LispParser implements IParser  {
     return n;
   }
 
-  protected static void  _unreadChar(PushbackReader reader, ParseCtx pctx, int n) throws IOException {
-    //if (reader == null) {
-    //streamNotCharacterInputStream();
-    //}
+  protected static void doUnreadChar(PushbackReader reader, ParseCtx pctx, int n)
+      throws IOException {
+    // if (reader == null) {
+    // streamNotCharacterInputStream();
+    // }
     // FIXME! (how to return to end of prev line?
     pctx.setOff(pctx.getOff() - 1);
     pctx.setPos(pctx.getPos() - 1);
     if (n == '\n') {
-      //n = eolChar;
+      // n = eolChar;
       pctx.setLine(pctx.getLine() - 1);
     }
 
     reader.unread(n);
-    //pastEnd = false;
+    // pastEnd = false;
   }
 
-    
-
-
   private static String readMultipleEscape(ParseCtx pctx, PushbackReader r, ReadTable rt)
-    throws ParserException  {
+      throws ParserException {
     StringBuilder sb = new StringBuilder();
     try {
       while (true) {
-        int n = _readChar(r, pctx);
+        int n = doReadChar(r, pctx);
         if (n < 0) {
-          //return serror(new EndOfFile(this));
+          // return serror(new EndOfFile(this));
           throw new ParserEOFException("Unexpected EOF");
         }
 
         char c = (char) n; // ### BUG: Codepoint conversion
         byte syntaxType = rt.getSyntaxType(c);
         if (syntaxType == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
-          n = _readChar(r, pctx);
+          n = doReadChar(r, pctx);
           if (n < 0) {
             throw new ParserEOFException("Unexpected EOF");
-            //return serror(new EndOfFile(this));
+            // return serror(new EndOfFile(this));
           }
-          sb.append((char)n); // ### BUG: Codepoint conversion
+          sb.append((char) n); // ### BUG: Codepoint conversion
           continue;
         }
-        if (syntaxType == ReadTable.SYNTAX_TYPE_MULTIPLE_ESCAPE)
+        if (syntaxType == ReadTable.SYNTAX_TYPE_MULTIPLE_ESCAPE) {
           break;
+        }
         sb.append(c);
       }
     } catch (IOException e) {
-      //return serror(new StreamError(this, e));
+      // return serror(new StreamError(this, e));
       throw new ParserException("IO Error: " + e.getMessage());
     }
     return sb.toString();
   }
-
 }
