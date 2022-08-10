@@ -24,8 +24,10 @@
   <suppress checks="ParameterName"
             files="io/opsit/explang/parser/lisp/ReadTable.java"/>
   <suppress checks="ParameterName"
-             files="io/opsit/explang/parser/lisp/LispParser.java"/>  
+            files="io/opsit/explang/parser/lisp/LispParser.java"/>  
   <suppress checks="LocalVariable"
-             files="io/opsit/explang/parser/lisp/LispParser.java"/>  
+            files="io/opsit/explang/parser/lisp/LispParser.java"/>
+  <suppress checks="AvoidStarImport"
+             files="io/opsit/explang/Compiler.java"/>  
  
 </suppressions>
