@@ -32,9 +32,7 @@ public class Compiler {
       Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
   protected boolean enforcePackages = true;
 
-  /**
-   * Return default list of enabled packages for a Compiler instance.
-   */
+  /** Return default list of enabled packages for a Compiler instance. */
   public static Set<String> getDefaultPackages() {
     // FIXME: make configurable
     return Utils.roset(
@@ -55,9 +53,7 @@ public class Compiler {
         Package.BASE_LANG);
   }
 
-  /**
-   * Return list of available packages.
-   */
+  /** Return list of available packages. */
   public static Set<String> getAllPackages() {
     // FIXME: discover dynamically
     return Utils.roset(
@@ -86,8 +82,7 @@ public class Compiler {
   /**
    * Construct compiler with default configuration.
    *
-   * <p>The compiler created with NO OP string converter
-   * and with default list of enabled packages.
+   * <p>The compiler created with NO OP string converter and with default list of enabled packages.
    */
   public Compiler() {
     this(new NOPConverter(), getDefaultPackages());
@@ -96,29 +91,22 @@ public class Compiler {
   /**
    * Construct compiler with given list of packages.
    *
-   * <p>The compiler created with NO OP string converter
-   * and with given list of packages.
+   * <p>The compiler created with NO OP string converter and with given list of packages.
    */
   public Compiler(Set<String> packages) {
     this(new NOPConverter(), packages);
   }
 
-
   /**
    * Construct compiler with given list of packages.
    *
-   * <p>The compiler created with given function name converter
-   * and default list of packages.
+   * <p>The compiler created with given function name converter and default list of packages.
    */
   public Compiler(IStringConverter converter) {
     this(converter, getDefaultPackages());
   }
 
-
-  /**
-   * Construct compiler with given list of packages and with given
-   * function name converter.
-   */
+  /** Construct compiler with given list of packages and with given function name converter. */
   public Compiler(IStringConverter fnameConverter, Set<String> packages) {
     super();
     this.setFnameConverter(fnameConverter);
@@ -126,54 +114,39 @@ public class Compiler {
     initBuiltins(this.getPackages());
   }
 
-  /**
-   * Configure function name converter.
-   */
+  /** Configure function name converter. */
   public void setFnameConverter(IStringConverter converter) {
     this.funcNameConverter = converter;
   }
 
-
-  /**
-   * Configure behaviour on dereference of non-existing variables.
-   */
+  /** Configure behaviour on dereference of non-existing variables. */
   public void setFailOnMissingVariables(boolean val) {
     // FIXME: allow configuration on creation
     this.failOnMissingVariables = val;
   }
 
-  /**
-   * Get configured parser.
-   */
+  /** Get configured parser. */
   public IParser getParser() {
     return parser;
   }
 
-  /**
-   * Configure parser.
-   */
+  /** Configure parser. */
   public void setParser(IParser parser) {
     // FIXME: make configurable at compiler creation time
     this.parser = parser;
   }
 
-  /**
-   * Get status of package enforcement.
-   */
+  /** Get status of package enforcement. */
   public boolean isEnforcePackages() {
     return this.enforcePackages;
   }
 
-  /**
-   * Set status of package enforcement.
-   */
+  /** Set status of package enforcement. */
   public void setEnforcePackages(boolean val) {
     this.enforcePackages = val;
   }
 
-  /**
-   * Add package specifications to the list of used packages.
-   */
+  /** Add package specifications to the list of used packages. */
   public void usePackages(String... pkgSpecs) {
     Set<String> pkgSet = new HashSet<String>();
     if (null != pkgSpecs) {
@@ -185,9 +158,7 @@ public class Compiler {
     initBuiltins(pkgSet);
   }
 
-  /**
-   * Add package specifications to the list of used packages.
-   */
+  /** Add package specifications to the list of used packages. */
   public void usePackages(Collection<String> pkgSpecs) {
     if (null != pkgSpecs) {
       for (String pkgSpec : pkgSpecs) {
@@ -199,24 +170,17 @@ public class Compiler {
     initBuiltins(pkgSet);
   }
 
-  /**
-   * Return set of enabled packages.
-   */
+  /** Return set of enabled packages. */
   public Set<String> getPackages() {
     return this.packages;
   }
 
-
-  /**
-   * Configure set of enabled packages.
-   */
+  /** Configure set of enabled packages. */
   public void setPackages(Set<String> packages) {
     this.packages = packages;
   }
 
-  /**
-   * Check if Builtin's package is contaimed in the set of packages.
-   */
+  /** Check if Builtin's package is contaimed in the set of packages. */
   public boolean checkBuiltinPackage(Class<?> cls, Set<String> pkgs) {
     final String name = this.getBuiltinPackage(cls);
     if (null != name) {
@@ -226,9 +190,7 @@ public class Compiler {
     }
   }
 
-  /**
-   * Get Builtin's package.
-   */
+  /** Get Builtin's package. */
   public String getBuiltinPackage(Class<?> cls) {
     final Package pkg = (Package) cls.getAnnotation(Package.class);
     if (null != pkg) {
@@ -241,8 +203,8 @@ public class Compiler {
   /**
    * Add mapping for a Builtin.
    *
-   * <p>Add builtin mapping. If packages are enforced the builtin
-   * will be checked against the list of enabled packages.
+   * <p>Add builtin mapping. If packages are enforced the builtin will be checked against the list
+   * of enabled packages.
    */
   public void addBuiltIn(String name, Class<?> cls) {
     if ((!isEnforcePackages()) || checkBuiltinPackage(cls, this.getPackages())) {
@@ -260,9 +222,7 @@ public class Compiler {
     }
   }
 
-  /**
-   * Abstract class for Builtins
-   */
+  /** Abstract class for Builtins. */
   public abstract class Builtin implements ICode {
     protected Class<?> cls;
 
@@ -548,8 +508,10 @@ public class Compiler {
     }
   }
 
+  /** Compile AST into executable data structures. */
   public ICompiled compile(ASTN ast) {
     if (ast.isList() && ((ASTNList) ast).isLiteralList()) {
+      // 1. Compile List literal (may be initializer like [a b c] in some syntaxes)
       // FIXME: DRY with callfunc like AST manipulation
       //       should go in subroutine?
       //       unless we get rid of callfunc usage here (implement label?)
@@ -564,7 +526,8 @@ public class Compiler {
       func.setDebugInfo(pctx);
       return func;
     } else if (ast.isList() && !((ASTNList) ast).isLiteralList()) {
-      // @SuppressWarnings("unchecked")
+      // 2. Usual form execution (form arg ...) or ((lambda) arg ..)
+
       ASTNList astList = ((ASTNList) ast);
 
       if (astList.size() == 0) {
@@ -653,6 +616,7 @@ public class Compiler {
                 "failed to compile list " + astList + ": first element is of unsupported type"));
       }
     } else {
+      // 3. standalone atom of some kind
       IExpr expr = null;
       final Object astObj = ast.getObject();
       if (astObj instanceof String) {
@@ -671,10 +635,9 @@ public class Compiler {
       expr.setDebugInfo(ast.getPctx());
       return expr;
     }
-    // throw new CompilationException(ast.getPctx(), "This cannot happen: reached end of compile for
-    // AST "+ast);
   }
 
+  /** Base class for special forms and regular functions. */
   public abstract class AbstractForm implements IForm, Runnable {
     protected ParseCtx debugInfo;
     protected String name;
@@ -695,6 +658,7 @@ public class Compiler {
       return debugInfo;
     }
 
+    /** Evaluate expression in new thread. */
     public void run() {
       final Compiler.ICtx ctx = Threads.contexts.get(Thread.currentThread());
       final Object result = this.evaluate(new Backtrace(), ctx);
@@ -726,6 +690,7 @@ public class Compiler {
     // FIXME: checks
     protected Symbol fsym;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() != 1) {
         throw new InvalidParametersException(
@@ -779,7 +744,7 @@ public class Compiler {
     }
 
     @SuppressWarnings("unchecked")
-    public CatchEntry compileCatchBlock(ASTNList list) throws InvalidParametersException {
+    protected CatchEntry compileCatchBlock(ASTNList list) throws InvalidParametersException {
       CatchEntry result = new CatchEntry();
       ASTN exception = list.get(0);
 
@@ -807,6 +772,7 @@ public class Compiler {
       return result;
     }
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       for (int i = 0; i < params.size(); i++) {
         ASTN param = params.get(i);
@@ -885,12 +851,15 @@ public class Compiler {
   }
 
   @Docstring(
-      text = "While loop construction. Execute sequnce of expressions while the consition is true")
+      text =
+          "While loop construction. "
+              + "Execute sequnce of expressions while the consition is true")
   @Package(name = Package.LOOPS)
   public class WHILE extends AbstractForm {
     private List<ICompiled> blocks = null;
     private ICompiled condition = null;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 2) {
         throw new InvalidParametersException(debugInfo, "WHILE expects at least 2 parameters");
@@ -932,6 +901,7 @@ public class Compiler {
     private ICompiled seqexpr = null;
     private ICompiled resultExpr = null;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 2) {
         throw new InvalidParametersException(
@@ -999,6 +969,7 @@ public class Compiler {
     private List<List<ICompiled>> forms = null;
     private List<ICompiled> testForms = null;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       final int numParms = params.size();
       this.forms = new ArrayList<List<ICompiled>>(numParms);
@@ -1022,6 +993,7 @@ public class Compiler {
       }
     }
 
+    @Override
     public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       final int numClauses = testForms.size();
       for (int i = 0; i < numClauses; i++) {
@@ -1193,7 +1165,7 @@ public class Compiler {
       this.elseBlocks = compileExpList(params.subList(2, params.size()));
     }
 
-    public Object evalWithArgs(Backtrace backtrace, List<Object> eargs, ICtx ctx) {
+    protected Object evalWithArgs(Backtrace backtrace, List<Object> eargs, ICtx ctx) {
       Object condVal = eargs.get(0);
       if (Utils.asBoolean(condVal)) {
         return thenBlock.evaluate(backtrace, ctx);
@@ -1202,7 +1174,7 @@ public class Compiler {
       }
     }
 
-    public List<Object> evaluateParameters(Backtrace backtrace, ICtx ctx) {
+    protected List<Object> evaluateParameters(Backtrace backtrace, ICtx ctx) {
       List<Object> eargs = new ArrayList<Object>(1);
       eargs.add(condition.evaluate(backtrace, ctx));
       return eargs;
@@ -1256,6 +1228,7 @@ public class Compiler {
     protected ArgSpec argSpec;
     protected List<ICompiled> blocks;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 1) {
         throw new InvalidParametersException(
@@ -1275,8 +1248,7 @@ public class Compiler {
       return getICode();
     }
 
-    // @Override
-    public ICode getICode() {
+    protected ICode getICode() {
       return new ICode() {
         @Override
         public Funcs.AbstractExpr getInstance() {
@@ -1341,6 +1313,7 @@ public class Compiler {
     protected ICompiled listExpr = null;
     protected List<String> varNames = new ArrayList<String>();
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 2) {
         throw new InvalidParametersException(
@@ -1414,6 +1387,7 @@ public class Compiler {
     protected List<ICompiled> blocks = null;
     ICompiled bindExpr = null;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 1) {
         throw new InvalidParametersException(
@@ -1443,6 +1417,7 @@ public class Compiler {
     protected List<ICompiled> blocks = null;
     ICompiled bindExpr = null;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 1) {
         throw new InvalidParametersException(
@@ -1469,6 +1444,7 @@ public class Compiler {
     VarExp[] variables;
     ICompiled[] values;
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       final int numParams = params.size();
       if ((numParams & 0x1) == 1) {
@@ -1527,7 +1503,7 @@ public class Compiler {
   @Package(name = Package.BASE_BINDINGS)
   @Docstring(
       text =
-          "Varianle assignmentm, local if not exists. If variable is already assigned it's value"
+          "Variable assignment, glocal if not exists. If variable is already assigned it's value"
               + " will be replaced by result of form evaluation. If not new global binding will be"
               + " created in the global scope\n"
               + "var - a symbol naming a variable.\n"
@@ -1547,6 +1523,7 @@ public class Compiler {
     protected List<ICompiled> varExprs = new ArrayList<ICompiled>();
     protected List<String> varNames = new ArrayList<String>();
 
+    @Override
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() < 2) {
         throw new InvalidParametersException(debugInfo, "LET expects at least 2 parameters");
@@ -1685,7 +1662,12 @@ public class Compiler {
     }
   }
 
-  //**** Context 
+  // **** Context
+
+  /**
+   * Context - The execution context containing Map of values of dynamic variables, map of variables
+   * properties and link to parent context.
+   */
   public interface ICtx {
     public ICtx getPrev();
 
@@ -1734,6 +1716,8 @@ public class Compiler {
     public void addMatches(Map<String, Object> matches, String pattern);
 
     public void remove(String name);
+
+    public List<ICtx> getParentContexts();
   }
 
   public interface IMissHandler {
@@ -1789,10 +1773,22 @@ public class Compiler {
       return null;
     }
 
+    /**
+     * Set variable property.
+     *
+     * @param name variable name
+     * @pobj list of pairs (property name, property value)
+     */
     public void putProp(String name, Object pkey, Object pval) {
       getPropsMapForPut(name).put(pkey, pval);
     }
 
+    /**
+     * Set variable properties.
+     *
+     * @param name of variable
+     * @pobj list of pairs (property name, property value)
+     */
     public void putProps(String name, Object... pobjs) {
       Map<Object, Object> pmap = getPropsMapForPut(name);
       for (int i = 0; i < pobjs.length; i += 2) {
@@ -1839,6 +1835,16 @@ public class Compiler {
       this(prev, vars, false);
     }
 
+    /**
+     * Make context based on parent context and map of value mappings.
+     *
+     * <p>If roCtx is true will be created context with empty mappings with parentcontext as
+     * described above.
+     *
+     * @param prev Parent context
+     * @param vars Variable mappings
+     * @param roCtx make extra child context.
+     */
     public Ctx(ICtx prev, Map<String, Object> vars, boolean roCtx) {
       super();
       initCtxSettings();
@@ -1851,20 +1857,27 @@ public class Compiler {
       }
     }
 
+    /** Build empty context. */
     public Ctx() {
       this(null, null, false);
     }
 
+    /** Create child context linking to previous context. */
     public Ctx(ICtx prev) {
       this(prev, null, false);
     }
 
+    /**
+     * Create child context linking to ctx as previous context and adding all local mapping from the
+     * locals context.
+     */
     public Ctx(ICtx locals, ICtx ctx) {
       this();
       mappings.putAll(locals.getMappings());
       prev = ctx;
     }
 
+    /** Return variable value. */
     public Object get(String name, Backtrace bt) {
       Object val;
       if (null == (val = mappings.get(name))) {
@@ -1900,6 +1913,7 @@ public class Compiler {
       return findCtxOrGlobal(name).getMappings();
     }
 
+    /** Check existance of variable mapping with given name. */
     public boolean contains(String name) {
       if (mappings.containsKey(name)) {
         return true;
@@ -1910,6 +1924,7 @@ public class Compiler {
       }
     }
 
+    /** Create new variable mapping. */
     public void put(String name, Object expr) {
       Object prev = mappings.put(name, expr);
       // FIXME: bug - if var was spreviously set to null
@@ -1918,10 +1933,12 @@ public class Compiler {
       }
     }
 
+    /** Get compiler that created this context. */
     public Compiler getCompiler() {
       return Compiler.this;
     }
 
+    /** Print out context with its content. */
     public String toString() {
       StringBuffer buf = new StringBuffer();
       buf.append("Ctx<").append(this.hashCode()).append("[");
@@ -1938,12 +1955,14 @@ public class Compiler {
       return buf.toString();
     }
 
+    /** Prunt out string identification of context. */
     public String toStringSelf() {
       StringBuffer buf = new StringBuffer();
       buf.append("Ctx<").append(this.hashCode()).append(">");
       return buf.toString();
     }
 
+    /** Print out context contents. */
     public String toStringShort() {
       StringBuffer buf = new StringBuffer();
       buf.append(this.toStringSelf()).append("=").append(mappings);
@@ -1978,6 +1997,7 @@ public class Compiler {
       this.getMappingsOrGlobal(name).put(name, value);
     }
 
+    @Override
     public List<ICtx> getParentContexts() {
       final List<ICtx> parents = new ArrayList<ICtx>();
       ICtx parent = this.getPrev();
@@ -2047,7 +2067,9 @@ public class Compiler {
     return new Backtrace();
   }
 
-  //***** Utility functions 
+  // ***** Utility functions
+
+  /** Evaluate block of compiled expressions. */
   public Object evalBlocks(Backtrace backtrace, List<ICompiled> blocks, ICtx ctx) {
     Object result = null;
     for (ICompiled block : blocks) {
@@ -2057,16 +2079,14 @@ public class Compiler {
   }
 
   /*public List<ICompiled> compileExpList(ASTNList nodes) {
-    List<ICompiled> exprs = new ArrayList<ICompiled>(nodes.size());
-    for (ASTN node : nodes) {
-      exprs.add(compile(node));
-    }
-    return exprs;
-    }*/
+  List<ICompiled> exprs = new ArrayList<ICompiled>(nodes.size());
+  for (ASTN node : nodes) {
+    exprs.add(compile(node));
+  }
+  return exprs;
+  }*/
 
-  /**
-   * Compile parameters.
-   */
+  /** Compile parameters. */
   public List<ICompiled> compileExpList(ASTNList params) {
     List<ICompiled> compiledParams = new ArrayList<ICompiled>(params.size());
     for (ASTN param : params) {
@@ -2075,22 +2095,16 @@ public class Compiler {
     return compiledParams;
   }
 
-  //***** Evaluated Arguments
-  /**
-   * Context adepted for function arguments.
-   */
+  // ***** Evaluated Arguments
+  /** Context adepted for function arguments. */
   public class Eargs extends Ctx {
     private Object[] eargs;
     private ArgList argList;
 
-    /**
-     * Create arguments list.
-     */
-    public Eargs(Object[] eargs, boolean []needEval, ArgList argList, ICtx ctx) {
+    /** Create arguments list. */
+    public Eargs(Object[] eargs, boolean[] needEval, ArgList argList, ICtx ctx) {
       super(ctx);
-      if ((null == argList)
-          || (null == eargs)
-          || (null == ctx)) {
+      if ((null == argList) || (null == eargs) || (null == ctx)) {
         throw new RuntimeException("Internal error: null constructor parameter when creating Earg");
       }
       this.eargs = eargs;
@@ -2118,9 +2132,7 @@ public class Compiler {
       return (spec.nameToIdx(name) >= 0) || (spec.svarNameToIdx(name) >= 0) || super.contains(name);
     }
 
-    /**
-     * Get evaluated argument by its number.
-     */
+    /** Get evaluated argument by its number. */
     public Object get(int argIdx, Backtrace backtrace) {
       final Object val = eargs[argIdx];
       if (val instanceof LazyEval) {
@@ -2129,7 +2141,7 @@ public class Compiler {
         return val;
       }
     }
-    
+
     @Override
     public Object get(String name, Backtrace bt) {
       // first hash map (function args may be overridden)
