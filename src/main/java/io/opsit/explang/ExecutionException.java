@@ -1,8 +1,8 @@
 package io.opsit.explang;
 
-
 public class ExecutionException extends RuntimeException {
   public Backtrace backtrace;
+
   public ExecutionException(Throwable cause) {
     super(cause);
   }
@@ -21,15 +21,16 @@ public class ExecutionException extends RuntimeException {
     this.backtrace = null == backtrace ? null : backtrace.copy();
   }
 
-  public ExecutionException(Backtrace backtrace, String msg, Throwable t) {
-    super(msg, t);
+  public ExecutionException(Backtrace backtrace, String msg, Throwable throwable) {
+    super(msg, throwable);
     this.backtrace = null == backtrace ? null : backtrace.copy();
   }
 
   public Backtrace getBacktrace() {
     return backtrace;
   }
-  public void  setBacktrace(Backtrace bt) {
-    this.backtrace =  bt;
+
+  public void setBacktrace(Backtrace bt) {
+    this.backtrace = bt;
   }
 }
