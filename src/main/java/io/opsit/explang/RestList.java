@@ -5,16 +5,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-//@SuppressWarnings("rawtypes")
+
 public class RestList implements List<Object> {
   private List<Object> lst;
   Backtrace bt;
-    
+
   public RestList(List<Object> lst, Backtrace bt) {
     this.lst = lst;
     this.bt = bt;
   }
-    
+
   @Override
   public int size() {
     return lst.size();
@@ -26,15 +26,15 @@ public class RestList implements List<Object> {
   }
 
   @Override
-  public boolean contains(Object o) {
-    return lst.contains(o);
+  public boolean contains(Object obj) {
+    return lst.contains(obj);
   }
 
   @Override
   public Iterator<Object> iterator() {
     final Iterator<Object> lstIter = lst.iterator();
     return new Iterator<Object>() {
-        
+
       @Override
       public boolean hasNext() {
         return lstIter.hasNext();
@@ -44,13 +44,12 @@ public class RestList implements List<Object> {
       public Object next() {
         final Object obj = lstIter.next();
         if (obj instanceof LazyEval) {
-          return ((LazyEval)obj).getValue(bt);
+          return ((LazyEval) obj).getValue(bt);
         } else {
           return obj;
         }
       }
     };
-
   }
 
   @Override
@@ -60,43 +59,53 @@ public class RestList implements List<Object> {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Object[] toArray(Object[] a) {
-    return lst.toArray(a);
+  public Object[] toArray(Object[] array) {
+    return lst.toArray(array);
   }
 
   @Override
-  public boolean add(Object e) {
-    return lst.add(e);
+  public boolean add(Object obj) {
+    return lst.add(obj);
   }
 
   @Override
-  public boolean remove(Object o) {
-    return lst.remove(o);
+  public void add(int index, Object element) {
+    lst.add(index, element);
   }
 
   @Override
-  public boolean containsAll(Collection<?> c) {
-    return lst.containsAll(c);
+  public boolean remove(Object obj) {
+    return lst.remove(obj);
   }
 
   @Override
-  public boolean addAll(Collection<? extends Object> c) {
-    return lst.addAll(c);
+  public Object remove(int index) {
+    return lst.remove(index);
   }
 
   @Override
-  public boolean addAll(int index, Collection<? extends Object> c) {
-    return lst.addAll(index, c);
+  public boolean containsAll(Collection<?> col) {
+    return lst.containsAll(col);
   }
 
   @Override
-  public boolean removeAll(Collection<? extends Object> c) {
-    return lst.removeAll(c);
+  public boolean addAll(Collection<? extends Object> col) {
+    return lst.addAll(col);
   }
 
   @Override
-  public boolean retainAll(Collection<? extends Object> c) {
-    return lst.retainAll(c);
+  public boolean addAll(int index, Collection<? extends Object> col) {
+    return lst.addAll(index, col);
+  }
+
+  @Override
+  public boolean removeAll(Collection<? extends Object> col) {
+    return lst.removeAll(col);
+  }
+
+  @Override
+  public boolean retainAll(Collection<? extends Object> col) {
+    return lst.retainAll(col);
   }
 
   @Override
@@ -108,7 +117,7 @@ public class RestList implements List<Object> {
   public Object get(int index) {
     final Object obj = lst.get(index);
     if (obj instanceof LazyEval) {
-      return ((LazyEval)obj).getValue(bt);
+      return ((LazyEval) obj).getValue(bt);
     } else {
       return obj;
     }
@@ -120,22 +129,12 @@ public class RestList implements List<Object> {
   }
 
   @Override
-  public void add(int index, Object element) {
-    lst.add(index, element);
+  public int indexOf(Object obj) {
+    return lst.indexOf(obj);
   }
 
   @Override
-  public Object remove(int index) {
-    return lst.remove(index);
-  }
-
-  @Override
-  public int indexOf(Object o) {
-    return lst.indexOf(o);
-  }
-
-  @Override
-  public int lastIndexOf(Object o) {
+  public int lastIndexOf(Object obj) {
     return lst.lastIndexOf(0);
   }
 
