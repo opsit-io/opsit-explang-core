@@ -32,8 +32,11 @@ public class Compiler {
       Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
   protected boolean enforcePackages = true;
 
-  // FIXME: globbing?
+  /**
+   * Return default list of enabled packages for a Compiler instance.
+   */
   public static Set<String> getDefaultPackages() {
+    // FIXME: make configurable
     return Utils.roset(
         Package.BASE_ARITHMENTICS,
         Package.BASE_LOGIC,
@@ -52,7 +55,11 @@ public class Compiler {
         Package.BASE_LANG);
   }
 
+  /**
+   * Return list of available packages.
+   */
   public static Set<String> getAllPackages() {
+    // FIXME: discover dynamically
     return Utils.roset(
         Package.BASE_ARITHMENTICS,
         Package.BASE_LOGIC,
@@ -76,18 +83,42 @@ public class Compiler {
         Package.THREADS);
   }
 
+  /**
+   * Construct compiler with default configuration.
+   *
+   * <p>The compiler created with NO OP string converter
+   * and with default list of enabled packages.
+   */
   public Compiler() {
     this(new NOPConverter(), getDefaultPackages());
   }
 
+  /**
+   * Construct compiler with given list of packages.
+   *
+   * <p>The compiler created with NO OP string converter
+   * and with given list of packages.
+   */
   public Compiler(Set<String> packages) {
     this(new NOPConverter(), packages);
   }
 
-  public Compiler(IStringConverter fnameConverter) {
-    this(fnameConverter, getDefaultPackages());
+
+  /**
+   * Construct compiler with given list of packages.
+   *
+   * <p>The compiler created with given function name converter
+   * and default list of packages.
+   */
+  public Compiler(IStringConverter converter) {
+    this(converter, getDefaultPackages());
   }
 
+
+  /**
+   * Construct compiler with given list of packages and with given
+   * function name converter.
+   */
   public Compiler(IStringConverter fnameConverter, Set<String> packages) {
     super();
     this.setFnameConverter(fnameConverter);
@@ -95,30 +126,54 @@ public class Compiler {
     initBuiltins(this.getPackages());
   }
 
+  /**
+   * Configure function name converter.
+   */
   public void setFnameConverter(IStringConverter converter) {
     this.funcNameConverter = converter;
   }
 
+
+  /**
+   * Configure behaviour on dereference of non-existing variables.
+   */
   public void setFailOnMissingVariables(boolean val) {
+    // FIXME: allow configuration on creation
     this.failOnMissingVariables = val;
   }
 
+  /**
+   * Get configured parser.
+   */
   public IParser getParser() {
     return parser;
   }
 
+  /**
+   * Configure parser.
+   */
   public void setParser(IParser parser) {
+    // FIXME: make configurable at compiler creation time
     this.parser = parser;
   }
 
+  /**
+   * Get status of package enforcement.
+   */
   public boolean isEnforcePackages() {
     return this.enforcePackages;
   }
 
+  /**
+   * Set status of package enforcement.
+   */
   public void setEnforcePackages(boolean val) {
     this.enforcePackages = val;
   }
 
+  /**
+   * Add package specifications to the list of used packages.
+   */
   public void usePackages(String... pkgSpecs) {
     Set<String> pkgSet = new HashSet<String>();
     if (null != pkgSpecs) {
@@ -130,6 +185,9 @@ public class Compiler {
     initBuiltins(pkgSet);
   }
 
+  /**
+   * Add package specifications to the list of used packages.
+   */
   public void usePackages(Collection<String> pkgSpecs) {
     if (null != pkgSpecs) {
       for (String pkgSpec : pkgSpecs) {
@@ -141,14 +199,24 @@ public class Compiler {
     initBuiltins(pkgSet);
   }
 
+  /**
+   * Return set of enabled packages.
+   */
   public Set<String> getPackages() {
     return this.packages;
   }
 
+
+  /**
+   * Configure set of enabled packages.
+   */
   public void setPackages(Set<String> packages) {
     this.packages = packages;
   }
 
+  /**
+   * Check if Builtin's package is contaimed in the set of packages.
+   */
   public boolean checkBuiltinPackage(Class<?> cls, Set<String> pkgs) {
     final String name = this.getBuiltinPackage(cls);
     if (null != name) {
@@ -158,6 +226,9 @@ public class Compiler {
     }
   }
 
+  /**
+   * Get Builtin's package.
+   */
   public String getBuiltinPackage(Class<?> cls) {
     final Package pkg = (Package) cls.getAnnotation(Package.class);
     if (null != pkg) {
@@ -167,6 +238,12 @@ public class Compiler {
     }
   }
 
+  /**
+   * Add mapping for a Builtin.
+   *
+   * <p>Add builtin mapping. If packages are enforced the builtin
+   * will be checked against the list of enabled packages.
+   */
   public void addBuiltIn(String name, Class<?> cls) {
     if ((!isEnforcePackages()) || checkBuiltinPackage(cls, this.getPackages())) {
       final Builtin builtin =
@@ -183,6 +260,9 @@ public class Compiler {
     }
   }
 
+  /**
+   * Abstract class for Builtins
+   */
   public abstract class Builtin implements ICode {
     protected Class<?> cls;
 
@@ -300,6 +380,7 @@ public class Compiler {
   private final Map<String, ICode> functab = new ConcurrentHashMap<String, ICode>();
 
   private void initBuiltins(Set<String> fromPackages) {
+    // FIXME: make list of builtins configurable before initBuiltins.
     // arithmetics
     final List<Object> builtinsInit =
         Utils.list(
@@ -1991,18 +2072,22 @@ public class Compiler {
     return compiledParams;
   }
 
+  //***** Evaluated Arguments
+  /**
+   * Context adepted for function arguments.
+   */
   public class Eargs extends Ctx {
     private Object[] eargs;
     private ArgList argList;
 
-    // FIXME: not elegant!
+    /**
+     * Create arguments list.
+     */
     public Eargs(Object[] eargs, boolean []needEval, ArgList argList, ICtx ctx) {
       super(ctx);
       if ((null == argList)
           || (null == eargs)
-          ||
-          // (null == needEval) ||
-          (null == ctx)) {
+          || (null == ctx)) {
         throw new RuntimeException("Internal error: null constructor parameter when creating Earg");
       }
       this.eargs = eargs;
