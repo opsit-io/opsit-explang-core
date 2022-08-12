@@ -283,7 +283,7 @@ public class ExplangScriptEngine
       List<Object> paramsList = Arrays.asList(args);
       ParseCtx pctx = new ParseCtx("InvokeFunction");
       ASTNList astnizedParams = (ASTNList)Utils.astnize(paramsList, pctx);
-      List<ICompiled> compiledParams = comp.compileParams(astnizedParams);
+      List<ICompiled> compiledParams = comp.compileExpList(astnizedParams);
       func.setParams(compiledParams);
       Backtrace bt = comp.newBacktrace();
       Compiler.ICtx ctx = makeCtx(this.defScriptContext);

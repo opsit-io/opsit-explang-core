@@ -583,7 +583,7 @@ public class Compiler {
           if (compiled instanceof IForm) {
             ((IForm) compiled).setRawParams(restASTN);
           } else {
-            List<ICompiled> compiledParams = compileParams(restASTN);
+            List<ICompiled> compiledParams = compileExpList(restASTN);
             // FIXME???
             // compiled = compiled.getInstance();
             compiled.setDebugInfo(firstASTN.getPctx());
@@ -603,7 +603,7 @@ public class Compiler {
             if (compiled instanceof IForm) {
               ((IForm) compiled).setRawParams(restASTN);
             } else {
-              List<ICompiled> compiledParams = compileParams(restASTN);
+              List<ICompiled> compiledParams = compileExpList(restASTN);
               ((IExpr) compiled).setParams(compiledParams);
             }
             compiled.setName(fName);
@@ -756,7 +756,7 @@ public class Compiler {
     private List<ICompiled> blocks = null;
 
     public void setRawParams(ASTNList params) {
-      this.blocks = compileParams(params);
+      this.blocks = compileExpList(params);
     }
 
     @Override
@@ -803,7 +803,7 @@ public class Compiler {
             debugInfo, "catch: invalid exception class specified: '" + excSym.getName() + "'");
       }
       result.varName = ((Symbol) astnVar.getObject()).getName();
-      result.blocks = compileParams(list.subList(2, list.size()));
+      result.blocks = compileExpList(list.subList(2, list.size()));
       return result;
     }
 
@@ -826,7 +826,7 @@ public class Compiler {
               if (null == finalBlocks) {
                 finalBlocks = new ArrayList<ICompiled>();
               }
-              finalBlocks.addAll(compileParams(paramsList.subList(1, paramsList.size())));
+              finalBlocks.addAll(compileExpList(paramsList.subList(1, paramsList.size())));
               continue;
             }
           }
@@ -896,7 +896,7 @@ public class Compiler {
         throw new InvalidParametersException(debugInfo, "WHILE expects at least 2 parameters");
       }
       this.condition = compile(params.get(0));
-      this.blocks = compileParams(params.subList(1, params.size()));
+      this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
     @Override
@@ -952,7 +952,7 @@ public class Compiler {
       this.loopVar = (Symbol) loopVarObj;
       this.seqexpr = compile((ASTN) loopPars.get(1));
       this.resultExpr = (loopPars.size() > 2) ? compile((ASTN) loopPars.get(2)) : null;
-      this.blocks = compileParams(params.subList(1, params.size()));
+      this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
     @Override
@@ -1190,7 +1190,7 @@ public class Compiler {
       }
       this.condition = compile(params.get(0));
       this.thenBlock = compile(params.get(1));
-      this.elseBlocks = compileParams(params.subList(2, params.size()));
+      this.elseBlocks = compileExpList(params.subList(2, params.size()));
     }
 
     public Object evalWithArgs(Backtrace backtrace, List<Object> eargs, ICtx ctx) {
@@ -1246,7 +1246,7 @@ public class Compiler {
       this.name = sym.toString();
       final ASTNList second = (ASTNList) params.get(1);
       this.argSpec = new ArgSpec(second, Compiler.this);
-      this.blocks = compileParams(params.subList(2, params.size()));
+      this.blocks = compileExpList(params.subList(2, params.size()));
     }
   }
 
@@ -1267,7 +1267,7 @@ public class Compiler {
             debugInfo, "LAMBDA expects first parameter to be a list");
       }
       this.argSpec = new ArgSpec((ASTNList) first, Compiler.this);
-      this.blocks = compileParams(params.subList(1, params.size()));
+      this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
     @Override
@@ -1369,7 +1369,7 @@ public class Compiler {
         listExpr = compile(params.get(1));
       }
       // handle executable blocks
-      this.blocks = compileParams(params.subList(2, params.size()));
+      this.blocks = compileExpList(params.subList(2, params.size()));
     }
 
     @Override
@@ -1420,7 +1420,7 @@ public class Compiler {
             debugInfo, getName() + " expects at least 2 parameters");
       }
       this.bindExpr = compile(params.get(0));
-      this.blocks = compileParams(params.subList(1, params.size()));
+      this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
     @Override
@@ -1449,7 +1449,7 @@ public class Compiler {
             debugInfo, getName() + " expects at least 2 parameters");
       }
       this.bindExpr = compile(params.get(0));
-      this.blocks = compileParams(params.subList(1, params.size()));
+      this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
     @Override
@@ -1590,7 +1590,7 @@ public class Compiler {
         varExprs.add(expr);
       }
       // handle executable blocks
-      this.blocks = compileParams(params.subList(1, params.size()));
+      this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
     @Override
@@ -2056,15 +2056,18 @@ public class Compiler {
     return result;
   }
 
-  public List<ICompiled> compileExpList(ASTNList nodes) {
+  /*public List<ICompiled> compileExpList(ASTNList nodes) {
     List<ICompiled> exprs = new ArrayList<ICompiled>(nodes.size());
     for (ASTN node : nodes) {
       exprs.add(compile(node));
     }
     return exprs;
-  }
+    }*/
 
-  public List<ICompiled> compileParams(ASTNList params) {
+  /**
+   * Compile parameters.
+   */
+  public List<ICompiled> compileExpList(ASTNList params) {
     List<ICompiled> compiledParams = new ArrayList<ICompiled>(params.size());
     for (ASTN param : params) {
       compiledParams.add(compile(param));
@@ -2115,7 +2118,9 @@ public class Compiler {
       return (spec.nameToIdx(name) >= 0) || (spec.svarNameToIdx(name) >= 0) || super.contains(name);
     }
 
-
+    /**
+     * Get evaluated argument by its number.
+     */
     public Object get(int argIdx, Backtrace backtrace) {
       final Object val = eargs[argIdx];
       if (val instanceof LazyEval) {
