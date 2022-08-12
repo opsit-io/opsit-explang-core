@@ -10,6 +10,7 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   public ASTNList(List<ASTN> object, ParseCtx pctx) {
     super(object, pctx);
   }
+
   public ASTNList(List<ASTN> object, ParseCtx pctx, boolean isComment) {
     super(object, pctx, isComment);
   }
@@ -21,7 +22,7 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   public void setMultiExpr(boolean multiExpr) {
     this.isMultiExpr = multiExpr;
   }
-    
+
   @Override
   public boolean isList() {
     return true;
@@ -29,7 +30,7 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
 
   @Override
   public Object getObject() {
-    throw new CompilationException(pctx,"internal error: object requested on list AST Node");
+    throw new CompilationException(pctx, "internal error: object requested on list AST Node");
   }
 
   @Override
@@ -37,18 +38,18 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
     if (null != getProblem()) {
       return true;
     }
-    for( ASTN astn: getList()) {
+    for (ASTN astn : getList()) {
       if (astn.hasProblems()) {
         return true;
       }
     }
     return false;
   }
-    
-  //@Override
+
+  // @Override
   @SuppressWarnings("unchecked")
   public List<ASTN> getList() {
-    return (List<ASTN>)object;
+    return (List<ASTN>) object;
   }
 
   @Override
@@ -56,23 +57,29 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
     return getList().iterator();
   }
 
-  public ASTN get(int i) {
-    return getList().get(i);
+  public ASTN get(int idx) {
+    return getList().get(idx);
   }
 
+  /**
+   * Add all nodes from another AST list.
+   */
   public void addAll(ASTNList astns) {
     for (ASTN astn : astns) {
       add(astn);
     }
   }
-    
+
+  /**
+   * Add an AST node to this list.
+   */
   public void add(ASTN astn) {
     // FIXME: when can it happen?
-    //if (null == astn.parent) {
+    // if (null == astn.parent) {
     astn.parent = this;
     getList().add(astn);
-    //} else {
-    //throw new RuntimeException("ASTN node already has parent");
+    // } else {
+    // throw new RuntimeException("ASTN node already has parent");
     // }
   }
 
@@ -80,6 +87,9 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
     return getList().size();
   }
 
+  /**
+   * Return sublist of AST nodes.
+   */
   public ASTNList subList(int start, int end) {
     // FIXME: when is it used? what with parent tracking?
     final List<ASTN> subList = getList().subList(start, end);
@@ -93,29 +103,27 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
 
   @Override
   public String toStringWithPos() {
-    StringBuilder b = new StringBuilder();
-    b.append("@").append(this.getPctx())
-      .append("@");
+    StringBuilder buf = new StringBuilder();
+    buf.append("@").append(this.getPctx()).append("@");
     if (null != problem) {
-      b.append("<"+problem+">");
+      buf.append("<" + problem + ">");
     }
-    b.append("(");
+    buf.append("(");
     final int len = getList().size();
-    for (int i = 0; i < len ; i++) {
+    for (int i = 0; i < len; i++) {
       if (i > 0) {
-        b.append(" ");
+        buf.append(" ");
       }
-      b.append(getList().get(i).toStringWithPos());
+      buf.append(getList().get(i).toStringWithPos());
     }
-    b.append(")");
-    return b.toString();
+    buf.append(")");
+    return buf.toString();
   }
 
   @Override
   public String toString() {
-    return
-      (null != problem  ? "<"+problem+">" : "") +
-      ((null != object) ? astnlistToString(getList())  : "<null>");
+    return (null != problem ? "<" + problem + ">" : "")
+        + ((null != object) ? astnlistToString(getList()) : "<null>");
   }
 
   protected String astnlistToString(List<ASTN> lst) {
@@ -138,5 +146,4 @@ public class ASTNList extends ASTN implements Iterable<ASTN> {
   public boolean isLiteralList() {
     return this.isLiteralList;
   }
-
 }
