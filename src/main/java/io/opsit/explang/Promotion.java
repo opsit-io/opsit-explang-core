@@ -2,15 +2,23 @@ package io.opsit.explang;
 
 import io.opsit.version.Version;
 
-// used by numeric operators
+
+/**
+ * Keep status of numeric promotion.
+ *
+ * <p>For use by numeric operators.
+ */
 public class Promotion {
   public boolean noVersion = true;
   public boolean noDouble = true;
-  public boolean noFloat  = true;
-  public boolean noShort  = true;
-  public boolean noInt    = true;
-  public boolean noLong   = true;
-        
+  public boolean noFloat = true;
+  public boolean noShort = true;
+  public boolean noInt = true;
+  public boolean noLong = true;
+
+  /**
+   * Promote numeric operation up to type of argument.
+   */
   public void promote(Number arg) {
     if (noVersion) {
       if (noDouble) {
@@ -49,16 +57,23 @@ public class Promotion {
       }
     }
   }
+
+  /**
+   * Call numeric operation with promotion of its arguments.
+   */
   public Number callOP(AbstractOp op, Number arg1, Number arg2) {
     final Number result =
-      (noVersion
-       ? (noDouble 
-          ? (noFloat ? op.doIntOp(arg1, arg2) : op.doFloatOp(arg1, arg2)) 
-          : op.doDoubleOp(arg1, arg2))
-       : op.doVersionOp(arg1, arg2));
+        (noVersion
+            ? (noDouble
+                ? (noFloat ? op.doIntOp(arg1, arg2) : op.doFloatOp(arg1, arg2))
+                : op.doDoubleOp(arg1, arg2))
+            : op.doVersionOp(arg1, arg2));
     return result;
   }
 
+  /**
+   * Promote given numeric value.
+   */
   public Number returnResult(Number result) {
     if (noVersion) {
       if (noDouble) {
