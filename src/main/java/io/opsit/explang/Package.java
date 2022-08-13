@@ -1,4 +1,4 @@
-package  io.opsit.explang;
+package io.opsit.explang;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -6,12 +6,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-
+/**
+ * Annotation for specifying builtin function package.
+ */
 @Target(ElementType.TYPE)
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Package {
-  String  name () default "";
+  /**
+   * Package name.
+   */
+  String name() default "";
+
   public static String BASE_ARITHMENTICS = "base.arithmetics";
   public static String BASE_LOGIC = "base.logic";
   public static String BASE_COERCION = "base.coercion";
@@ -32,5 +38,4 @@ public @interface Package {
   public static String IO = "io";
   public static String THREADS = "threads";
   public static String LOOPS = "loops";
-
 }
