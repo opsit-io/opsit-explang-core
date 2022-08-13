@@ -1,6 +1,5 @@
 package io.opsit.explang;
 
-
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,25 +10,31 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
+/** Utility class for operations on sequences of various types. */
 public class Seq {
 
   public static interface Operation {
     public boolean perform(Object obj);
   }
 
+  /** Check if object is a supported sequence. */
   public static boolean isSequence(Object obj) {
-    return (null!= obj) &&
-      ((obj instanceof Map) ||
-       (obj instanceof Iterable) ||
-       (obj instanceof CharSequence) ||
-       (obj instanceof Enumeration) ||
-       (obj.getClass().isArray()));
+    return (null != obj)
+        && ((obj instanceof Map)
+            || (obj instanceof Iterable)
+            || (obj instanceof CharSequence)
+            || (obj instanceof Enumeration)
+            || (obj.getClass().isArray()));
   }
-    
+
+  /**
+   * Run operation op on all objects in sequence.
+   *
+   * <p>If allowNonSeq is true then run operation on object that is not a sequence.
+   */
   public static void forEach(Object seq, Operation op, boolean allowNonSeq) {
     if (seq instanceof Map) {
-      seq = ((Map<?,?>)seq).entrySet();
+      seq = ((Map<?, ?>) seq).entrySet();
     }
     if (null == seq) {
       if (allowNonSeq) {
@@ -38,15 +43,15 @@ public class Seq {
         throw new RuntimeException("NIL is not a supported sequence.");
       }
     } else if (seq instanceof Iterable) {
-      final Iterator<?> iter = ((Iterable<?>)seq).iterator();
-      //boolean brk = false;;
+      final Iterator<?> iter = ((Iterable<?>) seq).iterator();
+      // boolean brk = false;;
       while (iter.hasNext()) {
         if (op.perform(iter.next())) {
           break;
         }
       }
     } else if (seq instanceof CharSequence) {
-      final CharSequence cs = ((CharSequence)seq);
+      final CharSequence cs = ((CharSequence) seq);
       final int numChars = cs.length();
       for (int j = 0; j < numChars; j++) {
         if (op.perform(cs.charAt(j))) {
@@ -69,10 +74,10 @@ public class Seq {
       }
     } else if (seq instanceof Map) {
       // FIXME: dead code? Why?
-      final Map<?,?> map = (Map<?,?>) seq;
+      final Map<?, ?> map = (Map<?, ?>) seq;
       Iterable<?> col = map.values();
       Iterator<?> iter = col.iterator();
-      while(iter.hasNext()) {
+      while (iter.hasNext()) {
         if (op.perform(iter.next())) {
           break;
         }
@@ -81,16 +86,19 @@ public class Seq {
       if (allowNonSeq) {
         op.perform(seq);
       } else {
-        throw new RuntimeException("Do not know how to iterate sequence of type "+seq.getClass());
+        throw new RuntimeException("Do not know how to iterate sequence of type " + seq.getClass());
       }
     }
   }
 
+  /**
+   * Check if sequence contains object.
+   */
   public static boolean containsElement(Object seq, Object obj) {
     if (null == seq) {
       return false;
     } else if (seq instanceof Collection) {
-      return ((Collection<?>)seq).contains(obj);
+      return ((Collection<?>) seq).contains(obj);
     } else if (seq.getClass().isArray()) {
       final int len = Array.getLength(seq);
       for (int j = 0; j < len; j++) {
@@ -105,7 +113,7 @@ public class Seq {
       }
       return false;
     } else if (seq instanceof CharSequence) {
-      if (! (obj instanceof Character)) {
+      if (!(obj instanceof Character)) {
         return false;
       }
       final CharSequence cs = ((CharSequence) seq);
@@ -118,18 +126,21 @@ public class Seq {
       }
       return false;
     } else if (seq instanceof Map) {
-      return ((Map<?,?>) seq).containsValue(obj);
+      return ((Map<?, ?>) seq).containsValue(obj);
     } else {
       return false;
     }
   }
-    
+
+  /**
+   * Get sequence element by index.
+   */
   public static Object getElement(Object seq, int index) {
     if (null == seq) {
       return null;
     } else if (seq instanceof List) {
       try {
-        final List<?> list = (List<?>)seq;
+        final List<?> list = (List<?>) seq;
         return list.get(index);
       } catch (IndexOutOfBoundsException bex) {
         return null;
@@ -142,19 +153,20 @@ public class Seq {
       }
     } else if (seq instanceof CharSequence) {
       try {
-        final CharSequence cs = (CharSequence)seq;
+        final CharSequence cs = (CharSequence) seq;
         return cs.charAt(index);
       } catch (IndexOutOfBoundsException bex) {
         return null;
       }
     } else {
-      throw new RuntimeException("Unupported sequence type "+
-                                 seq.getClass().getName());
+      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
     }
   }
-    
-  public static int getLength(Object val,
-                              boolean allowNonSeq) {
+
+  /**
+   * Get length of sequence.
+   */
+  public static int getLength(Object val, boolean allowNonSeq) {
     if (null == val) {
       if (allowNonSeq) {
         return 0;
@@ -162,51 +174,65 @@ public class Seq {
         throw new RuntimeException("NIL not a sequence: ");
       }
     } else if (val instanceof Collection) {
-      return ((Collection<?>)val).size();
+      return ((Collection<?>) val).size();
     } else if (val instanceof CharSequence) {
-      return ((CharSequence)val).length();
+      return ((CharSequence) val).length();
     } else if (val.getClass().isArray()) {
       return Array.getLength(val);
     } else if (val instanceof Map) {
-      return ((Map<?,?>)val).size();
+      return ((Map<?, ?>) val).size();
     } else {
       if (allowNonSeq) {
         return 1;
       } else {
-        throw new RuntimeException("Given object type is not a sequence: "+val.getClass());
+        throw new RuntimeException("Given object type is not a sequence: " + val.getClass());
       }
     }
   }
 
+  /**
+   * Return sequence objects as Set.
+   */
   public static Set<?> asSet(Object obj) {
     final Set<Object> result = new HashSet<Object>();
-    if (null!=obj) {
-      forEach(obj, new Operation () {
-          @Override
-          public boolean perform(Object obj) {
-            result.add(obj);
-            return false;
-          }
-                
-        }, false);
+    if (null != obj) {
+      forEach(
+          obj,
+          new Operation() {
+            @Override
+            public boolean perform(Object obj) {
+              result.add(obj);
+              return false;
+            }
+          },
+          false);
     }
     return result;
   }
 
+  /**
+   * Return new list with all elements of given sequence.
+   */
   public static List<Object> valuesList(Object seq) {
     final List<Object> result = Utils.list();
     if (null != seq) {
-      forEach(seq, new Operation () {
-          @Override
-          public boolean perform(Object obj) {
-            result.add(obj);
-            return false;
-          }
-        }, false);
+      forEach(
+          seq,
+          new Operation() {
+            @Override
+            public boolean perform(Object obj) {
+              result.add(obj);
+              return false;
+            }
+          },
+          false);
     }
     return result;
   }
 
+  /**
+   * Get maximal length of given sequences.
+   */
   public static int maxLength(Object... seqs) {
     int result = 0;
     for (int i = 0; i < seqs.length; i++) {
@@ -218,6 +244,9 @@ public class Seq {
     return result;
   }
 
+  /**
+   * Get minimal length of given sequences.
+   */
   public static int minLength(Object... seqs) {
     if (seqs.length > 0) {
       int result = Integer.MAX_VALUE;
@@ -233,11 +262,13 @@ public class Seq {
     }
   }
 
-    
-  public static interface Multiop{
+  public static interface Multiop {
     public Object perform(Object... objs);
   }
 
+  /**
+   * Perform operation on all objects of the given sequences.
+   */
   public static List<Object> mapall(Multiop op, Object... seqs) {
     int maxlen = maxLength(seqs);
     List<Object> result = new ArrayList<Object>(maxlen);
@@ -251,8 +282,10 @@ public class Seq {
     return result;
   }
 
-
-  public static boolean sequal(Map <?,?>m1, Map<?,?> m2) {
+  /**
+   * Compare maps contents.
+   */
+  public static boolean sequal(Map<?, ?> m1, Map<?, ?> m2) {
     // not sure that this is right
     // probably need to check keys according to the same rules?
     // but it could get messy
@@ -274,11 +307,14 @@ public class Seq {
   }
 
   // FIXME: identify circular refs?
+  /**
+   * Compare objects, for sequences compare sequence contents.
+   */
   public static boolean sequal(Object o1, Object o2) {
     if (Utils.objequal(o1, o2)) {
       return true;
     } else if ((o1 instanceof Map) && (o2 instanceof Map)) {
-      return sequal((Map<?,?>) o1, (Map<?,?>) o2);
+      return sequal((Map<?, ?>) o1, (Map<?, ?>) o2);
     } else if ((o1 instanceof Set) && (o2 instanceof Set)) {
       return o1.equals(o2);
     } else if (Seq.isSequence(o1) && Seq.isSequence(o2)) {
@@ -293,7 +329,7 @@ public class Seq {
         // compare non-sequence objects
         // if both of them is sequnces and x.equals(y) == true
         //  it's ok as well.
-        if (sequal(el1,el2)) {
+        if (sequal(el1, el2)) {
           continue;
         }
         return false;
