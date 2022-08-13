@@ -21,22 +21,22 @@ public class UtilsTests {
     assertTrue(isRoundNumber(Long.MAX_VALUE));
     assertTrue(isRoundNumber(Long.MIN_VALUE));
         
-    assertTrue(isRoundNumber((double)0.0));
+    assertTrue(isRoundNumber(0.0));
     assertTrue(isRoundNumber((float)0.0));
 
-    assertFalse(isRoundNumber((double)-0.1));
+    assertFalse(isRoundNumber(-0.1));
     assertFalse(isRoundNumber((float)-0.1));
 
-    assertFalse(isRoundNumber((double)-10.00001));
+    assertFalse(isRoundNumber(-10.00001));
     assertFalse(isRoundNumber((float)-10.00001));
 
-    assertTrue(isRoundNumber((double)2e20));
-    assertTrue(isRoundNumber((double)-2e20));
+    assertTrue(isRoundNumber(2e20));
+    assertTrue(isRoundNumber(-2e20));
     assertTrue(isRoundNumber((float)2e20));
     assertTrue(isRoundNumber((float)-2e20));
 
-    assertFalse(isRoundNumber((double)2e-20));
-    assertFalse(isRoundNumber((double)-2e-20));
+    assertFalse(isRoundNumber(2e-20));
+    assertFalse(isRoundNumber(-2e-20));
     assertFalse(isRoundNumber((float)2e-20));
     assertFalse(isRoundNumber((float)-2e-20));
   }

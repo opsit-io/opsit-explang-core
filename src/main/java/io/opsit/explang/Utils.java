@@ -206,7 +206,7 @@ public class Utils {
 
   static {
     for (Class<?> cls :
-        new Class[] {
+        new Class<?>[] {
           void.class,
           boolean.class,
           char.class,
@@ -254,7 +254,7 @@ public class Utils {
    */
   public static Class<?>[] getMethodParamsClasses(List<?> methodParams, List<?> typeSpecs) {
     int listSize = (null == methodParams) ? 0 : methodParams.size();
-    final Class<?>[] methodParamClasses = new Class[listSize];
+    final Class<?>[] methodParamClasses = new Class<?>[listSize];
     for (int j = 0; j < listSize; j++) {
       if (null != typeSpecs && typeSpecs.size() > j && typeSpecs.get(j) != null) {
         methodParamClasses[j] = tspecToClass(typeSpecs.get(j));

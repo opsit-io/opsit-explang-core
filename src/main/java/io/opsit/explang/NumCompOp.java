@@ -36,9 +36,9 @@ public class NumCompOp implements AbstractOp, Comparator<Number> {
   @Override
   public int compare(Number v1, Number v2) {
     final Promotion p = new Promotion();
-    final Number n1 = (Number) v1;
+    final Number n1 = v1;
     p.promote(n1);
-    final Number n2 = (Number) v2;
+    final Number n2 = v2;
     p.promote(n2);
     final Integer dif = p.callOP(this, n1, n2).intValue();
     return dif;

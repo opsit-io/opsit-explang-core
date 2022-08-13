@@ -26,4 +26,9 @@ public class Symbol {
     // return value.toUpperCase();
     return value;
   }
+
+  @Override
+  public int hashCode() {
+    return value.hashCode();
+  }
 }

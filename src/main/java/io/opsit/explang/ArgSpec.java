@@ -89,6 +89,13 @@ public class ArgSpec {
     }
 
     @Override
+    public int hashCode() {
+      return (null == name ? 0 : name.hashCode()) + (null == flag ? 0 : flag.hashCode())
+          + (null == svar ? 0 : svar.hashCode()) + (allowOtherKeys ? 0 : 0x01) + (lazy ? 0 : 0x02)
+          + (pipe ? 0 : 0x04);
+    }
+
+    @Override
     public String toString() {
       return "("
           + flag
@@ -265,7 +272,7 @@ public class ArgSpec {
   private static Object[] stringsToArray(String[] strArgs) throws InvalidParametersException {
     Object []args = new Object[strArgs.length];
     for (int i = 0; i < strArgs.length; i++) {
-      args[i] = new Symbol((String) strArgs[i]);
+      args[i] = new Symbol(strArgs[i]);
     }
     return args;
   }
@@ -280,7 +287,7 @@ public class ArgSpec {
 
     Object []specs = new Object[astnList.size()];
     for (int i = 0; i < astnList.size(); i++) {
-      ASTN astn = (ASTN) astnList.get(i);
+      ASTN astn = astnList.get(i);
       if (!astn.isList()) {
         specs[i] = astn.getObject();
       } else {

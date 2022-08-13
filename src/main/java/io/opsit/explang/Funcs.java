@@ -925,7 +925,7 @@ public class Funcs {
       } else if (numberObj instanceof Float) {
         return (float) (val * number.floatValue());
       } else if (numberObj instanceof Double) {
-        return (double) (val * number.doubleValue());
+        return val * number.doubleValue();
       } else if (numberObj instanceof Byte) {
         return (byte) (val * number.byteValue());
       } else {
@@ -1237,7 +1237,7 @@ public class Funcs {
   protected static List<ICompiled> setFuncPosParams(IExpr instance, int cnt) {
     final List<ICompiled> callParams = Utils.newPosArgsList(cnt);
     try {
-      instance.setParams((List<ICompiled>) callParams);
+      instance.setParams(callParams);
     } catch (InvalidParametersException e) {
       throw new RuntimeException(
           String.format(
@@ -1317,7 +1317,7 @@ public class Funcs {
       final List<ICompiled> callParams = new ArrayList<ICompiled>(1);
       callParams.add(new VarExp(argname));
       try {
-        instance.setParams((List<ICompiled>) callParams);
+        instance.setParams(callParams);
       } catch (InvalidParametersException e) {
         throw new RuntimeException(
             String.format(
@@ -1362,7 +1362,7 @@ public class Funcs {
         callParams.add(new VarExp("arg#" + i));
       }
       try {
-        instance.setParams((List<ICompiled>) callParams);
+        instance.setParams(callParams);
       } catch (InvalidParametersException e) {
         throw new RuntimeException(
             String.format(

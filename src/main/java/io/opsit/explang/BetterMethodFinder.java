@@ -85,7 +85,7 @@ public final class BetterMethodFinder {
    */
   public Constructor<?> findConstructor(Class<?>[] parameterTypes) throws NoSuchMethodException {
     if (parameterTypes == null) {
-      parameterTypes = new Class[0];
+      parameterTypes = new Class<?>[0];
     }
     return (Constructor<?>) findMemberIn(ctorList, parameterTypes);
   }
@@ -121,7 +121,7 @@ public final class BetterMethodFinder {
     }
 
     if (matchingMembers.size() == 1) {
-      return (Member) matchingMembers.get(0);
+      return matchingMembers.get(0);
     }
 
     return findMostSpecificMemberIn(matchingMembers);
@@ -150,7 +150,7 @@ public final class BetterMethodFinder {
     }
 
     if (parameterTypes == null) {
-      parameterTypes = new Class[0];
+      parameterTypes = new Class<?>[0];
     }
 
     return (Method) findMemberIn(methodList, parameterTypes);
@@ -210,7 +210,7 @@ public final class BetterMethodFinder {
           "Ambiguous request for member in " + clazz.getName() + " matching given args");
     }
 
-    return (Member) mostSpecificMembers.get(0);
+    return mostSpecificMembers.get(0);
   }
 
   /**
@@ -225,13 +225,13 @@ public final class BetterMethodFinder {
     Class<?>[] argTypes = null;
 
     if (args != null) {
-      argTypes = new Class[args.length];
+      argTypes = new Class<?>[args.length];
 
       for (int i = 0; i < args.length; ++i) {
         argTypes[i] = (args[i] == null) ? Void.TYPE : args[i].getClass();
       }
     } else {
-      argTypes = new Class[0];
+      argTypes = new Class<?>[0];
     }
 
     return argTypes;
@@ -276,13 +276,13 @@ public final class BetterMethodFinder {
     Class<?>[] types = null;
 
     if (classNames != null) {
-      types = new Class[classNames.length];
+      types = new Class<?>[classNames.length];
 
       for (int i = 0; i < classNames.length; ++i) {
         types[i] = ClassUtilities.classForNameOrPrimitive(classNames[i], loader);
       }
     } else {
-      types = new Class[0];
+      types = new Class<?>[0];
     }
 
     return types;

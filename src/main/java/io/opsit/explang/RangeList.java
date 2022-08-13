@@ -249,8 +249,8 @@ public class RangeList implements List<Number> {
     if (fromIndex > toIndex) {
       throw new IllegalArgumentException("fromIndex > toIndex");
     }
-    final Number startNum = (Number) get(fromIndex);
-    final Number toNum = (Number) unlimGet(toIndex);
+    final Number startNum = get(fromIndex);
+    final Number toNum = unlimGet(toIndex);
     return new RangeList(startNum, toNum, step);
   }
 }

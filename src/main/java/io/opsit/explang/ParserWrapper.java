@@ -22,11 +22,11 @@ public class ParserWrapper {
 
   public ASTNList parse(String txt, String inputName) throws ParserException {
     ParseCtx pctx = new ParseCtx(inputName);
-    return (ASTNList) parser.parse(pctx, txt);
+    return parser.parse(pctx, txt);
   }
 
   public ASTNList parse(InputStream is) {
-    return (ASTNList) parse(is, DEFAULT_INPUT_NAME);
+    return parse(is, DEFAULT_INPUT_NAME);
   }
 
   /**
@@ -38,7 +38,7 @@ public class ParserWrapper {
     try {
       is = new FileInputStream(file);
       InputStreamReader reader = new InputStreamReader(is);
-      return (ASTNList) parser.parse(pctx, reader, Integer.MAX_VALUE);
+      return parser.parse(pctx, reader, Integer.MAX_VALUE);
     } catch (FileNotFoundException ex) {
       throw new ParserException(pctx, "I/O exception", ex);
     } finally {
@@ -58,6 +58,6 @@ public class ParserWrapper {
 
   public ASTNList parse(InputStream is, String inputName) {
     Reader reader = new InputStreamReader(is);
-    return (ASTNList) parser.parse(new ParseCtx(inputName), reader, Integer.MAX_VALUE);
+    return  parser.parse(new ParseCtx(inputName), reader, Integer.MAX_VALUE);
   }
 }

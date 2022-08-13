@@ -191,7 +191,7 @@ public class Compiler {
 
   /** Get Builtin's package. */
   public String getBuiltinPackage(Class<?> cls) {
-    final Package pkg = (Package) cls.getAnnotation(Package.class);
+    final Package pkg =  cls.getAnnotation(Package.class);
     if (null != pkg) {
       return pkg.name();
     } else {
@@ -236,13 +236,13 @@ public class Compiler {
 
     @Override
     public String getDocstring() {
-      Docstring ann = (Docstring) cls.getAnnotation(Docstring.class);
+      Docstring ann = cls.getAnnotation(Docstring.class);
       return null == ann ? "Not provided." : ann.text();
     }
 
     @Override
     public String getArgDescr() {
-      Arguments ann = (Arguments) cls.getAnnotation(Arguments.class);
+      Arguments ann = cls.getAnnotation(Arguments.class);
       return null == ann
           ? "args"
           : Utils.asStringOrEmpty(
@@ -258,7 +258,7 @@ public class Compiler {
 
     @Override
     public ArgSpec getArgSpec() {
-      final Arguments ann = (Arguments) cls.getAnnotation(Arguments.class);
+      final Arguments ann = cls.getAnnotation(Arguments.class);
       final String[] spec = ann.spec();
       if (null != spec) {
         try {
@@ -919,8 +919,8 @@ public class Compiler {
             debugInfo, "FOREACH expects first loop argument must be loop variable");
       }
       this.loopVar = (Symbol) loopVarObj;
-      this.seqexpr = compile((ASTN) loopPars.get(1));
-      this.resultExpr = (loopPars.size() > 2) ? compile((ASTN) loopPars.get(2)) : null;
+      this.seqexpr = compile(loopPars.get(1));
+      this.resultExpr = (loopPars.size() > 2) ? compile(loopPars.get(2)) : null;
       this.blocks = compileExpList(params.subList(1, params.size()));
     }
 
