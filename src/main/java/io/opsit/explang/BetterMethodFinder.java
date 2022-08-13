@@ -157,6 +157,8 @@ public final class BetterMethodFinder {
   }
 
   /**
+   * Find best match for a member in the class.
+   *
    * @param a List of Members (either all Constructors or all Methods).
    * @return the most specific of all Members in the list.
    * @exception NoSuchMethodException if there is an ambiguity as to which is most specific.
@@ -212,6 +214,8 @@ public final class BetterMethodFinder {
   }
 
   /**
+   * Return an array of Class objects for the objects in the given array.
+   *
    * @param args an Object array
    * @return an array of Class objects representing the classes of the objects in the given Object
    *     array. If args is null, a zero-length Class array is returned. If an element in args is
@@ -234,6 +238,8 @@ public final class BetterMethodFinder {
   }
 
   /**
+   * Return an array of Class objects named by the FQNs in the given String array.
+   *
    * @param classNames String array of fully qualified names (FQNs) of classes or primitives.
    *     Represent an array type by using its JVM type descriptor, with dots instead of slashes
    *     (e.g. represent the type int[] with "[I", and Object[][] with "[[Ljava.lang.Object;").
@@ -251,6 +257,8 @@ public final class BetterMethodFinder {
   }
 
   /**
+   * Return an array of Class objects named by the FQNs in the given String array.
+   *
    * @param classNames String array of fully qualified names (FQNs) of classes or primitives.
    *     Represent an array type by using its JVM type descriptor, with dots instead of slashes
    *     (e.g. represent the type int[] with "[I", and Object[][] with "[[Ljava.lang.Object;").
@@ -322,6 +330,8 @@ public final class BetterMethodFinder {
   }
 
   /**
+   * Return what method is more specific.
+   *
    * @param first a Member
    * @param second a Member
    * @return true if the first Member is more specific than the second, false otherwise. Specificity

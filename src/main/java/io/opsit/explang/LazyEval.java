@@ -24,10 +24,12 @@ public class LazyEval implements ICompiled {
   }
 
   @Override
-  public void setDebugInfo(ParseCtx pctx) {}
+  public void setDebugInfo(ParseCtx pctx) {
+  }
 
   @Override
-  public void setName(String str) {}
+  public void setName(String str) {
+  }
 
   @Override
   public ParseCtx getDebugInfo() {

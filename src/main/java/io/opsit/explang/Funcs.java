@@ -2,6 +2,7 @@ package io.opsit.explang;
 
 import static io.opsit.explang.ArgSpec.ARG_OPTIONAL;
 import static io.opsit.explang.ArgSpec.ARG_REST;
+
 import io.opsit.explang.Compiler.Eargs;
 import io.opsit.explang.Compiler.ICtx;
 import io.opsit.explang.Seq.Operation;
@@ -1335,6 +1336,7 @@ public class Funcs {
       return results;
     }
   }
+
   // f &rest args
   public abstract static class ABSTRACTMAPOP extends FuncExp {
     @Override
@@ -2447,7 +2449,7 @@ public class Funcs {
 
   @SuppressWarnings("unchecked")
   protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj
-      /*final Backtrace bt*/ ) {
+      /*final Backtrace bt*/) {
     result[0] = null;
     if (obj instanceof Map) {
       final Map<Object, Object> map = (Map<Object, Object>) obj;

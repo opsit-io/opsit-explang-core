@@ -70,9 +70,12 @@ final class ClassUtilities {
   }
 
   /** Do not instantiate. Static methods only. */
-  private ClassUtilities() {}
+  private ClassUtilities() {
+  }
 
   /**
+   * Get class by name, if required loading them using the given classloader.
+   *
    * @param name FQN of a class, or the name of a primitive type
    * @param loader a ClassLoader
    * @return the Class for the name given. Primitive types are converted to their particular Class
@@ -123,6 +126,8 @@ final class ClassUtilities {
   }
 
   /**
+   * Check if class is accessioble.
+   *
    * @param clz a Class
    * @return true if the class is accessible, false otherwise. Presently returns true if the class
    *     is declared public.
@@ -169,6 +174,8 @@ final class ClassUtilities {
   }
 
   /**
+   * Return accessible method for given class, method name and parameters.
+   * 
    * @param clz a Class
    * @param methodName name of a method
    * @param paramTypes Class array representing the types of a method's formal parameters
@@ -242,6 +249,8 @@ final class ClassUtilities {
   }
 
   /**
+   * Return primitive equivalent of given class.
+   *
    * @param clz a Class
    * @return the class's primitive equivalent, if aClass is a primitive wrapper. If aClass is
    *     primitive, returns aClass. Otherwise, returns null.
