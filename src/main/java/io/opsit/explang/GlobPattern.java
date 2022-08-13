@@ -3,11 +3,18 @@ package io.opsit.explang;
 import java.util.regex.Pattern;
 
 public class GlobPattern {
-  public static final Pattern  compile(String pattern) {
+  public static final Pattern compile(String pattern) {
     return compile(pattern, 0);
   }
-    
-  public static final Pattern  compile(String pattern, int flags) {
+
+  /**
+   * Converts a glob expression to a regexp and compile it into Pattern.
+   * 
+   * @param pattern glob pattern
+   * @param flags flags for compiling regexp
+   * @ereturn regexp Pattern 
+   */
+  public static final Pattern compile(String pattern, int flags) {
     StringBuilder sb = new StringBuilder(pattern.length());
     int inGroup = 0;
     int inClass = 0;
@@ -16,81 +23,88 @@ public class GlobPattern {
     for (int i = 0; i < arr.length; i++) {
       char ch = arr[i];
       switch (ch) {
-      case '\\':
-        if (++i >= arr.length) {
-          sb.append('\\');
-        } else {
-          char next = arr[i];
-          switch (next) {
-          case ',':
-            // escape not needed
-            break;
-          case 'Q':
-          case 'E':
-            // extra escape needed
+        case '\\':
+          if (++i >= arr.length) {
             sb.append('\\');
-          default:
+          } else {
+            char next = arr[i];
+            switch (next) {
+              case ',':
+                // escape not needed
+                break;
+              case 'Q':
+              case 'E':
+                // extra escape needed
+                sb.append('\\');
+                sb.append('\\');
+                break;
+              default:
+                sb.append('\\');
+            }
+            sb.append(next);
+          }
+          break;
+        case '*':
+          if (inClass == 0) {
+            sb.append(".*");
+          } else {
+            sb.append('*');
+          }
+          break;
+        case '?':
+          if (inClass == 0) {
+            sb.append('.');
+          } else {
+            sb.append('?');
+          }
+          break;
+        case '[':
+          inClass++;
+          firstIndexInClass = i + 1;
+          sb.append('[');
+          break;
+        case ']':
+          inClass--;
+          sb.append(']');
+          break;
+        case '.':
+        case '(':
+        case ')':
+        case '+':
+        case '|':
+        case '^':
+        case '$':
+        case '@':
+        case '%':
+          if (inClass == 0 || (firstIndexInClass == i && ch == '^')) {
             sb.append('\\');
           }
-          sb.append(next);
-        }
-        break;
-      case '*':
-        if (inClass == 0)
-          sb.append(".*");
-        else
-          sb.append('*');
-        break;
-      case '?':
-        if (inClass == 0)
-          sb.append('.');
-        else
-          sb.append('?');
-        break;
-      case '[':
-        inClass++;
-        firstIndexInClass = i+1;
-        sb.append('[');
-        break;
-      case ']':
-        inClass--;
-        sb.append(']');
-        break;
-      case '.':
-      case '(':
-      case ')':
-      case '+':
-      case '|':
-      case '^':
-      case '$':
-      case '@':
-      case '%':
-        if (inClass == 0 || (firstIndexInClass == i && ch == '^'))
-          sb.append('\\');
-        sb.append(ch);
-        break;
-      case '!':
-        if (firstIndexInClass == i)
-          sb.append('^');
-        else
-          sb.append('!');
-        break;
-      case '{':
-        inGroup++;
-        sb.append('(');
-        break;
-      case '}':
-        inGroup--;
-        sb.append(')');
-        break;
-      case ',':
-        if (inGroup > 0)
-          sb.append('|');
-        else
-          sb.append(',');
-        break;
-      default:
-        sb.append(ch);
+          sb.append(ch);
+          break;
+        case '!':
+          if (firstIndexInClass == i) {
+            sb.append('^');
+          } else {
+            sb.append('!');
+          }
+          break;
+        case '{':
+          inGroup++;
+          sb.append('(');
+          break;
+        case '}':
+          inGroup--;
+          sb.append(')');
+          break;
+        case ',':
+          if (inGroup > 0) {
+            sb.append('|');
+          } else {
+            sb.append(',');
+          }
+          break;
+        default:
+          sb.append(ch);
       }
     }
     final Pattern p = Pattern.compile(sb.toString(), flags);
