@@ -2,9 +2,10 @@ package io.opsit.explang;
 
 import io.opsit.explang.Compiler.ICtx;
 
-public class LazyEval implements ICompiled  {
+public class LazyEval implements ICompiled {
   private ICompiled expr;
   private ICtx ctx;
+
   public LazyEval(ICompiled expr) {
     this.expr = expr;
   }
@@ -15,19 +16,18 @@ public class LazyEval implements ICompiled  {
     return this;
   }
 
+  /**
+   * Evaluate code and get result in stored context.
+   */
   public Object getValue(Backtrace backtrace) {
     return expr.evaluate(backtrace, ctx);
   }
 
   @Override
-  public void setDebugInfo(ParseCtx pctx) {
-
-  }
+  public void setDebugInfo(ParseCtx pctx) {}
 
   @Override
-  public void setName(String str) {
-
-  }
+  public void setName(String str) {}
 
   @Override
   public ParseCtx getDebugInfo() {
