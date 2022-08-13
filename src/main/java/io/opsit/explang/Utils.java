@@ -29,6 +29,7 @@ public class Utils {
   /**
    * Make List of positionals args.
    */
+  @SuppressWarnings("varargs")
   @SafeVarargs
   public static <T> List<T> list(T... objs) {
     List<T> lst = new ArrayList<T>(objs.length);
@@ -39,6 +40,7 @@ public class Utils {
   /**
    * Make unmodifiableList list of positionals args.
    */
+  @SuppressWarnings("varargs")
   @SafeVarargs
   public static <T> List<T> clist(T... objs) {
     return Collections.unmodifiableList(list(objs));
