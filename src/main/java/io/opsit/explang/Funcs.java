@@ -3761,6 +3761,12 @@ public class Funcs {
     }
 
     @Override
+    public int hashCode() {
+      return this.getClass().hashCode() 
+        + (null == this.value ? 0 : value.hashCode());
+    }
+    
+    @Override
     public boolean equals(Object obj) {
       if (obj instanceof ValueExpr) {
         final ValueExpr v = (ValueExpr) obj;
