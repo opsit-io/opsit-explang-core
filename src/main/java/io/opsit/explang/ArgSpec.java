@@ -443,4 +443,11 @@ public class ArgSpec {
     }
     return -1;
   }
+
+  /**
+   * Check if name is a parameter variable.
+   */
+  public boolean isParameterVar(String name) {
+    return (this.nameToIdx(name) >= 0) || (this.svarNameToIdx(name) >= 0);
+  }
 }

@@ -2114,16 +2114,11 @@ public class Compiler {
 
     @Override
     public void replace(final String name, final Object val) {
-      if (this.isParameterVar(name)) {
+      if (argList.getSpec().isParameterVar(name)) {
         this.getMappings().put(name, val);
       } else {
         super.replace(name, val);
       }
-    }
-
-    protected boolean isParameterVar(String name) {
-      final ArgSpec spec = argList.getSpec();
-      return (spec.nameToIdx(name) >= 0) || (spec.svarNameToIdx(name) >= 0);
     }
 
     @Override
