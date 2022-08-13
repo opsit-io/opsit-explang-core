@@ -18,7 +18,6 @@ import io.opsit.explang.atom.NumberParser;
 import io.opsit.explang.atom.RegexpParser;
 import io.opsit.explang.atom.SymbolParser;
 import io.opsit.explang.atom.VersionParser;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;

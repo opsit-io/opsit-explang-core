@@ -1,27 +1,26 @@
 package io.opsit.explang.jsr223;
 
+import io.opsit.explang.Utils;
 import java.util.List;
 import java.util.Map;
-
+import javax.script.Bindings;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineFactory;
 import javax.script.SimpleBindings;
-import javax.script.Bindings;
-import javax.script.ScriptContext;
-
-import io.opsit.explang.Utils;
 
 public class ExplangScriptEngineFactory implements ScriptEngineFactory {
   // FIXME: define threading parameters
-  final protected Map <String,String> engineParameters =
-    Utils.map(ScriptEngine.ENGINE,           "ExplangSE",
-              ScriptEngine.ENGINE_VERSION,   "0.0.1",
-              ScriptEngine.NAME,             "ExplangSE",
-              ScriptEngine.LANGUAGE,         "explang",
-              ScriptEngine.LANGUAGE_VERSION, "0.0.1");
+  protected final Map<String, String> engineParameters =
+      Utils.map(
+          ScriptEngine.ENGINE, "ExplangSE",
+          ScriptEngine.ENGINE_VERSION, "0.0.1",
+          ScriptEngine.NAME, "ExplangSE",
+          ScriptEngine.LANGUAGE, "explang",
+          ScriptEngine.LANGUAGE_VERSION, "0.0.1");
 
   protected Bindings globalBindings = new SimpleBindings();
-    
+
   @Override
   public String getEngineName() {
     return engineParameters.get(ScriptEngine.ENGINE);
@@ -34,7 +33,7 @@ public class ExplangScriptEngineFactory implements ScriptEngineFactory {
 
   @Override
   public List<String> getExtensions() {
-    return Utils.clist("l","lsp","lisp","exl");
+    return Utils.clist("l", "lsp", "lisp", "exl");
   }
 
   @Override
@@ -63,11 +62,11 @@ public class ExplangScriptEngineFactory implements ScriptEngineFactory {
   }
 
   @Override
-  public String getMethodCallSyntax(String obj, String m, String... args) {
+  public String getMethodCallSyntax(String obj, String method, String... args) {
     final StringBuilder buf = new StringBuilder();
-    buf.append("(.").append(obj).append(" \"").append(m).append("\" ");
+    buf.append("(.").append(obj).append(" \"").append(method).append("\" ");
     buf.append("(LIST ");
-    for (int i =0; i < args.length; i++)  {
+    for (int i = 0; i < args.length; i++) {
       if (i > 0) {
         buf.append(" ");
       }
@@ -92,10 +91,8 @@ public class ExplangScriptEngineFactory implements ScriptEngineFactory {
 
   @Override
   public ScriptEngine getScriptEngine() {
-    final ScriptEngine engine =  new ExplangScriptEngine(this);
-    engine.setBindings(this.globalBindings,
-                       ScriptContext.GLOBAL_SCOPE);
+    final ScriptEngine engine = new ExplangScriptEngine(this);
+    engine.setBindings(this.globalBindings, ScriptContext.GLOBAL_SCOPE);
     return engine;
   }
-    
 }

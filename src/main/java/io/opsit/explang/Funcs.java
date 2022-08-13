@@ -2,12 +2,10 @@ package io.opsit.explang;
 
 import static io.opsit.explang.ArgSpec.ARG_OPTIONAL;
 import static io.opsit.explang.ArgSpec.ARG_REST;
-
 import io.opsit.explang.Compiler.Eargs;
 import io.opsit.explang.Compiler.ICtx;
 import io.opsit.explang.Seq.Operation;
 import io.opsit.version.Version;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;

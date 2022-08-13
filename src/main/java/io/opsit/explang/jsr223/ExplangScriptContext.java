@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.SimpleBindings;
@@ -16,64 +15,64 @@ import javax.script.SimpleBindings;
 public class ExplangScriptContext implements ScriptContext {
 
   /**
-   * This is the writer to be used to output from scripts.
-   * By default, a <code>PrintWriter</code> based on <code>System.out</code>
-   * is used. Accessor methods getWriter, setWriter are used to manage
-   * this field.
+   * This is the writer to be used to output from scripts. By default, a <code>PrintWriter</code>
+   * based on <code>System.out</code> is used. Accessor methods getWriter, setWriter are used to
+   * manage this field.
+   *
    * @see java.lang.System#out
    * @see java.io.PrintWriter
    */
   protected Writer writer;
 
   /**
-   * This is the writer to be used to output errors from scripts.
-   * By default, a <code>PrintWriter</code> based on <code>System.err</code> is
-   * used. Accessor methods getErrorWriter, setErrorWriter are used to manage
-   * this field.
+   * This is the writer to be used to output errors from scripts. By default, a <code>PrintWriter
+   * </code> based on <code>System.err</code> is used. Accessor methods getErrorWriter,
+   * setErrorWriter are used to manage this field.
+   *
    * @see java.lang.System#err
    * @see java.io.PrintWriter
    */
   protected Writer errorWriter;
 
   /**
-   * This is the reader to be used for input from scripts.
-   * By default, a <code>InputStreamReader</code> based on <code>System.in</code>
-   * is used and default charset is used by this reader. Accessor methods
-   * getReader, setReader are used to manage this field.
+   * This is the reader to be used for input from scripts. By default, a <code>InputStreamReader
+   * </code> based on <code>System.in</code> is used and default charset is used by this reader.
+   * Accessor methods getReader, setReader are used to manage this field.
+   *
    * @see java.lang.System#in
    * @see java.io.InputStreamReader
    */
   protected Reader reader;
 
   /**
-   * This is the engine scope bindings.
-   * By default, a <code>SimpleBindings</code> is used. Accessor
+   * This is the engine scope bindings. By default, a <code>SimpleBindings</code> is used. Accessor
    * methods setBindings, getBindings are used to manage this field.
+   *
    * @see SimpleBindings
    */
   protected Bindings engineScope;
 
   /**
-   * This is the global scope bindings.
-   * By default, a null value (which means no global scope) is used. Accessor
-   * methods setBindings, getBindings are used to manage this field.
+   * This is the global scope bindings. By default, a null value (which means no global scope) is
+   * used. Accessor methods setBindings, getBindings are used to manage this field.
    */
   protected Bindings globalScope;
 
   /**
-   * Create a {@code SimpleScriptContext}.
+   * Create an instance.
    */
   public ExplangScriptContext() {
-    this(new InputStreamReader(System.in), new PrintWriter(System.out, true),
-         new PrintWriter(System.err, true));
+    this(
+        new InputStreamReader(System.in),
+        new PrintWriter(System.out, true),
+        new PrintWriter(System.err, true));
     engineScope = new SimpleBindings();
     globalScope = null;
   }
 
-    
   /**
-   * Package-private constructor to avoid needless creation of reader and writers.
-   * It is the caller's responsability to initialize the engine scope.
+   * Package-private constructor to avoid needless creation of reader and writers. It is the
+   * caller's responsability to initialize the engine scope.
    *
    * @param reader the reader
    * @param writer the writer
@@ -86,47 +85,42 @@ public class ExplangScriptContext implements ScriptContext {
   }
 
   /**
-   * Sets a <code>Bindings</code> of attributes for the given scope.  If the value
-   * of scope is <code>ENGINE_SCOPE</code> the given <code>Bindings</code> replaces the
-   * <code>engineScope</code> field.  If the value
-   * of scope is <code>GLOBAL_SCOPE</code> the given <code>Bindings</code> replaces the
-   * <code>globalScope</code> field.
+   * Sets a <code>Bindings</code> of attributes for the given scope. If the value of scope is <code>
+   * ENGINE_SCOPE</code> the given <code>Bindings</code> replaces the <code>engineScope</code>
+   * field. If the value of scope is <code>GLOBAL_SCOPE</code> the given <code>Bindings</code>
+   * replaces the <code>globalScope</code> field.
    *
    * @param bindings The <code>Bindings</code> of attributes to set.
    * @param scope The value of the scope in which the attributes are set.
-   *
    * @throws IllegalArgumentException if scope is invalid.
-   * @throws NullPointerException if the value of scope is <code>ENGINE_SCOPE</code> and
-   * the specified <code>Bindings</code> is null.
+   * @throws NullPointerException if the value of scope is <code>ENGINE_SCOPE</code> and the
+   *     specified <code>Bindings</code> is null.
    */
   public void setBindings(Bindings bindings, int scope) {
 
     switch (scope) {
-
-    case ENGINE_SCOPE:
-      if (bindings == null) {
-        throw new NullPointerException("Engine scope cannot be null.");
-      }
-      engineScope = bindings;
-      break;
-    case GLOBAL_SCOPE:
-      globalScope = bindings;
-      break;
-    default:
-      throw new IllegalArgumentException("Invalid scope value.");
+      case ENGINE_SCOPE:
+        if (bindings == null) {
+          throw new NullPointerException("Engine scope cannot be null.");
+        }
+        engineScope = bindings;
+        break;
+      case GLOBAL_SCOPE:
+        globalScope = bindings;
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid scope value.");
     }
   }
 
   /**
-   * Retrieves the value of the attribute with the given name in
-   * the scope occurring earliest in the search order.  The order
-   * is determined by the numeric value of the scope parameter (lowest
-   * scope values first.)
+   * Retrieves the value of the attribute with the given name in the scope occurring earliest in the
+   * search order. The order is determined by the numeric value of the scope parameter (lowest scope
+   * values first.)
    *
    * @param name The name of the attribute to retrieve.
-   * @return The value of the attribute in the lowest scope for
-   * which an attribute with the given name is defined.  Returns
-   * null if no attribute with the name exists in any scope.
+   * @return The value of the attribute in the lowest scope for which an attribute with the given
+   *     name is defined. Returns null if no attribute with the name exists in any scope.
    * @throws NullPointerException if the name is null.
    * @throws IllegalArgumentException if the name is empty.
    */
@@ -146,28 +140,25 @@ public class ExplangScriptContext implements ScriptContext {
    *
    * @param name The name of the attribute to retrieve.
    * @param scope The scope in which to retrieve the attribute.
-   * @return The value of the attribute. Returns <code>null</code> is the name
-   * does not exist in the given scope.
-   *
-   * @throws IllegalArgumentException
-   *         if the name is empty or if the value of scope is invalid.
+   * @return The value of the attribute. Returns <code>null</code> is the name does not exist in the
+   *     given scope.
+   * @throws IllegalArgumentException if the name is empty or if the value of scope is invalid.
    * @throws NullPointerException if the name is null.
    */
   public Object getAttribute(String name, int scope) {
     checkName(name);
     switch (scope) {
+      case ENGINE_SCOPE:
+        return engineScope.get(name);
 
-    case ENGINE_SCOPE:
-      return engineScope.get(name);
+      case GLOBAL_SCOPE:
+        if (globalScope != null) {
+          return globalScope.get(name);
+        }
+        return null;
 
-    case GLOBAL_SCOPE:
-      if (globalScope != null) {
-        return globalScope.get(name);
-      }
-      return null;
-
-    default:
-      throw new IllegalArgumentException("Illegal scope value.");
+      default:
+        throw new IllegalArgumentException("Illegal scope value.");
     }
   }
 
@@ -176,100 +167,94 @@ public class ExplangScriptContext implements ScriptContext {
    *
    * @param name The name of the attribute to remove
    * @param scope The scope in which to remove the attribute
-   *
    * @return The removed value.
-   * @throws IllegalArgumentException
-   *         if the name is empty or if the scope is invalid.
+   * @throws IllegalArgumentException if the name is empty or if the scope is invalid.
    * @throws NullPointerException if the name is null.
    */
   public Object removeAttribute(String name, int scope) {
     checkName(name);
     switch (scope) {
+      case ENGINE_SCOPE:
+        if (getBindings(ENGINE_SCOPE) != null) {
+          return getBindings(ENGINE_SCOPE).remove(name);
+        }
+        return null;
 
-    case ENGINE_SCOPE:
-      if (getBindings(ENGINE_SCOPE) != null) {
-        return getBindings(ENGINE_SCOPE).remove(name);
-      }
-      return null;
+      case GLOBAL_SCOPE:
+        if (getBindings(GLOBAL_SCOPE) != null) {
+          return getBindings(GLOBAL_SCOPE).remove(name);
+        }
+        return null;
 
-    case GLOBAL_SCOPE:
-      if (getBindings(GLOBAL_SCOPE) != null) {
-        return getBindings(GLOBAL_SCOPE).remove(name);
-      }
-      return null;
-
-    default:
-      throw new IllegalArgumentException("Illegal scope value.");
+      default:
+        throw new IllegalArgumentException("Illegal scope value.");
     }
   }
 
   /**
-   * Sets the value of an attribute in a given scope. If the scope is <code>GLOBAL_SCOPE</code>
-   * and no Bindings is set for <code>GLOBAL_SCOPE</code>, then setAttribute call is a no-op.
+   * Sets the value of an attribute in a given scope. If the scope is <code>GLOBAL_SCOPE</code> and
+   * no Bindings is set for <code>GLOBAL_SCOPE</code>, then setAttribute call is a no-op.
    *
    * @param name The name of the attribute to set
    * @param value The value of the attribute
    * @param scope The scope in which to set the attribute
-   *
-   * @throws IllegalArgumentException
-   *         if the name is empty or if the scope is invalid.
+   * @throws IllegalArgumentException if the name is empty or if the scope is invalid.
    * @throws NullPointerException if the name is null.
    */
   public void setAttribute(String name, Object value, int scope) {
     checkName(name);
     switch (scope) {
+      case ENGINE_SCOPE:
+        engineScope.put(name, value);
+        return;
 
-    case ENGINE_SCOPE:
-      engineScope.put(name, value);
-      return;
+      case GLOBAL_SCOPE:
+        if (globalScope != null) {
+          globalScope.put(name, value);
+        }
+        return;
 
-    case GLOBAL_SCOPE:
-      if (globalScope != null) {
-        globalScope.put(name, value);
-      }
-      return;
-
-    default:
-      throw new IllegalArgumentException("Illegal scope value.");
+      default:
+        throw new IllegalArgumentException("Illegal scope value.");
     }
   }
 
-  /** {@inheritDoc} */
+  @Override
   public Writer getWriter() {
     return writer;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public Reader getReader() {
     return reader;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void setReader(Reader reader) {
     this.reader = reader;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void setWriter(Writer writer) {
     this.writer = writer;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public Writer getErrorWriter() {
     return errorWriter;
   }
 
-  /** {@inheritDoc} */
+  @Override
   public void setErrorWriter(Writer writer) {
     this.errorWriter = writer;
   }
 
   /**
    * Get the lowest scope in which an attribute is defined.
-   * @param name Name of the attribute
-   * .
-   * @return The lowest scope.  Returns -1 if no attribute with the given
-   * name is defined in any scope.
+   *
+   * @param name Name of the attribute .
+   * @return The lowest scope. Returns -1 if no attribute with the given name is defined in any
+   *     scope.
    * @throws NullPointerException if name is null.
    * @throws IllegalArgumentException if name is empty.
    */
@@ -285,12 +270,12 @@ public class ExplangScriptContext implements ScriptContext {
   }
 
   /**
-   * Returns the value of the <code>engineScope</code> field if specified scope is
-   * <code>ENGINE_SCOPE</code>.  Returns the value of the <code>globalScope</code> field if the specified scope is
-   * <code>GLOBAL_SCOPE</code>.
+   * Returns the value of the <code>engineScope</code> field if specified scope is <code>
+   * ENGINE_SCOPE</code>. Returns the value of the <code>globalScope</code> field if the specified
+   * scope is <code>GLOBAL_SCOPE</code>.
    *
    * @param scope The specified scope
-   * @return The value of either the  <code>engineScope</code> or <code>globalScope</code> field.
+   * @return The value of either the <code>engineScope</code> or <code>globalScope</code> field.
    * @throws IllegalArgumentException if the value of scope is invalid.
    */
   public Bindings getBindings(int scope) {
@@ -303,7 +288,7 @@ public class ExplangScriptContext implements ScriptContext {
     }
   }
 
-  /** {@inheritDoc} */
+  @Override
   public List<Integer> getScopes() {
     return scopes;
   }
@@ -316,10 +301,11 @@ public class ExplangScriptContext implements ScriptContext {
   }
 
   private static List<Integer> scopes;
+
   static {
     scopes = new ArrayList<Integer>(2);
     scopes.add(ENGINE_SCOPE);
     scopes.add(GLOBAL_SCOPE);
     scopes = Collections.unmodifiableList(scopes);
-  }    
+  }
 }

@@ -12,7 +12,6 @@ import io.opsit.explang.ParserEOFException;
 import io.opsit.explang.ParserException;
 import io.opsit.explang.Symbol;
 import io.opsit.explang.Utils;
-
 import java.io.IOException;
 import java.io.PushbackReader;
 import java.util.regex.Pattern;

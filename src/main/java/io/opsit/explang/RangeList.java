@@ -1,7 +1,6 @@
 package io.opsit.explang;
 
 import io.opsit.version.Version;
-
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Iterator;

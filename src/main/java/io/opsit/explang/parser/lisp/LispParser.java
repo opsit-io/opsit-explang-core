@@ -16,7 +16,6 @@ import io.opsit.explang.atom.KeywordParser;
 import io.opsit.explang.atom.NullParser;
 import io.opsit.explang.atom.NumberParser;
 import io.opsit.explang.atom.SymbolParser;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
