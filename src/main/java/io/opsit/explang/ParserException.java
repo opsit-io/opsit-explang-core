@@ -5,6 +5,7 @@ import static io.opsit.explang.Utils.list;
 import java.util.List;
 
 public class ParserException extends Exception {
+  public static final long serialVersionUID = 1L;
   protected ParseCtx pctx;
 
   public List<String> getMessages() {

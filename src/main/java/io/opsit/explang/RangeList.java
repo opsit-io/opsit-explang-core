@@ -109,14 +109,14 @@ public class RangeList implements List<Number> {
 
   @SuppressWarnings("unchecked")
   @Override
-  public Number[] toArray(Object[] arr) {
+  public <T> T[] toArray(T[] arr) {
     final int length = size();
     final Object array = Array.newInstance(arr.getClass().getComponentType(), length);
     final Iterator<Number> iter = this.iterator();
     for (int i = 0; i < length; i++) {
       Array.set(array, i, iter.next());
     }
-    return (Number[]) array;
+    return (T[]) array;
   }
 
   @Override

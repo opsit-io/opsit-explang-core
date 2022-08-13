@@ -1,6 +1,7 @@
 package io.opsit.explang;
 
 public class ExecutionException extends RuntimeException {
+  public static final long serialVersionUID = 1L;
   public Backtrace backtrace;
 
   public ExecutionException(Throwable cause) {

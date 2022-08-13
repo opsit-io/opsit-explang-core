@@ -58,8 +58,7 @@ public class RestList implements List<Object> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public Object[] toArray(Object[] array) {
+  public <T> T[] toArray(T[] array) {
     return lst.toArray(array);
   }
 

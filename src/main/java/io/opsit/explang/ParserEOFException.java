@@ -1,6 +1,7 @@
 package io.opsit.explang;
 
 public class ParserEOFException extends ParserException {
+  public static final long serialVersionUID = 1L;
 
   public ParserEOFException(String msg) {
     super(msg);

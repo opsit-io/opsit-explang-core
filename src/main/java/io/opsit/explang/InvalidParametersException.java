@@ -1,6 +1,8 @@
 package io.opsit.explang;
 
 public class InvalidParametersException extends Exception {
+  public static final long serialVersionUID = 1L;
+
   public ParseCtx getParseCtx() {
     return pctx;
   }

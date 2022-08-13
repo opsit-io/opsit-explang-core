@@ -3,6 +3,7 @@ package io.opsit.explang.atom;
 import io.opsit.explang.ParseCtx;
 
 public class AtomParseException extends Exception {
+  public static final long serialVersionUID = 1L;
   ParseCtx pctx;
 
   public AtomParseException(String msg) {

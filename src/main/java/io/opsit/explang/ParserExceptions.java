@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParserExceptions extends ParserException {
+  public static final long serialVersionUID = 1L;
   protected final List<ParserException> errList;
 
   @Override

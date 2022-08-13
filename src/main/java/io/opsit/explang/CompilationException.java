@@ -1,6 +1,7 @@
 package io.opsit.explang;
 
 public class CompilationException extends RuntimeException {
+  public static final long serialVersionUID = 1L;
   ParseCtx pctx;
 
   /**
