@@ -5,6 +5,7 @@ import io.opsit.explang.ParseCtx;
 import java.util.regex.Pattern;
 
 public class RegexpParser implements AtomParser {
+  @Override
   public boolean parse(String str, Object[] holder, ParseCtx pctx) {
     boolean isGlob;
     if (str.length() < 3) {
