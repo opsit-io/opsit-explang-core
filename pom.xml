@@ -97,18 +97,18 @@
         <version>3.0.0-M5</version>
       </plugin>
       <!--plugin>
-		<groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-javadoc-plugin</artifactId>
-        <version>3.4.0</version>
-		<executions>
+		  <groupId>org.apache.maven.plugins</groupId>
+		  <artifactId>maven-javadoc-plugin</artifactId>
+          <version>3.4.0</version>
+		  <executions>
 		  <execution>
-			<id>attach-javadocs</id>
-			<goals>
-			  <goal>jar</goal>
-			</goals>
+		  <id>attach-javadocs</id>
+		  <goals>
+		  <goal>jar</goal>
+		  </goals>
 		  </execution>
-		</executions>
-	  </plugin-->
+		  </executions>
+	      </plugin-->
       <plugin>
 		<groupId>org.apache.maven.plugins</groupId>
 		<artifactId>maven-source-plugin</artifactId>
@@ -125,28 +125,31 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.17</version>
+        <version>3.1.2</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.puppycrawl.tools</groupId>
+            <artifactId>checkstyle</artifactId>
+            <version>8.31</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <configLocation>.checkstyle.xml</configLocation>
+          <encoding>UTF-8</encoding>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <linkXRef>false</linkXRef>
+        </configuration>
         <executions>
           <execution>
             <id>validate</id>
             <phase>compile</phase>
-            <configuration>
-              <configLocation>google_checks.xml</configLocation>
-              <suppressionsLocation>.checkstyle-suppressions.xml</suppressionsLocation>
-              <encoding>UTF-8</encoding>
-              <failsOnError>true</failsOnError>
-              <consoleOutput>true</consoleOutput>
-              <includeTestSourceDirectory>true
-              </includeTestSourceDirectory>
-              <failOnViolation>false</failOnViolation>
-              <logViolationsToConsole>true</logViolationsToConsole>
-            </configuration>
             <goals>
               <goal>check</goal>
             </goals>
           </execution>
         </executions>
-      </plugin>      
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maaven-jar-plugin</artifactId>
