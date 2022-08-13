@@ -1,34 +1,31 @@
 package io.opsit.explang;
 
-import java.util.Map;
-import java.util.Set;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ArgSpec {
-  static public final String ARG_REST = "&REST";
-    
-  static public final String ARG_MANDATORY = "&REQUIRED";
-  static public final String ARG_OPTIONAL = "&OPTIONAL";
+  public static final String ARG_REST = "&REST";
 
-  static public final String ARG_KEY = "&KEY";
-  static public final String ARG_ALLOW_OTHER_KEYS = "&ALLOW-OTHER-KEYS";
-    
-  static public final String ARG_EAGER = "&EAGER";
-  static public final String ARG_LAZY = "&LAZY";
-  static public final String ARG_PIPE = "&PIPE";
+  public static final String ARG_MANDATORY = "&REQUIRED";
+  public static final String ARG_OPTIONAL = "&OPTIONAL";
 
-  private static final Set<String> argSyms = Utils.set(ARG_REST,
-                                                       ARG_OPTIONAL,
-                                                       ARG_KEY,
-                                                       ARG_MANDATORY);
+  public static final String ARG_KEY = "&KEY";
+  public static final String ARG_ALLOW_OTHER_KEYS = "&ALLOW-OTHER-KEYS";
+
+  public static final String ARG_EAGER = "&EAGER";
+  public static final String ARG_LAZY = "&LAZY";
+  public static final String ARG_PIPE = "&PIPE";
+
+  private static final Set<String> argSyms =
+      Utils.set(ARG_REST, ARG_OPTIONAL, ARG_KEY, ARG_MANDATORY);
 
   public static boolean isArgsym(Symbol arg) {
-    return arg!=null && argSyms.contains(arg.getName());
+    return arg != null && argSyms.contains(arg.getName());
   }
-    
+
   public static enum AF {
     MANDATORY,
     OPTIONAL,
@@ -41,22 +38,22 @@ public class ArgSpec {
   protected static class Arg {
     private AF flag;
     private String name;
+    /**
+     * Form that initializes default arg. value
+     */
     private ICompiled initForm;
+    /**
+     * Status var - true if optional argument was set.
+     */
     private String svar;
     private boolean allowOtherKeys = false;
     private boolean lazy = false;
     private boolean pipe = false;
 
-    /**
-     * @return the flag
-     */
     public AF getFlag() {
       return flag;
     }
 
-    /**
-     * @return the lazy
-     */
     public boolean isLazy() {
       return lazy;
     }
@@ -65,28 +62,22 @@ public class ArgSpec {
       return this.pipe;
     }
 
-        
     public boolean isAllowOtherKeys() {
       return allowOtherKeys;
     }
 
-    /**
-     * @param allowOtherKeys the allowOtherKeys to set
-     */
-    //public void setAllowOtherKeys(boolean allowOtherKeys) {
-    //    
-    //}
-
     protected Arg() {
       super();
     }
-    protected Arg(String name,
-                  AF flag,
-                  ICompiled initForm,
-                  String svar,
-                  boolean allowOtherKeys,
-                  boolean isLazy,
-                  boolean pipe) {
+
+    protected Arg(
+        String name,
+        AF flag,
+        ICompiled initForm,
+        String svar,
+        boolean allowOtherKeys,
+        boolean isLazy,
+        boolean pipe) {
       super();
       this.name = name;
       this.flag = flag;
@@ -99,41 +90,52 @@ public class ArgSpec {
 
     @Override
     public String toString() {
-      return "(" + flag +" "+
-        (this.isAllowOtherKeys() ? ARG_ALLOW_OTHER_KEYS : "") + " " +
-        (this.lazy ? ARG_LAZY : "") +" " +
-        (this.pipe ? ARG_PIPE : "") +" " +
-        name +" "+initForm+" "+ svar +")";
+      return "("
+          + flag
+          + " "
+          + (this.isAllowOtherKeys() ? ARG_ALLOW_OTHER_KEYS : "")
+          + " "
+          + (this.lazy ? ARG_LAZY : "")
+          + " "
+          + (this.pipe ? ARG_PIPE : "")
+          + " "
+          + name
+          + " "
+          + initForm
+          + " "
+          + svar
+          + ")";
     }
 
     @Override
-    public boolean equals(Object o) {
-      if (o instanceof Arg) {
-        final Arg a = (Arg)o;
-        return
-          ((null == this.name && null == a.name) ||
-           (null != this.name && this.name.equals(a.name))) &&
-          ((null == this.flag && null == a.flag)  ||
-           (null != this.flag && this.flag.equals(a.flag))) &&
-          (this.isAllowOtherKeys() == a.isAllowOtherKeys()) &&
-          (this.isLazy() == a.isLazy()) &&
-          (this.isPipe() == a.isPipe()) &&
-          ((null == this.initForm && null == a.initForm)  ||
-           (null != this.initForm && this.initForm.equals(a.initForm))) &&
-          ((null == this.svar && null == a.svar)  ||
-           (null != this.svar && this.svar.equals(a.svar)));
+    public boolean equals(Object obj) {
+      if (obj instanceof Arg) {
+        final Arg a = (Arg) obj;
+        return ((null == this.name && null == a.name)
+                || (null != this.name && this.name.equals(a.name)))
+            && ((null == this.flag && null == a.flag)
+                || (null != this.flag && this.flag.equals(a.flag)))
+            && (this.isAllowOtherKeys() == a.isAllowOtherKeys())
+            && (this.isLazy() == a.isLazy())
+            && (this.isPipe() == a.isPipe())
+            && ((null == this.initForm && null == a.initForm)
+                || (null != this.initForm && this.initForm.equals(a.initForm)))
+            && ((null == this.svar && null == a.svar)
+                || (null != this.svar && this.svar.equals(a.svar)));
       } else {
         return false;
       }
     }
-    
   }
 
-  public List<String> asSpecList()  {
+  /**
+   * Return list of argument specifiers.
+   */
+  public List<String> asSpecList() {
     final Arg[] args = this.getArgs();
-    //final StringBuilder buf = new StringBuilder(args.length<<3);
+    // final StringBuilder buf = new StringBuilder(args.length<<3);
     List<String> specList = Utils.list();
-    boolean optional=false;
+    boolean optional = false;
     boolean m2 = false;
     boolean rest = false;
     boolean eager = true;
@@ -141,21 +143,21 @@ public class ArgSpec {
     boolean key = false;
     for (int i = 0; i < args.length; i++) {
       Arg arg = args[i];
-      AF flag= arg.getFlag();
-      if (!optional && flag== AF.OPTIONAL) {
+      AF flag = arg.getFlag();
+      if (!optional && flag == AF.OPTIONAL) {
         specList.add(ARG_OPTIONAL);
         optional = true;
       }
-      if (!m2 && flag== AF.MANDATORY2) {
+      if (!m2 && flag == AF.MANDATORY2) {
         specList.add(ARG_MANDATORY);
         m2 = true;
         optional = false;
       }
-      if (!key && (flag == AF.KEY || flag==AF.REST_KEY)) {
+      if (!key && (flag == AF.KEY || flag == AF.REST_KEY)) {
         key = true;
         specList.add(ARG_KEY);
       }
-      if (!rest && (flag== AF.REST || flag==AF.REST_KEY)) {
+      if (!rest && (flag == AF.REST || flag == AF.REST_KEY)) {
         specList.add(ARG_REST);
         rest = true;
       }
@@ -177,7 +179,7 @@ public class ArgSpec {
         }
       } else {
         if (!arg.isAllowOtherKeys()) {
-          //specList.add("ERROR: "+ARG_ALLOW_OTHER_KEYS);
+          // specList.add("ERROR: "+ARG_ALLOW_OTHER_KEYS);
           aok = false;
         }
       }
@@ -186,24 +188,24 @@ public class ArgSpec {
     return specList;
   }
 
-  public Arg getArg(int  idx) {
+  public Arg getArg(int idx) {
     return args[idx];
   }
 
   public Arg[] getArgs() {
     return args;
   }
-    
-  private  Arg args [];
-  private  Object []argSpecs;
+
+  private Arg []args;
+  private Object[] argSpecs;
   private boolean hasRest = false;
-    
-  /* &required               &opt                
+
+  /* &required               &opt
    *+---+                         +----+
    *|   V         &opt            V    | &mnd
    *+-mandatory  ----------> optional -+----->mandatory2
    *  |      |                  |                       ^
-   *  |      | &rest            V &rest <-----+         | 
+   *  |      | &rest            V &rest <-----+         |
    *  |      +--------------> rest -----------+ &rest   |
    *  |                        | &key                   |
    *  |&key                   rest_key------------------+
@@ -211,47 +213,48 @@ public class ArgSpec {
    *  +----------------------- key----------------------+
    *                                    &required
    */
-  static final Map<Object, Map<Object,Object>> xmap =
-    Utils.map(AF.MANDATORY, Utils.map(ARG_MANDATORY,  AF.MANDATORY,
-                                      ARG_REST,       AF.REST,
-                                      ARG_OPTIONAL,   AF.OPTIONAL,
-                                      ARG_KEY,        AF.KEY),
-              AF.OPTIONAL,  Utils.map(ARG_OPTIONAL,   AF.OPTIONAL,
-                                      ARG_MANDATORY,  AF.MANDATORY2,
-                                      ARG_REST,       AF.REST,
-                                      ARG_KEY,        AF.KEY),
-              AF.MANDATORY2,Utils.map(ARG_MANDATORY, AF.MANDATORY2),
-              AF.REST,      Utils.map(ARG_REST, AF.REST,
-                                      ARG_KEY,  AF.REST_KEY,
-                                      ARG_MANDATORY,AF.MANDATORY2),
-              AF.KEY,       Utils.map(ARG_KEY,  AF.KEY,
-                                      ARG_MANDATORY,AF.MANDATORY2,
-                                      ARG_REST, AF.REST),
-              AF.REST_KEY,  Utils.map(ARG_KEY,  AF.REST_KEY,
-                                      ARG_MANDATORY,AF.MANDATORY2)
-              );
-          
+  static final Map<Object, Map<Object, Object>> xmap =
+      Utils.map(
+          AF.MANDATORY,
+              Utils.map(
+                  ARG_MANDATORY, AF.MANDATORY,
+                  ARG_REST, AF.REST,
+                  ARG_OPTIONAL, AF.OPTIONAL,
+                  ARG_KEY, AF.KEY),
+          AF.OPTIONAL,
+              Utils.map(
+                  ARG_OPTIONAL, AF.OPTIONAL,
+                  ARG_MANDATORY, AF.MANDATORY2,
+                  ARG_REST, AF.REST,
+                  ARG_KEY, AF.KEY),
+          AF.MANDATORY2, Utils.map(ARG_MANDATORY, AF.MANDATORY2),
+          AF.REST,
+              Utils.map(
+                  ARG_REST, AF.REST,
+                  ARG_KEY, AF.REST_KEY,
+                  ARG_MANDATORY, AF.MANDATORY2),
+          AF.KEY,
+              Utils.map(
+                  ARG_KEY, AF.KEY,
+                  ARG_MANDATORY, AF.MANDATORY2,
+                  ARG_REST, AF.REST),
+          AF.REST_KEY,
+              Utils.map(
+                  ARG_KEY, AF.REST_KEY,
+                  ARG_MANDATORY, AF.MANDATORY2));
 
-    
-    
-  /**
-   * @return the hasRest
-   */
   public boolean isHasRest() {
     return hasRest;
   }
 
-  /**
-   * @param hasRest the hasRest to set
-   */
-  private AF flagTrans(AF current , String spec) throws InvalidParametersException {        
-    Map<Object,Object> transitions =  xmap.get(current);
+  private AF flagTrans(AF current, String spec) throws InvalidParametersException {
+    Map<Object, Object> transitions = xmap.get(current);
     if (null == transitions) {
-      throw new RuntimeException("Internal error: unknown current arg state: "+ current);
+      throw new RuntimeException("Internal error: unknown current arg state: " + current);
     }
     AF result = (AF) transitions.get(spec);
     if (null == result) {
-      throw new  InvalidParametersException("misplaced argument keyword: "+spec);
+      throw new InvalidParametersException("misplaced argument keyword: " + spec);
     }
     if (result.equals(current)) {
       result = current;
@@ -259,95 +262,91 @@ public class ArgSpec {
     return result;
   }
 
-  private static Object[] stringsToArray(String [] strArgs)
-    throws InvalidParametersException {
-    Object args[] = new Object[strArgs.length];
+  private static Object[] stringsToArray(String[] strArgs) throws InvalidParametersException {
+    Object []args = new Object[strArgs.length];
     for (int i = 0; i < strArgs.length; i++) {
-      args[i]=new Symbol((String)strArgs[i]);
+      args[i] = new Symbol((String) strArgs[i]);
     }
     return args;
   }
-    
-    
-  private static Object[] astnToArray(ASTNList astnList,Compiler comp)
-    throws InvalidParametersException {
-    //if (! argSpecs.isList()) {
-    //    throw new InvalidParametersException("Argument Specification must be a list, but got "+ argSpecs.getObject());
-    //}
-    //final List astnList = argSpecs.getList();
-    
-    Object specs[] = new Object[astnList.size()];
+
+  private static Object[] astnToArray(ASTNList astnList, Compiler comp)
+      throws InvalidParametersException {
+    // if (! argSpecs.isList()) {
+    //    throw new InvalidParametersException("Argument Specification must be a list, but got "+
+    // argSpecs.getObject());
+    // }
+    // final List astnList = argSpecs.getList();
+
+    Object []specs = new Object[astnList.size()];
     for (int i = 0; i < astnList.size(); i++) {
-      ASTN astn = (ASTN)astnList.get(i);
+      ASTN astn = (ASTN) astnList.get(i);
       if (!astn.isList()) {
-        specs[i]=astn.getObject();
+        specs[i] = astn.getObject();
       } else {
-        ASTNList lst = (ASTNList)astn;
+        ASTNList lst = (ASTNList) astn;
         List<Object> listSpec = new ArrayList<Object>(lst.size());
-        for (int j =0; j < lst.size(); j++) {
+        for (int j = 0; j < lst.size(); j++) {
           ASTN el = lst.get(j);
-          if (!el.isList() &&
-              (el.getObject() instanceof Symbol)) {
+          if (!el.isList() && (el.getObject() instanceof Symbol)) {
             listSpec.add(el.getObject());
           } else {
             listSpec.add(comp.compile(el));
           }
-            
         }
-        specs[i]=listSpec;
+        specs[i] = listSpec;
       }
     }
     return specs;
   }
 
-  public ArgSpec(String []argspecs)
-    throws InvalidParametersException {
-    this(stringsToArray(argspecs), null); 
+  public ArgSpec(String[] argspecs) throws InvalidParametersException {
+    this(stringsToArray(argspecs), null);
   }
 
-  public ArgSpec(String []argspecs, Compiler comp)
-    throws InvalidParametersException {
-    this(stringsToArray(argspecs), comp); 
-  }
-    
-  public ArgSpec(ASTNList argSpecs,Compiler comp)
-    throws InvalidParametersException {
-    this(astnToArray(argSpecs, comp),comp);
+  public ArgSpec(String[] argspecs, Compiler comp) throws InvalidParametersException {
+    this(stringsToArray(argspecs), comp);
   }
 
-  public ArgSpec(Object argSpecs[], Compiler comp) throws  InvalidParametersException {
+  public ArgSpec(ASTNList argSpecs, Compiler comp) throws InvalidParametersException {
+    this(astnToArray(argSpecs, comp), comp);
+  }
+
+  /**
+   * Build ArgSpec from array of arguments specifications.
+   */
+  public ArgSpec(Object []argSpecs, Compiler comp) throws InvalidParametersException {
     this.argSpecs = argSpecs;
     AF flag = AF.MANDATORY;
-    Arg args[] = new Arg[argSpecs.length];
-    boolean otherKeys  = false;
+    Arg []args = new Arg[argSpecs.length];
+    boolean otherKeys = false;
     boolean lazy = false;
     boolean pipe = false;
     boolean hadPipe = false;
-    int j = 0;
+    int argsIdx = 0;
     Arg arg;
-    for (int i=0; i < argSpecs.length; i++) {
-      Object spec = this.argSpecs[i];
+    for (int specsIdx = 0; specsIdx < argSpecs.length; specsIdx++) {
+      Object spec = this.argSpecs[specsIdx];
       if (spec instanceof Symbol) {
-        Symbol specSym = (Symbol)spec;
+        Symbol specSym = (Symbol) spec;
         if (isArgsym(specSym)) {
           flag = flagTrans(flag, specSym.getName());
           continue;
         }
-        
+
         if (ARG_ALLOW_OTHER_KEYS.equalsIgnoreCase(specSym.getName())) {
-          if (AF.KEY==flag ||  AF.REST_KEY==flag) {
+          if (AF.KEY == flag || AF.REST_KEY == flag) {
             otherKeys = true;
-            for (int k = j - 1;
-                 k >= 0 && (args[k].flag==AF.KEY ||
-                            args[k].flag==AF.REST_KEY);
-                 k--) {
+            for (int k = argsIdx - 1;
+                k >= 0 && (args[k].flag == AF.KEY || args[k].flag == AF.REST_KEY);
+                k--) {
               args[k].allowOtherKeys = true;
             }
           } else {
-            throw new  InvalidParametersException(ARG_ALLOW_OTHER_KEYS +" allowed only after &key");
+            throw new InvalidParametersException(ARG_ALLOW_OTHER_KEYS + " allowed only after &key");
           }
           continue;
-        } else if (!(AF.KEY==flag ||  AF.REST_KEY==flag)) {
+        } else if (!(AF.KEY == flag || AF.REST_KEY == flag)) {
           // ??? WHY?
           otherKeys = false;
         }
@@ -366,10 +365,10 @@ public class ArgSpec {
       } else if (spec instanceof List) {
         arg = new Arg();
         @SuppressWarnings("unchecked")
-          List<Object> listSpec  = (List<Object>) spec;
-        if (AF.MANDATORY==flag
-            || AF.MANDATORY2==flag) {
-          throw new InvalidParametersException("Invalid parameter spec: must be Symbol for required argument");
+        List<Object> listSpec = (List<Object>) spec;
+        if (AF.MANDATORY == flag || AF.MANDATORY2 == flag) {
+          throw new InvalidParametersException(
+              "Invalid parameter spec: must be Symbol for required argument");
         }
         if (listSpec.isEmpty()) {
           throw new InvalidParametersException("Invalid parameter spec: cannot be empty list");
@@ -378,40 +377,45 @@ public class ArgSpec {
           throw new InvalidParametersException("Invalid parameter spec: list is too long");
         }
         if (!(listSpec.get(0) instanceof Symbol)) {
-          throw new InvalidParametersException("Invalid parameter spec: first list element must be symbol");
+          throw new InvalidParametersException(
+              "Invalid parameter spec: first list element must be symbol");
         }
         arg.name = ((Symbol) listSpec.get(0)).getName();
         if (listSpec.size() > 1) {
           arg.initForm = (ICompiled) listSpec.get(1);
         }
         if (listSpec.size() > 2) {
-          arg.svar = ((Symbol)listSpec.get(2)).getName();
+          arg.svar = ((Symbol) listSpec.get(2)).getName();
         }
       } else {
-        throw new InvalidParametersException("Invalid parameter spec, must be Symbol or List "+spec);
+        throw new InvalidParametersException(
+            "Invalid parameter spec, must be Symbol or List " + spec);
       }
       arg.flag = flag;
       arg.allowOtherKeys = otherKeys;
       arg.lazy = lazy;
       if (pipe && hadPipe) {
-        throw new InvalidParametersException("Invalid parameter spec: only one " +
-                                             ArgSpec.ARG_PIPE + " can be specified");
+        throw new InvalidParametersException(
+            "Invalid parameter spec: only one " + ArgSpec.ARG_PIPE + " can be specified");
       }
       arg.pipe = pipe;
       if (pipe) {
         pipe = false;
         hadPipe = true;
       }
-      hasRest|=(AF.REST == flag);
-      args[j] = arg;
-      j++;
+      hasRest |= (AF.REST == flag);
+      args[argsIdx] = arg;
+      argsIdx++;
     }
-    this.args = Arrays.copyOf(args, j);
+    this.args = Arrays.copyOf(args, argsIdx);
   }
 
+  /**
+   * Find argument index by name.
+   */
   public int nameToIdx(String name) {
     // FIXME: use map!
-    for (int i =0; i < this.args.length; i++) {
+    for (int i = 0; i < this.args.length; i++) {
       if (name.equals(args[i].name)) {
         return i;
       }
@@ -421,15 +425,18 @@ public class ArgSpec {
 
   public ICompiled getInitForm(int idx) {
     ICompiled result = this.args[idx].initForm;
-    return null ==  result ?  new Funcs.ObjectExp(null)  : result;
+    return null == result ? new Funcs.ObjectExp(null) : result;
   }
-    
+
   public int size() {
     return args.length;
   }
 
+  /**
+   * Convert svar variable name to argument index.
+   */
   public int svarNameToIdx(String name) {
-    for (int i =0; i < this.args.length; i++) {
+    for (int i = 0; i < this.args.length; i++) {
       if (name.equals(args[i].svar)) {
         return i;
       }
