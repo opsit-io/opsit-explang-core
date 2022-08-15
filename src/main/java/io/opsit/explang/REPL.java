@@ -27,7 +27,7 @@ public class REPL {
   }
 
   protected List<String> parsers = Utils.list("lisp", "sexp");
-  protected List<String> funcConverters = Utils.list("nop", "ucs");
+  protected List<String> funcConverters = Utils.list("uc", "nop");
 
   public List<String> getParsers() {
     return parsers;
@@ -159,18 +159,20 @@ public class REPL {
         ""
             + "Explang REPL usage:\n"
             + "explang  [ option .. ] [ file ... ]\n"
-            + "  -d            enable verbose diagnostics\n"
-            + "  -p  packages  comma separated list of enabled packages, the available packages:\n"
+            + "  -d            Enable verbose diagnostics\n"
+            + "  -p  packages  Comma separated list of enabled packages\n"
+            + "                The base.* packages are enabled by default.\n"
+            + "                The available packages:\n"
             + listItems(Compiler.getAllPackages())
-            + "  -r  parser    specify parser. The default is " + getParsers().get(0)
+            + "  -r  parser    Specify parser. The default is " + getParsers().get(0)
             +   ", available parsers are:\n"
             + listItems(getParsers())
-            + "  -f  converter specify function name converter. The default is  "
+            + "  -f  converter Specify function name converter. The default is  "
             +    getFuncConverters().get(0) + ", available converters are:\n"
             + listItems(getFuncConverters())      
-            + "  -l            enable line mode\n"
-            + "  -h            print help message\n"
-            + "  -v            print software version\n";
+            + "  -l            Enable line mode\n"
+            + "  -h            Print help message\n"
+            + "  -v            Print software version\n";
     System.err.print(msg);
   }
 
