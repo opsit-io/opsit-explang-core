@@ -8,4 +8,6 @@ public interface IParser {
   public ASTNList parse(ParseCtx pxt, String input);
 
   public ASTNList parse(ParseCtx pxt, String input, int maxExprs);
+
+  public boolean supportREPLStream();
 }

@@ -352,4 +352,8 @@ public class LispParser implements IParser {
     }
     return sb.toString();
   }
+
+  public boolean supportREPLStream() {
+    return true;
+  }
 }

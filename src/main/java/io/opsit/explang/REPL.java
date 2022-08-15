@@ -1,36 +1,49 @@
 package io.opsit.explang;
 
 import io.opsit.explang.Compiler.ICtx;
-import io.opsit.explang.parser.lisp.LispParser;
-import io.opsit.explang.parser.sexp.SexpParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
+
 public class REPL {
-  /**
-   * REPL entry point.
-   */
-  public static void main(String []argv) throws Exception {
-    boolean verbose = false;
-    boolean lineMode = false;
+  protected boolean verbose = false;
+  protected boolean lineMode = false;
+  protected ICtx ctx = null;
+  protected File inFile = null;
+
+  /** REPL entry point. */
+  public static void main(String[] argv) throws Exception {
+    REPL repl = new REPL();
+    repl.runWithArgs(argv);
+  }
+
+  protected List<String> parsers = Utils.list("lisp", "sexp");
+
+  public List<String> getParsers() {
+    return parsers;
+  }
+
+  public void setParsers(List<String> parsers) {
+    this.parsers = parsers;
+  }
+  
+  protected void runWithArgs(String[] argv) throws Exception {
     int rc = 0;
-
     Set<String> packages = Compiler.getAllPackages();
-    // Compiler compiler = null;
-    IParser parser = new LispParser();
     Compiler.IStringConverter conv = new Compiler.NOPConverter();
-
-    ICtx ctx = null;
-    File inFile = null;
+    String parserName = this.getParsers().get(0);
     for (int i = 0; i < argv.length; i++) {
       String val = argv[i];
-      if ("-v".equals(val)) {
+      if ("-d".equals(val)) {
         verbose = true;
         continue;
       }
@@ -42,6 +55,11 @@ public class REPL {
         packages = parsePackages(argv, ++i);
         continue;
       }
+      if ("-r".equals(val)) {
+        parserName = argv[++i];
+        continue;
+      }
+
       /*if ("-a".equals(val)) {
       conv  = new UCStringConverter();
       parser = new AlgReader();
@@ -49,24 +67,98 @@ public class REPL {
       lineMode = true;
       continue;
       }*/
-      if ("-s".equals(val)) {
-        parser = new SexpParser();
-        continue;
+
+      if ("-v".equals(val)) {
+        final String version = Utils.getExplangCoreVersionStr();
+        if (null != version) {
+          System.err.println(version);
+          System.exit(0);
+        } else {
+          System.err.println("Failed to determine version");
+          System.exit(1);
+        }
+      }
+
+      if (val.startsWith("-h") || "-?".equals(val)) {
+        usage();
+        System.exit(0);
+      }
+      if (val.startsWith("-")) {
+        System.err.println("Unknown option: '" + val + "'\n");
+        usage();
+        System.exit(1);
       }
       inFile = new java.io.File(val);
     }
+
+    IParser parser = loadParser(parserName);
+
     Compiler compiler = new Compiler(conv, packages);
     compiler.setParser(parser);
     ctx = compiler.newCtx();
     if (null != inFile) {
-      rc = runfile(inFile, verbose, ctx);
+      rc = runfile(inFile);
     } else {
+      if (!parser.supportREPLStream()) {
+        lineMode = true;
+      }
       String inputName = "<STDIN%d>";
       InputStream is = System.in;
       Reader reader = new InputStreamReader(is);
-      rc = repl(reader, verbose, inputName, ctx, lineMode);
+      rc = repl(reader, inputName);
     }
     System.exit(rc);
+  }
+
+  protected static final String PARSER_NAME_REGEX = "^[a-zA-Z_][a-zA-Z_0-9]*$";
+  
+  protected IParser loadParser(String parserName) {
+    if (! parserName.matches(PARSER_NAME_REGEX)) {
+      System.err.println("Invalid parser name specified '" + parserName
+                         + "', must match regex "  + PARSER_NAME_REGEX);
+      System.exit(1);
+    }
+    final String parserClassStr = "io.opsit.explang.parser."
+        + parserName.toLowerCase() + "."
+        + parserName.substring(0,1).toUpperCase() + parserName.substring(1) + "Parser";
+    System.out.println(parserClassStr);
+    try {
+      Class<?> clz = Utils.strToClass(parserClassStr);
+      Constructor<?> constr = clz.getConstructor();
+      IParser parser = (IParser) constr.newInstance();
+      
+      return parser;
+    } catch (Exception ex) {
+      System.err.println("Failed to load parser '" + parserName + "': " + ex);
+      System.exit(2);
+      return null;
+    }
+  }
+  
+  protected String listItems(Collection<String> items) {
+    final List<String> lst = new ArrayList<String>(items);
+    lst.sort(null);
+    StringBuilder buf = new StringBuilder();
+    for (String item : lst) {
+      buf.append("                  ").append(item).append("\n");
+    }
+    return buf.toString();
+  }
+
+  protected void usage() {
+    final String msg =
+        ""
+            + "Explang REPL usage:\n"
+            + "explang  [ option .. ] [ file ... ]\n"
+            + "  -d            enable verbose diagnostics\n"
+            + "  -p  packages  comma separated list of enabled packages, available packages:\n"
+            + listItems(getParsers())       
+            + "  -r  parser    specify parser. The default is lisp, available parsers are:\n"
+            + listItems(Compiler.getAllPackages()) 
+            + "  -l            enable line mode\n"
+            + "  -h            print help message\n"
+            + "  -v            print software version\n";
+    System.err.print(msg);
   }
 
   protected static Set<String> parsePackages(String[] argv, int idx) {
@@ -78,10 +170,8 @@ public class REPL {
     return packages;
   }
 
-  /**
-   * Compile and execute file as explang code.
-   */
-  public static int runfile(File file, boolean verbose, ICtx ctx) throws Exception {
+  /** Compile and execute file as explang code. */
+  public int runfile(File file) throws Exception {
     Exception err = null;
     Object result = null;
     int rc = 0;
@@ -133,12 +223,9 @@ public class REPL {
    * Run interactive REPL loop.
    *
    * @param reader input stream
-   * @param verbose print more diagnostics
-   * @param ctx context
-   * @param lineMode if true pass line to interpreter when newline is encountered.
+   * @param inputName name of input in REPL UI
    */
-  public static int repl(
-      Reader reader, boolean verbose, String inputName, ICtx ctx, boolean lineMode)
+  public int repl(Reader reader, String inputName)
       throws java.io.IOException {
     Compiler compiler = ctx.getCompiler();
     IParser parser = compiler.getParser();
@@ -263,7 +350,7 @@ public class REPL {
     return null == err ? 0 : 1;
   }
 
-  private static String listParseErrors(ASTN exprASTN) {
+  private String listParseErrors(ASTN exprASTN) {
     final StringBuilder buf = new StringBuilder();
     ASTN.Walker errCollector =
         new ASTN.Walker() {

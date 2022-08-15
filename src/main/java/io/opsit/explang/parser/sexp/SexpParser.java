@@ -188,10 +188,8 @@ public class SexpParser implements IParser {
   protected void clearBuf(StringBuffer buf) {
     buf.delete(0, buf.length());
   }
-
-  /*protected List list(Object ... objs) {
-  List lst = new ArrayList();
-  lst.addAll(Arrays.asList(objs));
-  return lst;
-  }*/
+  
+  public boolean supportREPLStream() {
+    return true;
+  }
 }

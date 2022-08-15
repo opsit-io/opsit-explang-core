@@ -1,6 +1,8 @@
 package io.opsit.explang;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Array;
@@ -15,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 public class Utils {
@@ -26,9 +29,7 @@ public class Utils {
     return ArrayList.class;
   }
 
-  /**
-   * Make List of positionals args.
-   */
+  /** Make List of positionals args. */
   @SuppressWarnings("varargs")
   @SafeVarargs
   public static <T> List<T> list(T... objs) {
@@ -37,18 +38,14 @@ public class Utils {
     return lst;
   }
 
-  /**
-   * Make unmodifiableList list of positionals args.
-   */
+  /** Make unmodifiableList list of positionals args. */
   @SuppressWarnings("varargs")
   @SafeVarargs
   public static <T> List<T> clist(T... objs) {
     return Collections.unmodifiableList(list(objs));
   }
 
-  /**
-   * Make Map of (key value) pairs of positionals args.
-   */
+  /** Make Map of (key value) pairs of positionals args. */
   @SuppressWarnings("unchecked")
   public static <T, U> Map<T, U> map(Object... objs) {
     Map<T, U> map = new HashMap<T, U>(objs.length >> 1);
@@ -58,9 +55,7 @@ public class Utils {
     return map;
   }
 
-  /**
-   * Make Set of positionals args.
-   */
+  /** Make Set of positionals args. */
   @SafeVarargs
   public static <T> Set<T> set(T... objs) {
     Set<T> set = new HashSet<T>(objs.length);
@@ -70,9 +65,7 @@ public class Utils {
     return set;
   }
 
-  /**
-   * Make Read-only Set of positionals args.
-   */
+  /** Make Read-only Set of positionals args. */
   @SafeVarargs
   public static <T> Set<T> roset(T... objs) {
     Set<T> set = new HashSet<T>(objs.length);
@@ -82,32 +75,24 @@ public class Utils {
     return Collections.unmodifiableSet(set);
   }
 
-  /**
-   * Make Symbol with given name.
-   */
+  /** Make Symbol with given name. */
   public static Symbol symbol(String name) {
     return null == name ? null : new Symbol(name);
   }
 
-  /**
-   * Make Reader from string content.
-   */
+  /** Make Reader from string content. */
   public static Reader str2reader(String str) {
     final ByteArrayInputStream is = new ByteArrayInputStream(str.getBytes());
     final Reader r = new InputStreamReader(is);
     return r;
   }
 
-  /**
-   * Return maximum of two values.
-   */
+  /** Return maximum of two values. */
   public static int max(int intA, int intB) {
     return intA > intB ? intA : intB;
   }
 
-  /**
-   * Convert an array to String for printout.
-   */
+  /** Convert an array to String for printout. */
   public static String arrayAsString(Object val) {
     final int len = Array.getLength(val);
     StringBuilder buf = new StringBuilder(len << 3);
@@ -126,9 +111,8 @@ public class Utils {
   /**
    * Convert an object to its String representation.
    *
-   * <p>Symbols will be printed as their names, Arrays - using
-   * arrayAsString, null as NIL, other objects using their toString()
-   * method.
+   * <p>Symbols will be printed as their names, Arrays - using arrayAsString, null as NIL, other
+   * objects using their toString() method.
    */
   public static String asString(Object val) {
     return null == val
@@ -138,18 +122,14 @@ public class Utils {
             : (val.getClass().isArray() ? arrayAsString(val) : val.toString()));
   }
 
-  /**
-   * Convert an object to its String representation or return null if value is null.
-   */
+  /** Convert an object to its String representation or return null if value is null. */
   public static String asStringOrNull(Object val) {
     return (null == val)
         ? null
         : ((val instanceof Symbol) ? ((Symbol) val).getName() : val.toString());
   }
 
-  /**
-   * Convert an object to its String representation or return empty String if value is null.
-   */
+  /** Convert an object to its String representation or return empty String if value is null. */
   public static String asStringOrEmpty(Object val) {
     return (null == val)
         ? ""
@@ -157,9 +137,8 @@ public class Utils {
   }
 
   /**
-   * Convert type specification to Class a object it is
-   * representing. Argument may be a Class instance, in this case it
-   * will be returned as it is.
+   * Convert type specification to Class a object it is representing. Argument may be a Class
+   * instance, in this case it will be returned as it is.
    */
   public static Class<?> tspecToClass(Object tspec) {
     if (tspec instanceof Class) {
@@ -169,9 +148,7 @@ public class Utils {
     }
   }
 
-  /**
-   * Create list of positional arguments.
-   */
+  /** Create list of positional arguments. */
   public static List<ICompiled> newPosArgsList(int num) {
     List<ICompiled> lst = new ArrayList<ICompiled>(num);
     for (int i = 1; i <= num; i++) {
@@ -183,9 +160,8 @@ public class Utils {
   /**
    * Shallow copy sequence.
    *
-   * <p>Creates new instance of sequence of the same type
-   * with the same content. Only Lists and Arrays are currently supported.
-   * 
+   * <p>Creates new instance of sequence of the same type with the same content. Only Lists and
+   * Arrays are currently supported.
    */
   public static Object copySeq(Object seq) {
     if (null == seq) {
@@ -251,8 +227,7 @@ public class Utils {
   }
 
   /**
-   * Get array of classes of method parameters given optional array of
-   * argument type specifications.
+   * Get array of classes of method parameters given optional array of argument type specifications.
    */
   public static Class<?>[] getMethodParamsClasses(List<?> methodParams, List<?> typeSpecs) {
     int listSize = (null == methodParams) ? 0 : methodParams.size();
@@ -270,9 +245,7 @@ public class Utils {
     return methodParamClasses;
   }
 
-  /**
-   * Strip objects out of an AST node.
-   */
+  /** Strip objects out of an AST node. */
   public static Object unAstnize(ASTN param) {
     if (param.isList()) {
       List<Object> result = new ArrayList<Object>();
@@ -285,9 +258,7 @@ public class Utils {
     }
   }
 
-  /**
-   * Make AST node of objects (honoring lists).
-   */
+  /** Make AST node of objects (honoring lists). */
   public static ASTN astnize(Object param, ParseCtx ctx) {
     if (param instanceof List) {
       // ;ASTN lst = new ASTN
@@ -302,10 +273,7 @@ public class Utils {
     }
   }
 
-  /**
-   * Return argument as object.
-   * FIXME: do we need this? why it was added?
-   */
+  /** Return argument as object. FIXME: do we need this? why it was added? */
   public static Object asObject(Object val) {
     return val;
   }
@@ -313,10 +281,8 @@ public class Utils {
   /**
    * Return object as char.
    *
-   * <p>Character object returned as is,
-   * Boolean as 'T' or '\0',
-   * Byte as corresponding ASCII character,
-   * otherwise ASCII character of numeric value
+   * <p>Character object returned as is, Boolean as 'T' or '\0', Byte as corresponding ASCII
+   * character, otherwise ASCII character of numeric value
    */
   public static char asChar(Object val) {
     if (null == val) {
@@ -334,9 +300,7 @@ public class Utils {
 
   // FIXME: make configurable
   // FIXME: docs
-  /**
-   * Coerce object to Number.
-   */
+  /** Coerce object to Number. */
   public static Number asNumber(Object val) {
     if (val == null) {
       return 0;
@@ -356,10 +320,7 @@ public class Utils {
     return 0;
   }
 
-  /**
-   * Parse string as Number.
-   * FIXME: describe format.
-   */
+  /** Parse string as Number. FIXME: describe format. */
   public static Number parseNumber(String str) {
     if (((str.length() > 1) && (str.startsWith("+") || str.startsWith("-") || str.startsWith(".")))
         || ((str.length() > 0) && (str.charAt(0) >= '0' && str.charAt(0) <= '9'))) {
@@ -422,10 +383,9 @@ public class Utils {
   }
 
   /**
-   *  Coerse object to Number.
+   * Coerse object to Number.
    *
-   * <p>FIXME: describe conversion
-   * FIXME: make configurable
+   * <p>FIXME: describe conversion FIXME: make configurable
    */
   public static Number asNumberOrParse(Object val) {
     if (null == val) {
@@ -453,23 +413,17 @@ public class Utils {
     }
   }
 
-  /**
-   * Check if the argument is a floating point number.
-   */
+  /** Check if the argument is a floating point number. */
   public static boolean isFP(Number num) {
     return ((num instanceof Float) || (num instanceof Double));
   }
 
-  /**
-   * Check if index is the last of the list.
-   */
+  /** Check if index is the last of the list. */
   protected static boolean isLast(List<?> list, int idx) {
     return (list.size() - 1) <= idx;
   }
 
-  /**
-   * Coerce object to boolean.
-   */
+  /** Coerce object to boolean. */
   public static Boolean asBoolean(Object val) {
     if (null == val) {
       return false;
@@ -501,74 +455,54 @@ public class Utils {
     return true;
   }
 
-  /**
-   * Assert true value.
-   */
+  /** Assert true value. */
   public static void assertTrue(boolean val) {
     if (!val) {
       throw new Error("Internal error: assertion failed");
     }
   }
 
-  /**
-   * Make array of int.
-   */
+  /** Make array of int. */
   public static int[] array(int... args) {
     return args;
   }
 
-  /**
-   * Make array of char.
-   */  
+  /** Make array of char. */
   public static char[] array(char... args) {
     return args;
   }
 
-  /**
-   * Make array of double.
-   */
+  /** Make array of double. */
   public static double[] array(double... args) {
     return args;
   }
 
-  /**
-   * Make array of float.
-   */
+  /** Make array of float. */
   public static float[] array(float... args) {
     return args;
   }
 
-  /**
-   * Make array of boolean.
-   */
+  /** Make array of boolean. */
   public static boolean[] array(boolean... args) {
     return args;
   }
 
-  /**
-   * Make array of byte.
-   */
+  /** Make array of byte. */
   public static byte[] array(byte... args) {
     return args;
   }
 
-  /**
-   * Make array of short.
-   */
+  /** Make array of short. */
   public static short[] array(short... args) {
     return args;
   }
 
-  /**
-   * Make array of long.
-   */
+  /** Make array of long. */
   public static long[] array(long... args) {
     return args;
   }
 
-  /**
-   * Set array element.
-   */
+  /** Set array element. */
   public static void aset(Object arrayObj, int index, Object obj) {
     try {
       Array.set(arrayObj, index, obj);
@@ -599,9 +533,7 @@ public class Utils {
     }
   }
 
-  /**
-   * Array deep comparison.
-   */   
+  /** Array deep comparison. */
   public static boolean arraysDeepEquals(Object arrayE, Object arrayV) {
     final Class<?> ec = arrayE.getClass();
     final Class<?> vc = arrayV.getClass();
@@ -636,16 +568,12 @@ public class Utils {
     }
   }
 
-  /**
-   * Check if String is empty.
-   */
+  /** Check if String is empty. */
   public static boolean isEmpty(String str) {
     return null == str || str.length() == 0;
   }
 
-  /**
-   * Return first not null not-empty argument.
-   */
+  /** Return first not null not-empty argument. */
   public static String coalesce(String... strings) {
     for (String s : strings) {
       if (!isEmpty(s)) {
@@ -655,9 +583,7 @@ public class Utils {
     return null;
   }
 
-  /**
-   * return first non-null argument.
-   */
+  /** return first non-null argument. */
   @SafeVarargs
   public static <T> T nvl(T... objects) {
     for (T object : objects) {
@@ -668,9 +594,7 @@ public class Utils {
     return null;
   }
 
-  /**
-   * Concatenate string arguments.
-   */
+  /** Concatenate string arguments. */
   public static String concat(String... strs) {
     if (null != strs) {
       final StringBuilder b = new StringBuilder(strs.length << 4);
@@ -683,9 +607,7 @@ public class Utils {
     }
   }
 
-  /**
-   * Compute intersection of sets.
-   */
+  /** Compute intersection of sets. */
   public static Set<Object> intersectSets(Set<?>... sets) {
     final Set<Object> result = new HashSet<Object>();
     if (sets.length > 0) {
@@ -697,9 +619,7 @@ public class Utils {
     return result;
   }
 
-  /**
-   * Make union of Sets.
-   */
+  /** Make union of Sets. */
   public static Set<Object> unionSets(Set<?>... sets) {
     final Set<Object> result = new HashSet<Object>();
     for (int i = 0; i < sets.length; i++) {
@@ -708,8 +628,7 @@ public class Utils {
     return result;
   }
 
-  /** Check if Number is equal.
-   */
+  /** Check if Number is equal. */
   public static boolean isRoundNumber(Number val) {
     if (null == val) {
       return false;
@@ -718,9 +637,7 @@ public class Utils {
     return d % 1 == 0;
   }
 
-  /**
-   * Check if objects are equal using Object.equals().
-   */
+  /** Check if objects are equal using Object.equals(). */
   public static boolean equal(Object objA, Object objB) {
     if (null == objA) {
       return null == objB;
@@ -728,18 +645,14 @@ public class Utils {
     return objA.equals(objB);
   }
 
-  /**
-   * Check if equal to enum according to the name of the enum value.
-   */
+  /** Check if equal to enum according to the name of the enum value. */
   public static boolean enumEqual(Enum<?> enumE, Object obj) {
     return Seq.sequal(enumE.name(), obj);
   }
 
   public static final NumCompOp nc = new NumCompOp();
 
-  /**
-   * Return true if object are equeal as Objects or Numerically.
-   */
+  /** Return true if object are equeal as Objects or Numerically. */
   public static boolean objequal(Object v1, Object v2) {
     if (v1 == null) {
       if (v2 == null) {
@@ -761,7 +674,33 @@ public class Utils {
     if (v2.getClass().isEnum()) {
       return enumEqual((Enum<?>) v2, v1);
     }
-
     return false;
+  }
+
+  public static final String MAVEN_PROPS =
+      "META-INF/maven/io.opsit/opsit-explang-core/pom.properties";
+
+  /**
+   * Return explang core jar version.
+   */
+  public static String getExplangCoreVersionStr() {
+    final ClassLoader loader = Utils.class.getClassLoader();
+    InputStream is = loader.getResourceAsStream(MAVEN_PROPS);
+    if (null != is) {
+      final Properties props = new Properties();
+      try {
+        props.load(is);
+        return props.getProperty("version");
+      } catch (IOException iex) {
+        return null;
+      } finally {
+        try {
+          is.close();
+        } catch (IOException ex) {
+          // won't happen hoppefully
+        }
+      }
+    }
+    return null;
   }
 }
