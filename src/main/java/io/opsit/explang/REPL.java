@@ -27,6 +27,7 @@ public class REPL {
   }
 
   protected List<String> parsers = Utils.list("lisp", "sexp");
+  protected List<String> funcConverters = Utils.list("nop", "ucs");
 
   public List<String> getParsers() {
     return parsers;
@@ -35,11 +36,20 @@ public class REPL {
   public void setParsers(List<String> parsers) {
     this.parsers = parsers;
   }
+
+  public List<String> getFuncConverters() {
+    return funcConverters;
+  }
+
+  public void setFuncConverters(List<String> funcConverters) {
+    this.funcConverters = funcConverters;
+  }
+
   
   protected void runWithArgs(String[] argv) throws Exception {
     int rc = 0;
     Set<String> packages = Compiler.getAllPackages();
-    Compiler.IStringConverter conv = new Compiler.NOPConverter();
+    String convName = this.getFuncConverters().get(0);
     String parserName = this.getParsers().get(0);
     for (int i = 0; i < argv.length; i++) {
       String val = argv[i];
@@ -59,14 +69,11 @@ public class REPL {
         parserName = argv[++i];
         continue;
       }
-
-      /*if ("-a".equals(val)) {
-      conv  = new UCStringConverter();
-      parser = new AlgReader();
-      // FIXME: make ANTLR work interactively
-      lineMode = true;
-      continue;
-      }*/
+      
+      if ("-f".equals(val)) {
+        convName = argv[++i];
+        continue;
+      }
 
       if ("-v".equals(val)) {
         final String version = Utils.getExplangCoreVersionStr();
@@ -91,8 +98,12 @@ public class REPL {
       inFile = new java.io.File(val);
     }
 
-    IParser parser = loadParser(parserName);
-
+    IParser parser = (IParser) loadModule("io.opsit.explang.parser.",
+                                          parserName,
+                                          "Parser");
+    IStringConverter conv = (IStringConverter) loadModule("io.opsit.explang.strconv.",
+                                                          convName,
+                                                          "Converter");
     Compiler compiler = new Compiler(conv, packages);
     compiler.setParser(parser);
     ctx = compiler.newCtx();
@@ -110,26 +121,24 @@ public class REPL {
     System.exit(rc);
   }
 
-  protected static final String PARSER_NAME_REGEX = "^[a-zA-Z_][a-zA-Z_0-9]*$";
+  protected static final String MODULE_NAME_REGEX = "^[a-zA-Z_][a-zA-Z_0-9]*$";
   
-  protected IParser loadParser(String parserName) {
-    if (! parserName.matches(PARSER_NAME_REGEX)) {
-      System.err.println("Invalid parser name specified '" + parserName
-                         + "', must match regex "  + PARSER_NAME_REGEX);
+  protected Object loadModule(String classPrefix, String moduleName, String classSuffix) {
+    if (! moduleName.matches(MODULE_NAME_REGEX)) {
+      System.err.println("Invalid module name specified '" + moduleName
+                         + "', must match regex "  + MODULE_NAME_REGEX);
       System.exit(1);
     }
-    final String parserClassStr = "io.opsit.explang.parser."
-        + parserName.toLowerCase() + "."
-        + parserName.substring(0,1).toUpperCase() + parserName.substring(1) + "Parser";
-    System.out.println(parserClassStr);
+    final String moduleClassStr = classPrefix
+        + moduleName.toLowerCase() + "."
+        + moduleName.substring(0,1).toUpperCase() + moduleName.substring(1) + classSuffix;
     try {
-      Class<?> clz = Utils.strToClass(parserClassStr);
+      Class<?> clz = Utils.strToClass(moduleClassStr);
       Constructor<?> constr = clz.getConstructor();
-      IParser parser = (IParser) constr.newInstance();
-      
-      return parser;
+      Object result =  constr.newInstance();
+      return result;
     } catch (Exception ex) {
-      System.err.println("Failed to load parser '" + parserName + "': " + ex);
+      System.err.println("Failed to load module '" + moduleName + "': " + ex);
       System.exit(2);
       return null;
     }
@@ -151,10 +160,14 @@ public class REPL {
             + "Explang REPL usage:\n"
             + "explang  [ option .. ] [ file ... ]\n"
             + "  -d            enable verbose diagnostics\n"
-            + "  -p  packages  comma separated list of enabled packages, available packages:\n"
-            + listItems(getParsers())       
-            + "  -r  parser    specify parser. The default is lisp, available parsers are:\n"
-            + listItems(Compiler.getAllPackages()) 
+            + "  -p  packages  comma separated list of enabled packages, the available packages:\n"
+            + listItems(Compiler.getAllPackages())
+            + "  -r  parser    specify parser. The default is " + getParsers().get(0)
+            +   ", available parsers are:\n"
+            + listItems(getParsers())
+            + "  -f  converter specify function name converter. The default is  "
+            +    getFuncConverters().get(0) + ", available converters are:\n"
+            + listItems(getFuncConverters())      
             + "  -l            enable line mode\n"
             + "  -h            print help message\n"
             + "  -v            print software version\n";

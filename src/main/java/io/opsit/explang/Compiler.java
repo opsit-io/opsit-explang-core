@@ -7,6 +7,7 @@ import static io.opsit.explang.Seq.*;
 import io.opsit.explang.Funcs.ObjectExp;
 import io.opsit.explang.Funcs.READ_FROM_STRING;
 import io.opsit.explang.parser.sexp.SexpParser;
+import io.opsit.explang.strconv.nop.NopConverter;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -84,7 +85,7 @@ public class Compiler {
    * <p>The compiler created with NO OP string converter and with default list of enabled packages.
    */
   public Compiler() {
-    this(new NOPConverter(), getDefaultPackages());
+    this(new NopConverter(), getDefaultPackages());
   }
 
   /**
@@ -93,7 +94,7 @@ public class Compiler {
    * <p>The compiler created with NO OP string converter and with given list of packages.
    */
   public Compiler(Set<String> packages) {
-    this(new NOPConverter(), packages);
+    this(new NopConverter(), packages);
   }
 
   /**
@@ -2165,15 +2166,5 @@ public class Compiler {
 
   public Eargs newEargs(Object[] result, boolean[] needEval, ArgList argList, ICtx ctx) {
     return new Eargs(result, needEval, argList, ctx);
-  }
-
-  public static interface IStringConverter {
-    String convert(String in);
-  }
-
-  public static class NOPConverter implements IStringConverter {
-    public String convert(String in) {
-      return in;
-    }
   }
 }
