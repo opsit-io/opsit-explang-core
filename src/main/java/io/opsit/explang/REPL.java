@@ -161,7 +161,7 @@ public class REPL {
             + "explang  [ option .. ] [ file ... ]\n"
             + "  -d            Enable verbose diagnostics\n"
             + "  -p  packages  Comma separated list of enabled packages\n"
-            + "                The base.* packages are enabled by default.\n"
+            + "                By default all the packages are enabled.\n"
             + "                The available packages:\n"
             + listItems(Compiler.getAllPackages())
             + "  -r  parser    Specify parser. The default is " + getParsers().get(0)
