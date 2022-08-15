@@ -12,7 +12,7 @@ public class GlobPattern {
    * 
    * @param pattern glob pattern
    * @param flags flags for compiling regexp
-   * @ereturn regexp Pattern 
+   * @return regexp Pattern 
    */
   public static final Pattern compile(String pattern, int flags) {
     StringBuilder sb = new StringBuilder(pattern.length());

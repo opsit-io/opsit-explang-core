@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Arguments {
   /**
-   * Default argument spec "&REST args".
+   * Default argument spec "&amp;REST args".
    */
   String[] spec() default {ArgSpec.ARG_REST, "args"};
 

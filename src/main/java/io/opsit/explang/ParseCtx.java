@@ -17,10 +17,10 @@ public class ParseCtx {
    * <p>Unknown locations pareameters must be set to -1.
    * 
    * @param input name of source file or stream
-   * @line line number
-   * @pos position in the line
-   * @off offest from start of the file/stream
-   * @len length of the fragment
+   * @param line line number
+   * @param pos position in the line
+   * @param off offest from start of the file/stream
+   * @param len length of the fragment
    */
   public ParseCtx(String input, int line, int pos, int off, int len) {
     this.input = input;

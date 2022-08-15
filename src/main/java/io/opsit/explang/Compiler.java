@@ -1777,7 +1777,8 @@ public class Compiler {
      * Set variable property.
      *
      * @param name variable name
-     * @pobj list of pairs (property name, property value)
+     * @param pkey property key
+     * @param pval property value     
      */
     public void putProp(String name, Object pkey, Object pval) {
       getPropsMapForPut(name).put(pkey, pval);
@@ -1787,7 +1788,7 @@ public class Compiler {
      * Set variable properties.
      *
      * @param name of variable
-     * @pobj list of pairs (property name, property value)
+     * @param pobjs list of pairs (property name, property value)
      */
     public void putProps(String name, Object... pobjs) {
       Map<Object, Object> pmap = getPropsMapForPut(name);
