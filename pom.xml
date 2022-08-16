@@ -114,6 +114,8 @@
               <goal>shade</goal>
             </goals>
             <configuration>
+              <shadedArtifactAttached>true</shadedArtifactAttached>
+              <shadedClassifierName>runnable</shadedClassifierName>
               <filters>
                 <filter>
                   <artifact>io.opsit:opsit-version-type</artifact>
@@ -126,7 +128,6 @@
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
                     <Main-Class>io.opsit.explang.REPL</Main-Class>
-                    <!--Build-Number>123</Build-Number-->
                   </manifestEntries>
                 </transformer>
               </transformers>
@@ -141,15 +142,6 @@
         <configuration>
           <archive>
             <index>true</index>
-            <manifest>
-              <mainClass>io.opsit.explang.REPL</mainClass>
-              <addClasspath>true</addClasspath>
-            </manifest>
-            <!--manifestEntries>
-                <mode>development</mode>
-                <url>${project.url}</url>
-                <key>value</key>
-                </manifestEntries-->
           </archive>
         </configuration>
       </plugin>
