@@ -261,7 +261,7 @@ public class Utils {
   /** Make AST node of objects (honoring lists). */
   public static ASTN astnize(Object param, ParseCtx ctx) {
     if (param instanceof ASTN) {
-        return (ASTN) param;
+      return (ASTN) param;
     } else if (param instanceof List) {
       // ;ASTN lst = new ASTN
       List<ASTN> astnList = new ArrayList<ASTN>(((List<?>) param).size());
