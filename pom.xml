@@ -5,7 +5,7 @@
   <version>0.0.2-SNAPSHOT</version>
 
   <name>Opsit Explang Core</name>
-  <description>Explang - an extensible dynamic language for the Java platform: Core Module</description>
+  <description>Explang - a simple customizable dynamic language for the Java platform: Core Module</description>
   <url>https://github.com/opsit-io/opsit-explang-core</url>
 
   <licenses>
@@ -144,6 +144,10 @@
           <archive>
             <index>true</index>
           </archive>
+          <manifest>
+            <addClasspath>true</addClasspath>
+            <mainClass>io.opsit.explang.REPL</mainClass>
+          </manifest>
         </configuration>
       </plugin>
       <plugin>
@@ -208,19 +212,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maaven-jar-plugin</artifactId>
-        <version>3.2.0</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <mainClass>io.opsit.explang.REPL</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
       </plugin>
     </plugins>
   </build>
