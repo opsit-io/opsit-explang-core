@@ -108,7 +108,7 @@ public class Main {
         lineMode = true;
       }
       String inputName = "<STDIN%d>";
-      IREPL repl = new REPL();
+      IREPL repl = mkREPL(parser);
       repl.setParser(parser);
       repl.setCompiler(compiler);
       repl.setVerbose(verbose);
@@ -121,6 +121,10 @@ public class Main {
     System.exit(rc);
   }
 
+  protected IREPL mkREPL(IParser parser) {
+    return new REPL();
+  }
+  
   protected static final String MODULE_NAME_REGEX = "^[a-zA-Z_][a-zA-Z_0-9]*$";
   
   protected Object loadModule(String classPrefix, String moduleName, String classSuffix) {

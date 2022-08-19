@@ -12,9 +12,6 @@ public class REPL implements IREPL {
   protected Compiler compiler;
   protected IParser parser;
 
-  protected ICtx ctx = null;
-  
-
   protected IObjectWriter writer =
       new IObjectWriter() {
         @Override
