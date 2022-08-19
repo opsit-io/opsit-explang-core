@@ -207,6 +207,8 @@ public class REPL implements IREPL {
           public void walk(ASTN node) {
             final Exception ex = node.getProblem();
             if (null != ex) {
+              buf.append(node.getPctx());
+              buf.append(": ");
               buf.append(ex.getMessage()).append("\n");
             }
           }
