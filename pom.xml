@@ -128,7 +128,7 @@
               <transformers>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                   <manifestEntries>
-                    <Main-Class>io.opsit.explang.REPL</Main-Class>
+                    <Main-Class>io.opsit.explang.Main</Main-Class>
                   </manifestEntries>
                 </transformer>
               </transformers>
@@ -143,11 +143,11 @@
         <configuration>
           <archive>
             <index>true</index>
-          </archive>
-          <manifest>
-            <addClasspath>true</addClasspath>
-            <mainClass>io.opsit.explang.REPL</mainClass>
-          </manifest>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>io.opsit.explang.Main</mainClass>
+            </manifest>
+          </archive>            
         </configuration>
       </plugin>
       <plugin>
