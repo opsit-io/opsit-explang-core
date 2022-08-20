@@ -164,6 +164,52 @@ public class Seq {
   }
 
   /**
+   * put sequence element by index. Return old value at this index.
+   */
+  @SuppressWarnings("unchecked")
+  public static Object putElement(Object seq, int index, Object element) {
+    if (null == seq) {
+      return null;
+    } else if (seq instanceof List) {
+      try {
+        final List<Object> list = (List<Object>) seq;
+        return list.set(index, element);
+      } catch (IndexOutOfBoundsException bex) {
+        return null;
+      }
+    } else if (seq.getClass().isArray()) {
+      try {
+        Object result = Array.get(seq, index);
+        Utils.aset(seq, index, element);
+        return result;
+      } catch (ArrayIndexOutOfBoundsException bex) {
+        return null;
+      }
+    } else if (seq instanceof StringBuffer) {
+      try {
+        final StringBuffer buf = (StringBuffer) seq;
+        final Character result = buf.charAt(index);
+        buf.setCharAt(index, Utils.asChar(element));
+        return result;
+      } catch (IndexOutOfBoundsException bex) {
+        return null;
+      }
+    } else if (seq instanceof StringBuilder) {
+      try {
+        final StringBuffer buf = (StringBuffer) seq;
+        final Character result = buf.charAt(index);
+        buf.setCharAt(index, Utils.asChar(element));
+        return result;
+      } catch (IndexOutOfBoundsException bex) {
+        return null;
+      }
+    } else {
+      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
+    }
+  }
+
+
+  /**
    * Get length of sequence.
    */
   public static int getLength(Object val, boolean allowNonSeq) {

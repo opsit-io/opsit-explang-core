@@ -3589,7 +3589,7 @@ public class Funcs {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       final Object obj = Utils.asObject(eargs.get(2, backtrace));
-      Utils.aset(arrayObj, index, obj);
+      Seq.putElement(arrayObj, index, obj);
       return obj;
     }
   }
