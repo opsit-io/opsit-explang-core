@@ -47,9 +47,9 @@ declaration of functions but not loops or FFI for calling arbitrary
 Java methods. 
 
 The language strives to provide feature flags and configuration
-parameters to allow configuration of language behavious, such as use
-of default values vs. exceptions on access to undefined variables,
-etc.
+parameters to allow configuration of language behavious, such as case
+sensitivity, use of default values vs. exceptions on access to
+undefined variables, etc.
 
 
 ### Simplicity for integration in existing systems
