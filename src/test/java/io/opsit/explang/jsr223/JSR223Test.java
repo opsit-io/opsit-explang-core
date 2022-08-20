@@ -33,6 +33,17 @@ public class JSR223Test {
   }
 
   @Test
+  public void testPutGetEval() throws Exception {
+    ScriptEngine engine = getEngine();
+    Object someValue = 1;
+    engine.put("a", someValue);
+    Object retrieved = engine.get("a");
+    Assert.assertEquals(someValue, retrieved);
+    Object result = engine.eval("(+ 1 a)");
+    Assert.assertEquals(2, result);
+  }
+
+  @Test
   public void testEvalStringExpr() throws Exception {
     ScriptEngine engine = getEngine();
     Object result = engine.eval("(+ 1 2)");
@@ -72,42 +83,6 @@ public class JSR223Test {
     Object result = ((Invocable) engine).invokeFunction("FOO", 1,2,3);
     Assert.assertEquals(17, result);
   }
-    
-  //        //Implementing a Java interface in Lisp
-  //        //lispEngine.eval("(defun compare-to (&rest args) 42)");
-  //        //Comparable c = ((Invocable) lispEngine).getInterface(java.lang.Comparable.class);
-  //        //System.out.println("compareTo: " + c.compareTo(null));
-            
-  //        //Compilation!
-  //        engine.eval("(defmacro slow-compiling-macro (arg) (dotimes (i 1000000) (incf i)) `(print ,arg))");
-            
-  //        long millis = System.currentTimeMillis();
-  //        engine.eval("(slow-compiling-macro 42)");
-  //        millis = System.currentTimeMillis() - millis;
-  //        System.out.println("interpretation took " + millis);
-            
-  //        millis = System.currentTimeMillis();
-  //        CompiledScript cs = ((Compilable) engine).compile("(slow-compiling-macro 42)");
-  //        millis = System.currentTimeMillis() - millis;
-  //        System.out.println("compilation took " + millis);
-            
-  //        millis = System.currentTimeMillis();
-  //        cs.eval();
-  //        millis = System.currentTimeMillis() - millis;
-  //        System.out.println("evaluation took " + millis);
-
-  //        millis = System.currentTimeMillis();
-  //        cs.eval();
-  //        millis = System.currentTimeMillis() - millis;
-  //        System.out.println("evaluation took " + millis);
-
-  //        //Ecc. ecc.
-  //    } catch (NoSuchMethodException e) {
-  //        e.printStackTrace();
-  //    } catch (ScriptException e) {
-  //        e.printStackTrace();
-  //    }
-  // }
     
 }
 

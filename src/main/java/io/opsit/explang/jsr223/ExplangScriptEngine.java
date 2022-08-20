@@ -51,7 +51,8 @@ public class ExplangScriptEngine implements ScriptEngine, Invocable {
   }
 
   protected Compiler.ICtx makeCtx(ScriptContext sc) {
-    return comp.newCtx();
+    Compiler.ICtx ctx =  comp.newCtx(sc.getBindings(ScriptContext.ENGINE_SCOPE));
+    return ctx;
   }
 
   @Override
