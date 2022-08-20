@@ -4,16 +4,16 @@ Explang Core
 Introduction
 ------------
 
-Explang is a simple dynamic language for the Java platform.
+*Explang is a simple and customizable dynamic language for the Java platform.*
 
 The main use case for Explang currently is providing simple
 customizable user-facing extension language for JVM based
-software. Thus it is being designed to around the following goals and
+software. It is being designed to around the following goals and
 features:
 
-### Good support for programming in the small and friendliness to casual users of the language.
+### Focus on support for Programming in the Small, friendliness to casual users of the language.
 
-- Dynamic typing
+- Dynamic typing, implicit conversions to boolean and numeric values when required.
 - Dynamic variables: allows for passing values as variables in the
   context and defining user functions without arguments.
 - Lisp2 language: different namespaces for variables and functions, so
@@ -37,14 +37,20 @@ Explang comes with two parsers for LISP like languages:
 There is a parser with a somewhat Julia-like Algebraic syntax:
 - [opsit-explang-alg-parser](https://github.com/opsit/opsit-explang-alg-parser)
 
-### Modularity
+### Modularity and adaptability
 
 Language features come in packages so language integrators may select
 just the features that are needed for their use cases. For example, to
 implement a calculator one may include only arithmetical operations
 and variables.  For integrating webhooks one may allow conditionals,
 declaration of functions but not loops or FFI for calling arbitrary
-Java methods.
+Java methods. 
+
+The language strives to provide feature flags and configuration
+parameters to allow configuration of language behavious, such as use
+of default values vs. exceptions on access to undefined variables,
+etc.
+
 
 ### Simplicity for integration in existing systems
 
@@ -74,7 +80,7 @@ See [Explang Language Documentation](https://github.com/opsit/opsit-explang-docs
 Code Examples
 -------------
 
-- [Sample code](examples/)
+- See [Sample code](examples/)
 
 
 Installation
@@ -115,6 +121,14 @@ may want to it with some kind of wrapper such as [rlwrap](https://github.com/han
 VS Code [repeater REPL extension](https://github.com/RegisMelgaco/repeater--repl-tool), 
 [Emacs inferior lisp mode](https://ftp.gnu.org/old-gnu/Manuals/emacs/html_node/emacs_331.htmlemacs).
 
+
+Executing Explang Scripts
+-------------------------
+
+```shell
+$ java -jar opsit-explang-core-0.0.2-runnable.jar ./examples/hello.l
+Hello world
+```
 
 
 Quick Start Guide to Using Explang from Java Code
@@ -258,8 +272,6 @@ compiler.usePackages("user");
 compiler.addBuiltIn("rect", Rect.class);
 
 ```
-
-
 
 Language Documentation
 ----------------------
