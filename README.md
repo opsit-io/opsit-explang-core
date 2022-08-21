@@ -93,8 +93,7 @@ Download an Explang Core executable JAR jars from Github
 Or use maven CLI to fetch the artifacts from maven central:
 
 ```
-mvn download:download-file -DgroupId=opsit.io -DartfactId=opsit-explang-core -Dversion=LATEST -Dclassifier=runnable
-
+mvn org.apache.maven.plugins:maven-dependency-plugin:2.8:get -Dartifact=io.opsit:opsit-explang-core:0.0.2:jar:runnable   -Dtransitive=false -Ddest=opsit-explang-core-0.0.2-runnable.jar
 ```
 
 Using REPL
