@@ -255,7 +255,7 @@ import io.opsit.explang.ArgSpec;
 import io.opsit.explang.Compiler.Eargs;
 ...
 @Arguments(spec = {"with", ArgSpec.ARG_OPTIONAL, "height"})
-@Docstring(text = "make rectangle width x height. (If y not set return square)")
+@Docstring(text = "make rectangle width x height. (If height not set return square)")
 @Package(name = "user")
 public static class Rect extends FuncExp {
   @Override
