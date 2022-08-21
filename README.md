@@ -118,7 +118,7 @@ hello world
 This built-in REPL implementation does not support editing of and command history, so one is 
 may want to it with some kind of wrapper such as [rlwrap](https://github.com/hanslub42/rlwrap),
 VS Code [repeater REPL extension](https://github.com/RegisMelgaco/repeater--repl-tool), 
-[Emacs inferior lisp mode](https://ftp.gnu.org/old-gnu/Manuals/emacs/html_node/emacs_331.htmlemacs).
+[Emacs inferior lisp mode](https://www.gnu.org/software/emacs/manual/html_mono/emacs.html#External-Lisp).
 
 
 Executing Explang Scripts
