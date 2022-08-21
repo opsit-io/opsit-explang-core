@@ -142,7 +142,7 @@ Quick Start Guide to Using Explang from Java Code
   <dependency>
     <groupId>io.opsit</groupId>
     <artifactId>opsit-explang-core</artifactId>
-    <version>0.0.2-SNAPSHOT</version>
+    <version>0.0.2</version>
   </dependency>
 ...
 </dependencies>
