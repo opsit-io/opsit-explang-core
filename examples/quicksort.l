@@ -41,11 +41,10 @@
 		     (append () "Hello people! How do you do?")
 		     ;; semantic versions
 		     (map #'version '("0.1.2" "0.1.2-pre1" "0.1.2-pre2" "0.1.3" "0.1.2-pre1+10" "1.2.3")))))   
-  (map (lambda (sample)
-	 (print (str "Using quick sort on:  " (type-of sample) "\n"))	 
-	 (print (str "input:  " sample "\n"))
-	 (quick-sort sample)
-	 (print (str "output: " sample "\n\n")))
-       samples))
+  (foreach (sample samples)
+	   (print (str "Using quick sort on:  " (type-of sample) "\n"))
+	   (print (str "input:  " sample "\n"))
+	   (quick-sort sample)
+	   (print (str "output: " sample "\n\n"))))
 
 
