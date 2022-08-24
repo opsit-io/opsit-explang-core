@@ -34,8 +34,8 @@ Explang comes with two parsers for LISP like languages:
 - sexp - simple S-exp parser that is written imperatively (no depth
   limit because of JVM stack).
 
-There is a parser with a somewhat Julia-like Algebraic syntax:
-- [opsit-explang-alg-parser](https://github.com/opsit/opsit-explang-alg-parser)
+There is a parser with a Julia-like Algebraic syntax:
+- [opsit-explang-alg-parser](https://github.com/opsit-io/opsit-explang-alg-parser)
 
 ### Modularity and adaptability
 
@@ -119,6 +119,9 @@ This built-in REPL implementation does not support editing of and command histor
 may want to it with some kind of wrapper such as [rlwrap](https://github.com/hanslub42/rlwrap),
 VS Code [repeater REPL extension](https://github.com/RegisMelgaco/repeater--repl-tool), 
 [Emacs inferior lisp mode](https://www.gnu.org/software/emacs/manual/html_mono/emacs.html#External-Lisp).
+
+There is a REPL implementation with editing support in the separate project 
+[Explang JLine REPL](https://github.com/opsit-io/opsit-explang-jline-repl).
 
 
 Executing Explang Scripts
