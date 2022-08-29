@@ -14,4 +14,6 @@ public interface ICode {
   public String getCodeType();
 
   public String getDefLocation();
+
+  public String getPackageName();
 }

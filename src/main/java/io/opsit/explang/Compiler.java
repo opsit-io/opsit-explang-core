@@ -215,7 +215,7 @@ public class Compiler {
   /**
    * Set command line args.
    */
-  public List <String> getCommandlineArgs() {
+  public List<String> getCommandlineArgs() {
     return this.argv;
   }
   
@@ -274,6 +274,14 @@ public class Compiler {
     @Override
     public String getDefLocation() {
       return cls.toString();
+    }
+
+    @Override
+    public String getPackageName() {
+      Package ann = cls.getAnnotation(Package.class);
+      return null == ann
+        ? ""
+        : Utils.asStringOrEmpty(ann.name());
     }
 
     @Override
@@ -1322,6 +1330,11 @@ public class Compiler {
         @Override
         public ArgSpec getArgSpec() {
           return argSpec;
+        }
+
+        @Override
+        public String getPackageName() {
+          return "user";
         }
       };
     }

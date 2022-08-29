@@ -35,9 +35,7 @@ public class Funcs {
     protected ParseCtx debugInfo;
     protected String name = null;
 
-    /**
-     * Run expression in separate Thread.
-     */
+    /** Run expression in separate Thread. */
     public void run() {
       final Compiler.ICtx ctx = Threads.contexts.remove(Thread.currentThread());
       final Object result = this.evaluate(new Backtrace(), ctx);
@@ -101,16 +99,12 @@ public class Funcs {
 
     protected abstract Object evalWithArgs(Backtrace backtrace, Eargs eargs);
 
-    /**
-     * Evaluate function parameters in the execution context.
-     */
+    /** Evaluate function parameters in the execution context. */
     public Eargs evaluateParameters(Backtrace backtrace, ICtx ctx) {
       return argList.evaluateArguments(backtrace, ctx);
     }
 
-    /**
-     * Ensure that parametes are valid and can be set for the object.
-     */
+    /** Ensure that parametes are valid and can be set for the object. */
     public void checkParamsList(List<ICompiled> params) throws InvalidParametersException {
       // FIXME: what to do with parameters?
       if (null != argList) {
@@ -119,9 +113,7 @@ public class Funcs {
       }
     }
 
-    /**
-     * Set parameters for function on compilation stage.
-     */
+    /** Set parameters for function on compilation stage. */
     @Override
     public void setParams(List<ICompiled> params) throws InvalidParametersException {
 
@@ -129,7 +121,7 @@ public class Funcs {
       if (null == args) {
         throw new RuntimeException("argument list not specified for function " + this.getClass());
       }
-      String []specArray = args.spec();
+      String[] specArray = args.spec();
       // FIXME: no compiler - no initForm!
       ArgSpec spec = new ArgSpec(specArray, null);
       this.checkParamsList(params);
@@ -137,11 +129,9 @@ public class Funcs {
     }
   }
 
-  //**** ARITHMETIC FUNCTIONS 
+  // **** ARITHMETIC FUNCTIONS
 
-  /**
-   * Abstract class for addition type arithmetic functions.
-   */
+  /** Abstract class for addition type arithmetic functions. */
   @Arguments(spec = {ArgSpec.ARG_REST, "args"})
   public abstract static class ABSTRACTADDOP extends FuncExp implements AbstractOp {
     protected abstract Number getNeutral();
@@ -480,7 +470,7 @@ public class Funcs {
     }
   }
 
-  //**** BOOLEAN FUNCTIONS 
+  // **** BOOLEAN FUNCTIONS
   @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
   @Docstring(
       text =
@@ -550,7 +540,7 @@ public class Funcs {
     }
   }
 
-  //**** COMPARISON 
+  // **** COMPARISON
   @Arguments(spec = {"x", "y"})
   @Docstring(
       text =
@@ -585,7 +575,7 @@ public class Funcs {
     }
   }
 
-  //**** COMPARISON 
+  // **** COMPARISON
   @Arguments(spec = {"x", "y"})
   @Docstring(
       text =
@@ -749,7 +739,7 @@ public class Funcs {
     }
   }
 
-  //**** COERCION 
+  // **** COERCION
   @Arguments(spec = {"value"})
   @Docstring(
       text =
@@ -953,7 +943,8 @@ public class Funcs {
   @Arguments(spec = {"x", "&OPTIONAL", "base"})
   @Docstring(
       text =
-          "Computes logarithm. If base is not given it computes natural logarithm. Returns a Double"
+          "Computes logarithm. "
+              + "If base is not given it computes natural logarithm. Returns a Double"
               + " value.")
   @Package(name = Package.BASE_MATH)
   public static class LOG extends FuncExp {
@@ -1006,7 +997,7 @@ public class Funcs {
     }
   }
 
-  //**** VARIABLES, DATATYPES AND FUNCTIONS 
+  // **** VARIABLES, DATATYPES AND FUNCTIONS
   // FIXME: are array types supported?
   @Arguments(spec = {"object", "type-specifier"})
   @Docstring(
@@ -1184,7 +1175,7 @@ public class Funcs {
     }
   }
 
-  //****** MAPPING OPERATIONS 
+  // ****** MAPPING OPERATIONS
   // args is a spreadable list designator
   @Arguments(spec = {"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "arguments"})
   @Docstring(
@@ -1352,7 +1343,7 @@ public class Funcs {
       }
       final List<ICompiled> callParams = new ArrayList<ICompiled>(numLists);
       // evaluated lists that were given as parameters
-      Object []seqs = new Object[numLists];
+      Object[] seqs = new Object[numLists];
       for (int i = 0; i < seqs.length; i++) {
         Object seq = rest.get(i);
         if (seq instanceof Map) {
@@ -1380,7 +1371,7 @@ public class Funcs {
     protected abstract void callfuncs(
         Backtrace backtrace,
         List<Object> results,
-        Object []seqs,
+        Object[] seqs,
         IExpr instance,
         List<ICompiled> callParams,
         ICtx ctx);
@@ -1388,8 +1379,8 @@ public class Funcs {
     protected int callfunc(
         Backtrace backtrace,
         List<Object> results,
-        Object []seqs,
-        int []indices,
+        Object[] seqs,
+        int[] indices,
         IExpr instance,
         List<ICompiled> callParams,
         ICtx ctx) {
@@ -1427,11 +1418,11 @@ public class Funcs {
     protected void callfuncs(
         Backtrace backtrace,
         List<Object> results,
-        Object []seqs,
+        Object[] seqs,
         IExpr instance,
         List<ICompiled> callParams,
         ICtx ctx) {
-      int []indices = new int[seqs.length];
+      int[] indices = new int[seqs.length];
       int overflow = -1;
       while (true) {
         overflow = callfunc(backtrace, results, seqs, indices, instance, callParams, ctx);
@@ -1456,11 +1447,11 @@ public class Funcs {
     protected void callfuncs(
         Backtrace backtrace,
         List<Object> results,
-        Object []seqs,
+        Object[] seqs,
         IExpr instance,
         List<ICompiled> callParams,
         ICtx ctx) {
-      int []indices = new int[seqs.length];
+      int[] indices = new int[seqs.length];
       int overflow = -1;
       while (true) {
         overflow = callfunc(backtrace, results, seqs, indices, instance, callParams, ctx);
@@ -1483,8 +1474,8 @@ public class Funcs {
       }
     }
   }
-  
-  //***** VARIABLE PROPERTIES HANDLING 
+
+  // ***** VARIABLE PROPERTIES HANDLING
   @Arguments(spec = {"symbol", "property-key"})
   @Docstring(
       text = "Get Variable Property. " + "Returns value of a property from variable property map")
@@ -1552,7 +1543,7 @@ public class Funcs {
     }
   }
 
-  //***** CONTEXT HANDLING 
+  // ***** CONTEXT HANDLING
   @Arguments(spec = {})
   @Docstring(text = "Create New Empty Context")
   @Package(name = Package.BASE_BINDINGS)
@@ -1563,7 +1554,7 @@ public class Funcs {
     }
   }
 
-  //***** JAVA INTEROP 
+  // ***** JAVA INTEROP
   public static class FilteredMap implements Map<Object, Object> {
     protected Map<Object, Object> src;
     protected Set<?> filterSet;
@@ -1738,7 +1729,7 @@ public class Funcs {
      * @param obj base object
      * @param prefix map keys prefix
      * @param suffix map keys suffix
-     * @param fields sequence of allowed fields    
+     * @param fields sequence of allowed fields
      */
     public BeanMap(Object obj, String prefix, String suffix, Object fields) {
       this.obj = obj;
@@ -1898,7 +1889,7 @@ public class Funcs {
         sb.append(value == this ? "(this Map)" : value);
         if (!iter.hasNext()) {
           return sb.append('}').toString();
-        } 
+        }
         sb.append(',').append(' ');
       }
       // return sb.toString();
@@ -2063,7 +2054,7 @@ public class Funcs {
 
           if (isMethod) {
             if (null != methodParams) {
-              final Class<?> []methodParamClasses =
+              final Class<?>[] methodParamClasses =
                   Utils.getMethodParamsClasses(methodParams, paramsTypesSpec);
               Method method;
               if (null != paramsTypesSpec) {
@@ -2157,7 +2148,7 @@ public class Funcs {
     }
   }
 
-  //***** EXCEPTION HANDLING AND DEBUGGING 
+  // ***** EXCEPTION HANDLING AND DEBUGGING
   @Package(name = Package.BASE_FUNCS)
   @Arguments(spec = {})
   @Docstring(
@@ -2168,7 +2159,7 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       return (null == backtrace)
           ? "* BACKTRACE: Call backtrace is not available, please call evaluate() with the"
-                + " backtrace parameter *\n"
+              + " backtrace parameter *\n"
           : backtrace.toString();
     }
   }
@@ -2199,7 +2190,7 @@ public class Funcs {
     }
   }
 
-  //**** STRING HANDLING 
+  // **** STRING HANDLING
   @Arguments(spec = {"pattern"})
   @Docstring(
       text =
@@ -2448,8 +2439,7 @@ public class Funcs {
   }
 
   @SuppressWarnings("unchecked")
-  protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj
-      /*final Backtrace bt*/) {
+  protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj) {
     result[0] = null;
     if (obj instanceof Map) {
       final Map<Object, Object> map = (Map<Object, Object>) obj;
@@ -2515,7 +2505,7 @@ public class Funcs {
       final int ksIdx,
       final Object notDefined,
       final Backtrace bt) {
-    Object []result = new Object[1];
+    Object[] result = new Object[1];
     final Object key = getKeyByIndex(ksObj, ksIdx);
     if (null == key) {
       return obj;
@@ -2568,7 +2558,7 @@ public class Funcs {
       final Object obj = eargs.get(0, backtrace);
       final Object keyObj = eargs.get(1, backtrace);
       final Object notDefined = argsnum > 2 ? eargs.get(2, backtrace) : null;
-      final Object []result = new Object[1];
+      final Object[] result = new Object[1];
       return doGet(obj, result, keyObj) ? result[0] : notDefined;
     }
   }
@@ -2681,19 +2671,20 @@ public class Funcs {
   }
 
   @Arguments(spec = {ArgSpec.ARG_OPTIONAL, "n"})
-  @Docstring(text = "Access command line arguments. "
-             + "When n is provided return nth argument as String, "
-             + "when not -- return list of command line arguments. "
-             + "If n is out of range return NIL.")
+  @Docstring(
+      text =
+          "Access command line arguments. "
+              + "When n is provided return nth argument as String, "
+              + "when not -- return list of command line arguments. "
+              + "If n is out of range return NIL.")
   @Package(name = Package.RUNTIME)
-
   public static class ARGV extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      List<String> args =  eargs.getCompiler().getCommandlineArgs();
-      Object argObj =  eargs.get(0, backtrace);
+      List<String> args = eargs.getCompiler().getCommandlineArgs();
+      Object argObj = eargs.get(0, backtrace);
       int n = Utils.asNumber(argObj).intValue();
-      if  (null == argObj) {
+      if (null == argObj) {
         return Utils.copySeq(args);
       } else if (args.size() <= n) {
         return null;
@@ -2703,8 +2694,6 @@ public class Funcs {
     }
   }
 
-
-  
   @Arguments(spec = {ArgSpec.ARG_REST, "values"})
   @Docstring(
       text =
@@ -2722,7 +2711,7 @@ public class Funcs {
     }
   }
 
-  //****** SEQUENCES
+  // ****** SEQUENCES
   @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
   @Docstring(
       text =
@@ -2753,6 +2742,7 @@ public class Funcs {
         };
       } else if (componentType.equals(Boolean.TYPE)) {
         return new Seq.Operation() {
+
           @Override
           public boolean perform(Object obj) {
             Utils.aset(arr, counter[0]++, Utils.asBoolean(obj));
@@ -2771,6 +2761,7 @@ public class Funcs {
       }
     } else {
       return new Seq.Operation() {
+
         @Override
         public boolean perform(Object obj) {
           Utils.aset(arr, counter[0]++, obj);
@@ -3293,7 +3284,7 @@ public class Funcs {
     }
   }
 
-  //***** LANGUAGE 
+  // ***** LANGUAGE
   @Arguments(spec = {"fn", ARG_OPTIONAL, "name"})
   @Docstring(
       text =
@@ -3681,6 +3672,56 @@ public class Funcs {
     }
   }
 
+  public static class FDesc extends BeanMap {
+    protected String name;
+
+    public FDesc(Object obj, String name) {
+      super(obj);
+      this.name = name;
+    }
+
+    @Override
+    protected Map<String, Method> getGettersMap() {
+      Map<String, Method> methods = super.getGettersMap();
+      methods.put("name", null);
+      return methods;
+    }
+
+    @Override
+    public Object get(Object key) {
+      if ("name".equalsIgnoreCase(Utils.asString(key))) {
+        return this.name;
+      }
+      return super.get(key);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder buf = new StringBuilder(127);
+      if (null != this.obj && (this.obj instanceof ICode)) {
+        ICode codeObj = (ICode) this.obj;
+        ;
+        buf.append(this.name);
+        buf.append(" is a ");
+        if (codeObj.isBuiltIn()) {
+          buf.append("built-in ");
+        }
+        buf.append(codeObj.getCodeType());
+        buf.append(" defined at ");
+        buf.append(codeObj.getDefLocation());
+        buf.append("\n");
+        buf.append("Arguments: \n    " + codeObj.getArgDescr() + "\n");
+        buf.append("Documentation: \n    " + codeObj.getDocstring() + "\n");
+        buf.append("Package: \n    " + codeObj.getPackageName() + "\n");
+      } else if (null != this.obj) {
+        buf.append(" Object of type " + this.obj.getClass() + "\n");
+      } else {
+        buf.append(" is not defined\n");
+      }
+      return buf.toString();
+    }
+  }
+
   @Arguments(spec = {"function"})
   @Docstring(
       text =
@@ -3691,31 +3732,10 @@ public class Funcs {
   public static class DESCRIBE_FUNCTION extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object fobj = Utils.asObject(eargs.get(0, backtrace));
-      StringBuilder buf = new StringBuilder(127);
-      Object funcObj = findFuncObject(eargs.get(0, backtrace), eargs);
-      buf.append("Object " + Utils.asString(fobj));
-      if (null != funcObj) {
-        if (funcObj instanceof ICode) {
-          buf.append(" is a ");
-          ICode codeObj = (ICode) funcObj;
-          if (codeObj.isBuiltIn()) {
-            buf.append("built-in ");
-          }
-          buf.append(codeObj.getCodeType());
-          buf.append(" defined at ");
-          buf.append(codeObj.getDefLocation());
-          buf.append("\n");
-          buf.append("Arguments: \n    " + codeObj.getArgDescr() + "\n");
-          buf.append("Documentation: \n    " + codeObj.getDocstring() + "\n");
-        } else {
-          buf.append(" is an unknown object of type " + funcObj.getClass());
-        }
-      } else {
-        buf.append(" is not defined");
-      }
-
-      return buf.toString();
+      final Object target = eargs.get(0, backtrace);
+      final Object funcObj = findFuncObject(target, eargs);
+      FDesc fdesc = new FDesc((ICode) funcObj, Utils.asString(target));
+      return fdesc;
     }
   }
 
@@ -3777,7 +3797,7 @@ public class Funcs {
     }
   }
 
-  //****** SELF-EVALUATING OBJECTS 
+  // ****** SELF-EVALUATING OBJECTS
   public static class ValueExpr extends AbstractExpr {
     private Object value;
 
@@ -3787,10 +3807,9 @@ public class Funcs {
 
     @Override
     public int hashCode() {
-      return this.getClass().hashCode() 
-        + (null == this.value ? 0 : value.hashCode());
+      return this.getClass().hashCode() + (null == this.value ? 0 : value.hashCode());
     }
-    
+
     @Override
     public boolean equals(Object obj) {
       if (obj instanceof ValueExpr) {
