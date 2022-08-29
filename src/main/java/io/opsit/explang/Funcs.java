@@ -2680,6 +2680,31 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {ArgSpec.ARG_OPTIONAL, "n"})
+  @Docstring(text = "Access command line arguments. "
+             + "When n is provided return nth argument as String, "
+             + "when not -- return list of command line arguments. "
+             + "If n is out of range return NIL.")
+  @Package(name = Package.RUNTIME)
+
+  public static class ARGV extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      List<String> args =  eargs.getCompiler().getCommandlineArgs();
+      Object argObj =  eargs.get(0, backtrace);
+      int n = Utils.asNumber(argObj).intValue();
+      if  (null == argObj) {
+        return Utils.copySeq(args);
+      } else if (args.size() <= n) {
+        return null;
+      } else {
+        return args.get(n);
+      }
+    }
+  }
+
+
+  
   @Arguments(spec = {ArgSpec.ARG_REST, "values"})
   @Docstring(
       text =

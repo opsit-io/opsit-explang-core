@@ -31,6 +31,7 @@ public class Compiler {
   protected Set<String> packages =
       Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
   protected boolean enforcePackages = true;
+  protected List<String> argv = Utils.list();
 
   /** Return default list of enabled packages for a Compiler instance. */
   public static Set<String> getDefaultPackages() {
@@ -76,6 +77,7 @@ public class Compiler {
         Package.FFI,
         Package.IO,
         Package.LOOPS,
+        Package.RUNTIME,
         Package.THREADS);
   }
 
@@ -200,6 +202,23 @@ public class Compiler {
     }
   }
 
+  /**
+   * Set command line args.
+   */
+  public void setCommandlineArgs(List<String> argv) {
+    this.argv.clear();
+    if (null != argv) {
+      this.argv.addAll(argv);
+    }
+  }
+
+  /**
+   * Set command line args.
+   */
+  public List <String> getCommandlineArgs() {
+    return this.argv;
+  }
+  
   /**
    * Add mapping for a Builtin.
    *
@@ -431,6 +450,8 @@ public class Compiler {
             "NEW-THREAD", NEW_THREAD.class,
             // I/O
             "PRINT", PRINT.class,
+            // RUNTIME
+            "ARGV", ARGV.class,
             // sequences operations
             "LIST", LIST.class,
             "HASHSET", HASHSET.class,

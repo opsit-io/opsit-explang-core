@@ -45,51 +45,62 @@ public class Main {
     Set<String> packages = Compiler.getAllPackages();
     String convName = this.getFuncConverters().get(0);
     String parserName = this.getParsers().get(0);
+    List<String> args = Utils.list();
+    boolean readArgs = false;
     for (int i = 0; i < argv.length; i++) {
       String val = argv[i];
-      if ("-d".equals(val)) {
-        verbose = true;
-        continue;
-      }
-      if ("-l".equals(val)) {
-        lineMode = true;
-        continue;
-      }
-      if ("-p".equals(val)) {
-        packages = parsePackages(argv, ++i);
-        continue;
-      }
-      if ("-r".equals(val)) {
-        parserName = argv[++i];
-        continue;
-      }
-      
-      if ("-f".equals(val)) {
-        convName = argv[++i];
-        continue;
-      }
+      if (readArgs) {
+        args.add(val);
+      } else {
+        if ("-d".equals(val)) {
+          verbose = true;
+          continue;
+        }
+        if ("-l".equals(val)) {
+          lineMode = true;
+          continue;
+        }
+        if ("-p".equals(val)) {
+          packages = parsePackages(argv, ++i);
+          continue;
+        }
+        if ("-r".equals(val)) {
+          parserName = argv[++i];
+          continue;
+        }
 
-      if ("-v".equals(val)) {
-        final String version = Utils.getExplangCoreVersionStr();
-        if (null != version) {
-          System.err.println(version);
+        if ("-f".equals(val)) {
+          convName = argv[++i];
+          continue;
+        }
+        if ("--".equals(val)) {
+          readArgs = true;
+          continue;
+        }
+
+        if ("-v".equals(val)) {
+          final String version = Utils.getExplangCoreVersionStr();
+          if (null != version) {
+            System.err.println(version);
+            System.exit(0);
+          } else {
+            System.err.println("Failed to determine version");
+            System.exit(1);
+          }
+        }
+
+        if (val.startsWith("-h") || "-?".equals(val)) {
+          usage();
           System.exit(0);
-        } else {
-          System.err.println("Failed to determine version");
+        }
+        if (val.startsWith("-")) {
+          System.err.println("Unknown option: '" + val + "'\n");
+          usage();
           System.exit(1);
         }
+        inFile = new java.io.File(val);
+        readArgs = true;
       }
-
-      if (val.startsWith("-h") || "-?".equals(val)) {
-        usage();
-        System.exit(0);
-      }
-      if (val.startsWith("-")) {
-        System.err.println("Unknown option: '" + val + "'\n");
-        usage();
-        System.exit(1);
-      }
-      inFile = new java.io.File(val);
     }
 
     IParser parser = (IParser) loadModule("io.opsit.explang.parser.",
@@ -100,7 +111,7 @@ public class Main {
                                                           "Converter");
     Compiler compiler = new Compiler(conv, packages);
     compiler.setParser(parser);
-    
+    compiler.setCommandlineArgs(args);
     if (null != inFile) {
       rc = runfile(inFile, compiler, verbose);
     } else {
@@ -162,7 +173,7 @@ public class Main {
     final String msg =
         ""
             + "Explang REPL usage:\n"
-            + "explang  [ option .. ] [ file ... ]\n"
+            + "explang  [ option .. ] [ file | -- ] [ arg ..]\n"
             + "  -d            Enable verbose diagnostics\n"
             + "  -p  packages  Comma separated list of enabled packages\n"
             + "                By default all the packages are enabled.\n"

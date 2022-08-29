@@ -36,6 +36,7 @@ public @interface Package {
   public static String FFI = "ffi";
   public static String DWIM = "dwim";
   public static String IO = "io";
+  public static String RUNTIME = "runtime";
   public static String THREADS = "threads";
   public static String LOOPS = "loops";
 }
