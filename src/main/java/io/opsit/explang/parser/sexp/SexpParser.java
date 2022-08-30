@@ -8,6 +8,7 @@ import io.opsit.explang.ASTNList;
 import io.opsit.explang.IParser;
 import io.opsit.explang.ParseCtx;
 import io.opsit.explang.ParserException;
+import io.opsit.explang.ArgSpec;
 import io.opsit.explang.atom.AtomParseException;
 import io.opsit.explang.atom.AtomParser;
 import io.opsit.explang.atom.BooleanParser;
@@ -188,8 +189,22 @@ public class SexpParser implements IParser {
   protected void clearBuf(StringBuffer buf) {
     buf.delete(0, buf.length());
   }
-  
+
+  @Override
   public boolean supportREPLStream() {
     return true;
+  }
+
+  @Override
+  public String formatArgSpec(List<String> spec) {
+    StringBuilder buf = new StringBuilder(64);
+    if (null != spec) {
+      for (String str : spec) {
+        buf.append(" ").append(str);
+      }
+    } else {
+      buf.append(ArgSpec.ARG_REST).append(" args");
+    }
+    return buf.toString();
   }
 }

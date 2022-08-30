@@ -264,10 +264,10 @@ public class Compiler {
     public String getArgDescr() {
       Arguments ann = cls.getAnnotation(Arguments.class);
       return null == ann
-          ? "args"
+          ? "args ..."
           : Utils.asStringOrEmpty(
               null == ann.text() || ann.text().trim().isEmpty()
-                  ? Utils.arrayAsString(ann.spec())
+                  ? Utils.arrayContentsAsString(ann.spec())
                   : ann.text());
     }
 
@@ -287,7 +287,10 @@ public class Compiler {
     @Override
     public ArgSpec getArgSpec() {
       final Arguments ann = cls.getAnnotation(Arguments.class);
-      final String[] spec = ann.spec();
+      String[] spec = null;
+      if (null != ann) {
+        spec = ann.spec();
+      }
       if (null != spec) {
         try {
           final ArgSpec argSpec = new ArgSpec(spec);

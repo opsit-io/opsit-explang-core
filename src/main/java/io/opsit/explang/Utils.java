@@ -108,6 +108,20 @@ public class Utils {
     return buf.toString();
   }
 
+  /** Convert an array to String for printout. */
+  public static String arrayContentsAsString(Object val) {
+    final int len = Array.getLength(val);
+    StringBuilder buf = new StringBuilder(len << 3);
+    if (len > 0) {
+      buf.append(Array.get(val, 0));
+      for (int i = 1; i < len; i++) {
+        buf.append(", ");
+        buf.append(Array.get(val, i));
+      }
+    }
+    return buf.toString();
+  }
+
   /**
    * Convert an object to its String representation.
    *

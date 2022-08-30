@@ -3674,10 +3674,12 @@ public class Funcs {
 
   public static class FDesc extends BeanMap {
     protected String name;
+    protected IParser parser;
 
-    public FDesc(Object obj, String name) {
+    public FDesc(Object obj, String name, IParser parser) {
       super(obj);
       this.name = name;
+      this.parser = parser;
     }
 
     @Override
@@ -3689,12 +3691,24 @@ public class Funcs {
 
     @Override
     public Object get(Object key) {
-      if ("name".equalsIgnoreCase(Utils.asString(key))) {
+      final String keyStr = Utils.asString(key);
+      if ("name".equalsIgnoreCase(keyStr)) {
         return this.name;
+      } else if ("argDescr".equalsIgnoreCase(keyStr)) {
+        return formatArgs();
       }
       return super.get(key);
     }
 
+    protected String formatArgs() {
+      ICode codeObj = (ICode) this.obj;
+      if (null != parser && null!=codeObj.getArgSpec()) {
+        return parser.formatArgSpec(codeObj.getArgSpec().asSpecList());
+      } else {
+        return codeObj.getArgDescr();
+      }
+    }
+    
     @Override
     public String toString() {
       StringBuilder buf = new StringBuilder(127);
@@ -3709,12 +3723,12 @@ public class Funcs {
         buf.append(codeObj.getCodeType());
         buf.append(" defined at ");
         buf.append(codeObj.getDefLocation());
-        buf.append("\n");
-        buf.append("Arguments: \n    " + codeObj.getArgDescr() + "\n");
-        buf.append("Documentation: \n    " + codeObj.getDocstring() + "\n");
-        buf.append("Package: \n    " + codeObj.getPackageName() + "\n");
+        buf.append("\n\n");
+        buf.append("Arguments: ").append(formatArgs()).append("\n\n");
+        buf.append("Documentation: \n    ").append(codeObj.getDocstring()).append("\n");
+        buf.append("Package: ").append(codeObj.getPackageName()).append("\n");
       } else if (null != this.obj) {
-        buf.append(" Object of type " + this.obj.getClass() + "\n");
+        buf.append(" Object of type ").append(this.obj.getClass()).append("\n");
       } else {
         buf.append(" is not defined\n");
       }
@@ -3734,7 +3748,7 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object target = eargs.get(0, backtrace);
       final Object funcObj = findFuncObject(target, eargs);
-      FDesc fdesc = new FDesc((ICode) funcObj, Utils.asString(target));
+      FDesc fdesc = new FDesc((ICode) funcObj, Utils.asString(target), eargs.getCompiler().getParser());
       return fdesc;
     }
   }

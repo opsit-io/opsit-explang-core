@@ -1,6 +1,7 @@
 package io.opsit.explang.parser.lisp;
 
 import io.opsit.explang.ASTN;
+import io.opsit.explang.ArgSpec;
 import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTNList;
 import io.opsit.explang.IParser;
@@ -353,7 +354,21 @@ public class LispParser implements IParser {
     return sb.toString();
   }
 
+  @Override
   public boolean supportREPLStream() {
     return true;
+  }
+
+  @Override
+  public String formatArgSpec(List<String> spec) {
+    StringBuilder buf = new StringBuilder(64);
+    if (null != spec) {
+      for (String str : spec) {
+        buf.append(" ").append(str);
+      }
+    } else {
+      buf.append(ArgSpec.ARG_REST).append(" args");
+    }
+    return buf.toString();
   }
 }
