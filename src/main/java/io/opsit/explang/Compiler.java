@@ -486,7 +486,7 @@ public class Compiler {
             "GET", GET.class,
             "ASSOC", ASSOC.class,
             "ASSOC!", NASSOC.class,
-
+            "REPLACE", REPLACE.class,
             // java FFI
             ".", DOT.class,
             ".S", DOTS.class,

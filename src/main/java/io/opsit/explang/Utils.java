@@ -136,6 +136,16 @@ public class Utils {
             : (val.getClass().isArray() ? arrayAsString(val) : val.toString()));
   }
 
+  public static CharSequence asCharSequenceOrNull(Object val) {
+    return null == val
+        ? null
+      : ((val instanceof CharSequence)
+         ? (CharSequence)val
+         : ( (val instanceof Symbol)
+             ? ((Symbol) val).getName()
+             : (val.getClass().isArray() ? arrayAsString(val) : val.toString())));
+  }
+
   /** Convert an object to its String representation or return null if value is null. */
   public static String asStringOrNull(Object val) {
     return (null == val)

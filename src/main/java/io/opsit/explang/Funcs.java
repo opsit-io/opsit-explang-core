@@ -3625,6 +3625,35 @@ public class Funcs {
     }
   }
 
+
+  @Arguments(spec = {"seq", "target", ArgSpec.ARG_OPTIONAL, "replacement"})
+  @Docstring(text = "Replace eache subsequence in seq that equals to target with replacement sequence. "
+             + "Return resulting sequence. The original sequence is not modified. If replacement is not provided or NIl - the target sequences will be deleted.")
+  @Package(name = Package.BASE_SEQ)
+  public static class REPLACE extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object seqObj = Utils.asObject(eargs.get(0, backtrace));
+      if (seqObj instanceof String) {
+        final CharSequence targetCs = Utils.asCharSequenceOrNull(eargs.get(1, backtrace));
+        CharSequence replacementCs = (eargs.size() >2) ?
+          Utils.asCharSequenceOrNull(eargs.get(2, backtrace)) : null;
+        if (null == replacementCs) {
+          replacementCs = "";
+        }
+        if (null != targetCs) {
+          return ((String) seqObj).replace(targetCs, replacementCs);
+        } else {
+          return seqObj;
+        }
+      } else if (null == seqObj) {
+        return null;
+      }  else {
+        throw new ExecutionException(backtrace, getName() + "not implemented for objects of type " + seqObj.getClass());
+      }
+    }
+  }
+
   @Arguments(spec = {"size", ArgSpec.ARG_KEY, "element-type"})
   @Docstring(
       text =
