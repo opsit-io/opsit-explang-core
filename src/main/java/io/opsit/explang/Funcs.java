@@ -3627,8 +3627,12 @@ public class Funcs {
 
 
   @Arguments(spec = {"seq", "target", ArgSpec.ARG_OPTIONAL, "replacement"})
-  @Docstring(text = "Replace eache subsequence in seq that equals to target with replacement sequence. "
-             + "Return resulting sequence. The original sequence is not modified. If replacement is not provided or NIl - the target sequences will be deleted.")
+  @Docstring(text = "Replace eache subsequence in seq that equals to "
+             + "target with replacement sequence. "
+             + "Return resulting sequence. "
+             + " The original sequence is not modified. "
+             + "If replacement is not provided or is NIL "
+             + " the target sequences will be deleted.")
   @Package(name = Package.BASE_SEQ)
   public static class REPLACE extends FuncExp {
     @Override
@@ -3636,8 +3640,8 @@ public class Funcs {
       final Object seqObj = Utils.asObject(eargs.get(0, backtrace));
       if (seqObj instanceof String) {
         final CharSequence targetCs = Utils.asCharSequenceOrNull(eargs.get(1, backtrace));
-        CharSequence replacementCs = (eargs.size() >2) ?
-          Utils.asCharSequenceOrNull(eargs.get(2, backtrace)) : null;
+        CharSequence replacementCs = (eargs.size() > 2)
+            ? Utils.asCharSequenceOrNull(eargs.get(2, backtrace)) : null;
         if (null == replacementCs) {
           replacementCs = "";
         }
@@ -3649,7 +3653,9 @@ public class Funcs {
       } else if (null == seqObj) {
         return null;
       }  else {
-        throw new ExecutionException(backtrace, getName() + "not implemented for objects of type " + seqObj.getClass());
+        throw new ExecutionException(backtrace, getName()
+                                     + " not implemented for objects of type "
+                                     + seqObj.getClass());
       }
     }
   }
@@ -3705,6 +3711,9 @@ public class Funcs {
     protected String name;
     protected IParser parser;
 
+    /**
+     * Construct FSesc from ICompiled object.
+     */
     public FDesc(Object obj, String name, IParser parser) {
       super(obj);
       this.name = name;
@@ -3731,7 +3740,7 @@ public class Funcs {
 
     protected String formatArgs() {
       ICode codeObj = (ICode) this.obj;
-      if (null != parser && null!=codeObj.getArgSpec()) {
+      if (null != parser && null != codeObj.getArgSpec()) {
         return parser.formatArgSpec(codeObj.getArgSpec().asSpecList());
       } else {
         return codeObj.getArgDescr();
@@ -3777,7 +3786,9 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object target = eargs.get(0, backtrace);
       final Object funcObj = findFuncObject(target, eargs);
-      FDesc fdesc = new FDesc((ICode) funcObj, Utils.asString(target), eargs.getCompiler().getParser());
+      FDesc fdesc = new FDesc((ICode) funcObj,
+                              Utils.asString(target),
+                              eargs.getCompiler().getParser());
       return fdesc;
     }
   }

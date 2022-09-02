@@ -1,9 +1,9 @@
 package io.opsit.explang.parser.lisp;
 
 import io.opsit.explang.ASTN;
-import io.opsit.explang.ArgSpec;
 import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTNList;
+import io.opsit.explang.ArgSpec;
 import io.opsit.explang.IParser;
 import io.opsit.explang.Keyword;
 import io.opsit.explang.ParseCtx;
@@ -117,9 +117,7 @@ public class LispParser implements IParser {
     }
   }
 
-  /**
-   * Process input character.
-   */
+  /** Process input character. */
   static final ASTN processChar(ParseCtx pctx, char c, PushbackReader r, ReadTable rt) {
 
     final IReaderMacroFunc handler = rt.getReaderMacroFunction(c);

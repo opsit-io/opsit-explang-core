@@ -129,19 +129,20 @@ public class Utils {
    * objects using their toString() method.
    */
   public static String asString(Object val) {
-    return null == val
-        ? "NIL"
-        : ((val instanceof Symbol)
-            ? ((Symbol) val).getName()
+    return null == val ? "NIL"
+        : ((val instanceof Symbol) ? ((Symbol) val).getName()
             : (val.getClass().isArray() ? arrayAsString(val) : val.toString()));
   }
 
+  /** Convert an object to its String representation,
+   * return  CharSequences as is or return null if value is null.
+   */
   public static CharSequence asCharSequenceOrNull(Object val) {
     return null == val
         ? null
       : ((val instanceof CharSequence)
          ? (CharSequence)val
-         : ( (val instanceof Symbol)
+         : ((val instanceof Symbol)
              ? ((Symbol) val).getName()
              : (val.getClass().isArray() ? arrayAsString(val) : val.toString())));
   }
