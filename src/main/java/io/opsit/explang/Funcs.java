@@ -2634,6 +2634,57 @@ public class Funcs {
     }
   }
 
+
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+      "Convert character, string or character sequence to upper case.")
+  @Package(name = Package.BASE_TEXT)
+  public static class UPPERCASE extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object obj =  eargs.get(0, backtrace);
+      if (obj == null) {
+        return null;
+      } else if (obj instanceof String) {
+        return ((String) obj).toUpperCase();
+      } else if (obj instanceof Character) {
+        return Character.toUpperCase((Character) obj);
+      } else if (obj instanceof StringBuilder) {
+        return new StringBuilder(((StringBuilder) obj).toString().toUpperCase());
+      } else if (obj instanceof StringBuffer) {
+        return new StringBuffer(((StringBuffer) obj).toString().toUpperCase());
+      } else {
+        return obj;
+      }
+    }
+  }
+
+  @Arguments(spec = {"value"})
+  @Docstring(
+      text =
+      "Convert character, string or character sequence to lower case.")
+  @Package(name = Package.BASE_TEXT)
+  public static class LOWERCASE extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object obj =  eargs.get(0, backtrace);
+      if (obj == null) {
+        return null;
+      } else if (obj instanceof String) {
+        return ((String) obj).toLowerCase();
+      } else if (obj instanceof Character) {
+        return Character.toLowerCase((Character) obj);
+      } else if (obj instanceof StringBuilder) {
+        return new StringBuilder(((StringBuilder) obj).toString().toLowerCase());
+      } else if (obj instanceof StringBuffer) {
+        return new StringBuffer(((StringBuffer) obj).toString().toLowerCase());
+      } else {
+        return obj;
+      }
+    }
+  }
+
   @Arguments(spec = {"format", ArgSpec.ARG_REST, "values"})
   @Docstring(
       text =

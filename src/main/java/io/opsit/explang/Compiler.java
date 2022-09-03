@@ -512,6 +512,8 @@ public class Compiler {
             "RE-SEQ", RE_SEQ.class,
             "DWIM-MATCHES", DWIM_MATCHES.class,
             "DWIM-SEARCH", DWIM_SEARCH.class,
+            "UPPERCASE", UPPERCASE.class,
+            "LOWERCASE", LOWERCASE.class,
             "STR", STR.class,
             "FORMAT", FORMAT.class,
             "SEQ", SEQ.class,
