@@ -2477,6 +2477,15 @@ public class Funcs {
       } catch (ArrayIndexOutOfBoundsException ex) {
         return false;
       }
+
+    } else if (java.util.Map.Entry.class.isAssignableFrom(obj.getClass())) {
+      if ("key".equalsIgnoreCase(Utils.asStringOrNull(keyObj))) {
+        result[0] = ((Map.Entry<?,?>) obj).getKey();
+      } else if ("value".equalsIgnoreCase(Utils.asStringOrNull(keyObj))) {
+        result[0] = ((Map.Entry<?,?>) obj).getValue();
+      } else {
+        return false;
+      }
     } else {
       final String keyStr = Utils.asStringOrEmpty(keyObj).trim();
       if (keyStr.length() == 0) {
