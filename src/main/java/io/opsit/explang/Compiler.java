@@ -474,6 +474,7 @@ public class Compiler {
             "NEW-THREAD", NEW_THREAD.class,
             // I/O
             "PRINT", PRINT.class,
+            "PRINTLN", PRINTLN.class,
             // RUNTIME
             "ARGV", ARGV.class,
             // sequences operations

@@ -2730,6 +2730,21 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Docstring(text = "Print Arguments on standard output and print newline.")
+  @Package(name = Package.IO)
+  public static class PRINTLN extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      StringBuffer buf = new StringBuffer();
+      for (Object val : (List<?>) eargs.get(0, backtrace)) {
+        buf.append(Utils.asString(val));
+      }
+      System.out.println(buf.toString());
+      return buf.toString();
+    }
+  }
+
   @Arguments(spec = {ArgSpec.ARG_OPTIONAL, "n"})
   @Docstring(
       text =
