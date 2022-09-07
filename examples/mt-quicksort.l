@@ -38,6 +38,6 @@
   a)
 
 (let ((data (random-list 32 100)))
-  (print (str "Quick sort in:  " data "\n"))
+  (println "Quick sort in:  " data)
   (quick-sort data)
-  (print (str "Quick sort out: " data "\n")))
+  (println "Quick sort out: " data))
