@@ -3641,12 +3641,28 @@ public class Funcs {
           ctx.getMappings().put(sym.getName(), obj);
         } else {
           throw new ExecutionException(
-              backtrace, getName() + "uplevel value exceeds context depth");
+              backtrace, getName() + " uplevel value exceeds context depth");
         }
       } else {
         eargs.getPrev().greplace(sym.getName(), obj);
       }
       return obj;
+    }
+  }
+
+  @Docstring(text = "Set symbol's function value to value and return previous value or NIL.")
+  @Arguments(spec = {"symbol", "value"})
+  @Package(name = Package.BASE_BINDINGS)
+  public static class FSET extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object symObj = eargs.get(0, backtrace);
+      if (!(symObj instanceof Symbol)) {
+        throw new ExecutionException(
+            backtrace, getName() + " first argument must be symbol, but got " + symObj);
+      }
+      final Object obj = eargs.get(1, backtrace);
+      return eargs.getCompiler().putFun(((Symbol) symObj).getName(), (ICode) obj);
     }
   }
 

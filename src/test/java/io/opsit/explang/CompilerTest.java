@@ -1524,6 +1524,7 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          {"(PROGN (FSET (QUOTE p3) (LAMBDA (x) (+ 3 x)))  (p3 1))", 4, true, null, null, p},
           {"(FILTER (LAMBDA (x) (> x 0))  (LIST -2 -1 0 1 2))", list(1, 2), true, null, null, p},
           {"(PROGN (DEFUN INCR (x) (+ 1 x))  (INCR 1))", 2, true, null, null, p},
           {"(PROGN (DEFUN SELF (x) x)  (SELF 1))", 1, true, null, null, p},

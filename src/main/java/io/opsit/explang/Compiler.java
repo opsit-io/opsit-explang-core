@@ -359,6 +359,18 @@ public class Compiler {
     }
   }
 
+  /**
+   * Put function definition into function table.
+   */
+  public ICode putFun(String name, ICode code) {
+    final String key = funcNameConverter.convert(name);
+    if (null != code) {
+      return functab.put(key, code);
+    } else {
+      return functab.remove(key);
+    }
+  }
+
   public ICode getFun(String name) {
     return functab.get(funcNameConverter.convert(name));
   }
@@ -447,6 +459,7 @@ public class Compiler {
             "FUNCALL", FUNCALL.class,
             "DEFUN", DEFUN.class,
             "FUNCTION", FUNCTION.class,
+            "FSET", FSET.class,
             "SYMBOL-FUNCTION", SYMBOL_FUNCTION.class,
             "APPLY", APPLY.class,
             "EVAL", EVAL.class,
