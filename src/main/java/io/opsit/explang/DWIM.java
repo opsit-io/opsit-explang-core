@@ -42,7 +42,7 @@ public class DWIM {
           }
         } else if (patObj instanceof Number) {
           try {
-            final Number objNum = Utils.asNumberOrParse(obj);
+            final Number objNum = Utils.asNumber(obj);
             final Number patNum = (Number) patObj;
             final Promotion p = new Promotion();
             p.promote(patNum);

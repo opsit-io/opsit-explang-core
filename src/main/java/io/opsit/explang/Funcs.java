@@ -796,7 +796,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Utils.asNumberOrParse(val).intValue();
+      return Utils.asNumber(val).intValue();
     }
   }
 
@@ -826,7 +826,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Utils.asNumberOrParse(val).longValue();
+      return Utils.asNumber(val).longValue();
     }
   }
 
@@ -841,7 +841,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Utils.asNumberOrParse(val).shortValue();
+      return Utils.asNumber(val).shortValue();
     }
   }
 
@@ -856,7 +856,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Utils.asNumberOrParse(val).byteValue();
+      return Utils.asNumber(val).byteValue();
     }
   }
 
@@ -871,7 +871,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Utils.asNumberOrParse(val).doubleValue();
+      return Utils.asNumber(val).doubleValue();
     }
   }
 
@@ -886,7 +886,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Utils.asNumberOrParse(val).floatValue();
+      return Utils.asNumber(val).floatValue();
     }
   }
 
@@ -901,11 +901,8 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object numberObj = eargs.get(0, backtrace);
-      if (!(numberObj instanceof Number)) {
-        throw new ExecutionException(backtrace, getName() + " argument must be a number");
-      }
       final double val = java.lang.Math.random();
-      final Number number = (Number) numberObj;
+      final Number number = Utils.asNumber(numberObj);
       if (number instanceof Integer) {
         return (int) (val * number.intValue());
       } else if (numberObj instanceof Long) {
@@ -932,10 +929,7 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object numberObj = eargs.get(0, backtrace);
-      if (!(numberObj instanceof Number)) {
-        throw new ExecutionException(backtrace, getName() + " argument must be a number");
-      }
-      final double val = java.lang.Math.sqrt(((Number) numberObj).doubleValue());
+      final double val = java.lang.Math.sqrt(Utils.asNumber(numberObj).doubleValue());
       return val;
     }
   }
@@ -2432,7 +2426,7 @@ public class Funcs {
 
   protected static int getIntIdx(Object key) {
     try {
-      return Utils.asNumberOrParse(key).intValue();
+      return Utils.asNumber(key).intValue();
     } catch (Exception ex) {
       return -1;
     }

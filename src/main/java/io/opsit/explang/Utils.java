@@ -321,31 +321,10 @@ public class Utils {
     } else if (val instanceof Byte) {
       return (char) (0xff & ((byte) val));
     } else {
-      return (char) (Utils.asNumberOrParse(val).shortValue());
+      return (char) (Utils.asNumber(val).shortValue());
     }
   }
 
-  // FIXME: make configurable
-  // FIXME: docs
-  /** Coerce object to Number. */
-  public static Number asNumber(Object val) {
-    if (val == null) {
-      return 0;
-    } else if (val instanceof Number) {
-      return (Number) val;
-    } else if (val instanceof Character) {
-      return (short) ((Character) val).charValue();
-    } else if (val instanceof Boolean) {
-      return ((boolean) val) ? 1 : 0;
-    } else if (val instanceof Collection) {
-      // FIXME: Do we neede this?
-      // FIXME: Parameter or this?
-      return ((Collection<?>) val).size();
-    } else if (val.getClass().isArray()) {
-      return java.lang.reflect.Array.getLength(val);
-    }
-    return 0;
-  }
 
   /** Parse string as Number. FIXME: describe format. */
   public static Number parseNumber(String str) {
@@ -414,8 +393,10 @@ public class Utils {
    *
    * <p>FIXME: describe conversion FIXME: make configurable
    */
-  public static Number asNumberOrParse(Object val) {
-    if (null == val) {
+  public static Number asNumber(Object val) {
+    if (val instanceof Number) {
+      return (Number) val;
+    } else if (null == val) {
       return 0;
     } else if (val instanceof Boolean) {
       return ((Boolean) val) ? 1 : 0;
@@ -427,9 +408,7 @@ public class Utils {
       } catch (NumberFormatException ex) {
         throw new RuntimeException("String '" + val + "' cannot be coerced to Number", ex);
       }
-    } else if (val instanceof Number) {
-      return (Number) val;
-    } else if (val instanceof Character) {
+    }  else if (val instanceof Character) {
       return (short) ((Character) val).charValue();
     } else if (val instanceof Collection) {
       return ((Collection<?>) val).size();
