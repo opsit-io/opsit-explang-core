@@ -684,6 +684,8 @@ public class Utils {
     if (v1 == null) {
       if (v2 == null) {
         return true;
+      } else {
+        return false;
       }
     }
     if (v2 == null) {

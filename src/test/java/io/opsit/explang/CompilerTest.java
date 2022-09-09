@@ -242,6 +242,8 @@ public class CompilerTest extends AbstractTest {
           {"(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
           {"(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2)))", true, true, null, null, p},
           {"(== (LIST 1.0 (LIST 2.0)) (LIST 1 (LIST 2.1)))", false, false, null, null, p},
+          {"(== (LIST NIL NIL ) (LIST 1 2))", false, false, null, null, p},
+          {"(== (LIST 1 2) (LIST NIL NIL))", false, false, null, null, p},
           // FIXME: maps enum values set
 
           {"(== (HASHMAP 1 1000.0) (HASHMAP 1 1000.l))", true, true, null, null, p},
