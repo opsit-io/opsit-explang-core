@@ -3747,7 +3747,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"size", ArgSpec.ARG_KEY, "element-type"})
+  @Arguments(spec = {ArgSpec.ARG_KEY, "size", "element-type", ArgSpec.ARG_REST, "elements"})
   @Docstring(
       text =
           "Ceate an Array. Creates array of objects of specified size. Optional :element-type"
@@ -3756,14 +3756,30 @@ public class Funcs {
   public static class MAKE_ARRAY extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final int size = Utils.asNumber(eargs.get(0, backtrace)).intValue();
+      int size = 0;
+      final Object sizeObj = eargs.get("size", backtrace);
+      final Object eltsObj = eargs.get("elements", backtrace);
+      if (null != sizeObj) {
+        size =  Utils.asNumber(sizeObj).intValue();
+      } else if (null != eltsObj) {
+        size = Seq.getLength(eltsObj, false);
+      }
       final Object et = eargs.get("element-type", backtrace);
+      Object result = null;
       if (null != et) {
         final Class<?> tclass = Utils.tspecToClass(et);
-        return Array.newInstance(tclass, size);
+        result = Array.newInstance(tclass, size);
       } else {
-        return new Object[size];
+        result = new Object[size];
       }
+      if (null != eltsObj) {
+        int eltSize = Seq.getLength(eltsObj, false);
+        List elements = (List) eltsObj;
+        for (int i = 0; i < size && i < eltSize; i++) {
+          Array.set(result, i, elements.get(i));
+        }
+      }
+      return result;
     }
   }
 
