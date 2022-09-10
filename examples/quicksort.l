@@ -1,4 +1,4 @@
-;;; implement quicksort in explang
+;;; Quicksort
 (defun swap (a i j)
   "swap two elements in an indexable sequence"
   (let ((tmp (get a i)))

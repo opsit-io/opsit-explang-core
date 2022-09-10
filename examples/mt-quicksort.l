@@ -1,4 +1,4 @@
-;;; implement multithreaded quicksort in explang
+;;; Multithreaded Quicksort
 (defun swap (a i j)
   "swap two elements in an indexable sequence"
   (let ((tmp (get a i)))

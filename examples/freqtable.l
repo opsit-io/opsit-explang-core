@@ -1,4 +1,7 @@
+;;; Frequency Table
+;;;
 ;;; prints sorted frequency table for a sequence
+
 (defun freqcount(seq)
   ;; create map of counters
   (let ((m (hashmap)))

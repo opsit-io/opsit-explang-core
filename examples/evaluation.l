@@ -1,4 +1,4 @@
-;;; reading and evaluating explang code
+;;; Expression Reading and Evaluation
 
 ;; read source from string and evaluate
 (let ((read-eval-test "(+ 1 2 3)"))
