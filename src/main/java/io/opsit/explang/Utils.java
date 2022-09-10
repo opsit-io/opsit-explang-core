@@ -326,14 +326,14 @@ public class Utils {
   }
 
 
-  /** Parse string as Number. FIXME: describe format. */
+  /** Parse string as Number. FIXME: exc. handling is ugly */
   public static Number parseNumber(String str) {
     if (((str.length() > 1) && (str.startsWith("+") || str.startsWith("-") || str.startsWith(".")))
         || ((str.length() > 0) && (str.charAt(0) >= '0' && str.charAt(0) <= '9'))) {
       NumberFormat nf = NumberFormat.getInstance(new Locale("en)", "US"));
       ParsePosition pos = new ParsePosition(str.startsWith("+") ? 1 : 0);
       try {
-        Number num = (Number) nf.parseObject(str, pos);
+        Number num = (Number) nf.parseObject(str.toUpperCase(), pos);
         Character typeSpec = null;
         if (pos.getIndex() + 1 == str.length()) {
           typeSpec = str.charAt(pos.getIndex());

@@ -7,13 +7,17 @@ import java.util.Locale;
 
 public class NumberParser implements AtomParser {
   @Override
+  // FIXME: DRY with Utils.parseNumber(), exc. handling
   public boolean parse(String str, Object[] holder, ParseCtx pctx) throws AtomParseException {
     if (((str.length() > 1) && (str.startsWith("+") || str.startsWith("-")))
         || ((str.length() > 0) && (str.charAt(0) >= '0' && str.charAt(0) <= '9'))) {
-      NumberFormat nf = NumberFormat.getInstance(new Locale("en)", "US"));
+      NumberFormat nf = NumberFormat.getInstance(new Locale("en", "US"));
       ParsePosition pos = new ParsePosition(str.startsWith("+") ? 1 : 0);
       try {
-        Number n = (Number) nf.parseObject(str, pos);
+        // FIXME: toUpperCase here  looks like kluge, what a proper way to handle it?
+        // should we just document that we use locale settings
+        // or make it configurable?
+        Number n = (Number) nf.parseObject(str.toUpperCase(), pos);
         Character typeSpec = null;
         if (pos.getIndex() + 1 == str.length()) {
           typeSpec = str.charAt(pos.getIndex());

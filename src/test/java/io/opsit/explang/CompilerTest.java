@@ -79,6 +79,14 @@ public class CompilerTest extends AbstractTest {
           {"()", new ArrayList<Object>(0), false, null, null, p},
           // atomic values
           {"1", 1, true, null, null, p},
+          {"1.0", 1.0, true, null, null, p},
+          {"1.0f", 1.0f, true, null, null, p},
+          {"1.0e4", 1.0e4, true, null, null, p},
+          {"1.0E4", 1.0E4, true, null, null, p},
+          {"1.0e-4", 1.0e-4, true, null, null, p},
+          {"1.0E-4", 1.0E-4, true, null, null, p},
+          {"1.0e-4f", 1.0e-4f, true, null, null, p},
+          {"1.0E-4f", 1.0E-4f, true, null, null, p},
           {"\"foo\"", "foo", true, null, null, p},
           {"\"\"", "", false, null, null, p},
           {"TRUE", Boolean.TRUE, true, null, null, p},
@@ -1164,6 +1172,12 @@ public class CompilerTest extends AbstractTest {
           {"(DOUBLE \"22\")", 22.0, true, null, null, p},
           {"(DOUBLE \" 22 \")", 22.0, true, null, null, p},
           {"(DOUBLE \" 22.1 \")", 22.1, true, null, null, p},
+          //          ONLY,
+          {"(DOUBLE \"1.1e4\")", 1.1e+4, true, null, null, p},          
+          {"(DOUBLE \"1.1E4\")", 1.1E+4, true, null, null, p},
+          {"(FLOAT \"1.1e4\")", 1.1e+4f, true, null, null, p},          
+          {"(FLOAT \"1.1E4\")", 1.1E+4f, true, null, null, p},
+
           {
             "(DOUBLE \"\")",
             null,
