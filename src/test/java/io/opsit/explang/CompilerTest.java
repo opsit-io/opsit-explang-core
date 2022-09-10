@@ -1863,6 +1863,9 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {"(STR \"FOO \" 5 \" BAR\")", "FOO 5 BAR", true, null, null, p},
+          {"(STR \"FOO \" 5 \" BAR\" NIL)", "FOO 5 BAR", true, null, null, p},
+          {"(STR)", "", false, null, null, p},
+          {"(STR NIL)", "", false, null, null, p},
           {"(FORMAT \"a=%d b=%s\" 1 \"foo\")", "a=1 b=foo", true, null, null, p},
           {"(FORMAT \"foo\")", "foo", true, null, null, p},
           {"(LET ((M (HASHMAP 333 222)) (l (APPEND (LIST) M)) (E (GET l 0))) (GET E \"key\"))", 333, true, null, null, p},

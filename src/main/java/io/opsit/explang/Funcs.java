@@ -2767,14 +2767,16 @@ public class Funcs {
   @Docstring(
       text =
           "Concatenate Strings. Returns concatenation "
-              + "of string representationx of the function arguments")
+              + "of string representationx of the function arguments. NIL arguments are ignored.")
   @Package(name = Package.BASE_TEXT)
   public static class STR extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       StringBuffer buf = new StringBuffer();
       for (Object val : (List<?>) eargs.get(0, backtrace)) {
-        buf.append(Utils.asString(val));
+        if (null != val) {
+          buf.append(Utils.asString(val));
+        }
       }
       return buf.toString();
     }
