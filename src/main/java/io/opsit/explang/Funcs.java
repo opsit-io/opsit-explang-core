@@ -3016,11 +3016,32 @@ public class Funcs {
     private Object charSeqAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
       // FIXME: support other types but StringBuilder
       Object target = seqs.get(0);
-      if (isDestructive && !(target instanceof StringBuilder)) {
+      if (isDestructive && !
+          (target instanceof Appendable)) {
         throw new ExecutionException(
             bt, "Unsupported sequence type " + clz + " for being target of destructive operation");
       }
-      final StringBuilder result = isDestructive ? (StringBuilder) target : new StringBuilder();
+      Appendable result;
+      Object resultObj = null;
+      boolean subst = false;
+      if (isDestructive) {
+        result = (Appendable) target;
+      } else {
+        try {
+          final Constructor<?> constr = clz.getConstructor();
+          resultObj = constr.newInstance();
+        } catch (Exception ex) {
+          subst = true;
+          resultObj = new StringBuilder();
+        }
+        if (resultObj instanceof Appendable) {
+          result = (Appendable) resultObj;
+        } else {
+          subst = true;
+          result = new StringBuilder();
+        }
+      }
+      final Appendable appendable = result;
       final int numArgs = seqs.size();
       for (int i = isDestructive ? 1 : 0; i < numArgs; i++) {
         Object seq = seqs.get(i);
@@ -3029,26 +3050,21 @@ public class Funcs {
             new Seq.Operation() {
               @Override
               public boolean perform(Object obj) {
-                result.append(Utils.asChar(obj));
+                try {
+                  appendable.append(Utils.asChar(obj));
+                } catch (IOException ioex) {
+                  throw new ExecutionException(bt, ioex.getMessage());
+                }
                 return false;
               }
             },
             true);
       }
-      final CharSequence cs =
-          StringBuilder.class.isAssignableFrom(clz)
-              ? result
-              : (StringBuffer.class.isAssignableFrom(clz)
-                  ? new StringBuffer(result)
-                  : ((String.class == clz) ? result.toString() : null));
-      if (null == cs) {
-        throw new ExecutionException(
-            bt,
-            "Unsupported CharSequence type: "
-                + clz
-                + " only String, StringBuilder, StringBuffer are supported");
+      if (subst) {
+        // FIXME: use constructor(string)?
+        return appendable.toString();
       }
-      return cs;
+      return appendable;
     }
 
     private Object arrayAppend(Class<?> clz, Backtrace bt, List<?> seqs) {
