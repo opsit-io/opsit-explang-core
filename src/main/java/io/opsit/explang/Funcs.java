@@ -3774,7 +3774,7 @@ public class Funcs {
       }
       if (null != eltsObj) {
         int eltSize = Seq.getLength(eltsObj, false);
-        List elements = (List) eltsObj;
+        List<?> elements = (List<?>) eltsObj;
         for (int i = 0; i < size && i < eltSize; i++) {
           Array.set(result, i, elements.get(i));
         }
