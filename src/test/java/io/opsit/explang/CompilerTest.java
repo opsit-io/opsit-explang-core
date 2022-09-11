@@ -1868,6 +1868,12 @@ public class CompilerTest extends AbstractTest {
           {"(STR NIL)", "", false, null, null, p},
           {"(FORMAT \"a=%d b=%s\" 1 \"foo\")", "a=1 b=foo", true, null, null, p},
           {"(FORMAT \"foo\")", "foo", true, null, null, p},
+          {"(STRING-BUILDER)", new StringBuilder(), false, null, null, p},
+          {"(STRING-BUILDER \"foo\")", new StringBuilder("foo"), true, null, null, p},
+          {"(STRING-BUILDER \"foo\" \"bar\" )", new StringBuilder("foobar"), true, null, null, p}, 
+          {"(STRING-BUFFER)", new StringBuffer(), false, null, null, p},
+          {"(STRING-BUFFER \"foo\")", new StringBuffer("foo"), true, null, null, p},
+          {"(STRING-BUFFER \"foo\" \"bar\")", new StringBuffer("foobar"), true, null, null, p},
           {"(LET ((M (HASHMAP 333 222)) (l (APPEND (LIST) M)) (E (GET l 0))) (GET E \"key\"))", 333, true, null, null, p},
           {"(LET ((M (HASHMAP 333 222)) (l (APPEND (LIST) M)) (E (GET l 0))) (GET E \"value\"))", 222, true, null, null, p},
           {
@@ -2390,6 +2396,10 @@ public class CompilerTest extends AbstractTest {
           } else if (((result instanceof Pattern) && (expVal instanceof Pattern))
               || ((result instanceof Matcher) && (expVal instanceof Matcher))) {
             // FIXME: string repr. works, but how to do it properly?
+            Assert.assertEquals(result.toString(), expVal.toString());
+          } else if ((result instanceof StringBuilder) && (expVal instanceof StringBuilder)) {
+            Assert.assertEquals(result.toString(), expVal.toString());
+          } else if ((result instanceof StringBuffer) && (expVal instanceof StringBuffer)) {
             Assert.assertEquals(result.toString(), expVal.toString());
           } else {
             Assert.assertEquals(result, Utils.asObject(expVal));

@@ -530,6 +530,8 @@ public class Compiler {
             "LOWERCASE", LOWERCASE.class,
             "STR", STR.class,
             "FORMAT", FORMAT.class,
+            "STRING-BUFFER", STRINGBUFFER.class,
+            "STRING-BUILDER", STRINGBUILDER.class,
             "SEQ", SEQ.class,
             "SYMBOL", SYMBOL.class,
             // hashtables

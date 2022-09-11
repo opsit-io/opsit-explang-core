@@ -2739,6 +2739,43 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Docstring(text = "Create and initialize a StringBuilder object. "
+             + "Return stringbuilder with all the arguments concatenated.")
+  @Package(name = Package.BASE_TEXT)
+  public static class STRINGBUILDER extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
+      final StringBuilder b  = new StringBuilder();
+      for (Object val : rest) {
+        if (null != val) {
+          b.append(Utils.asStringOrNull(val));
+        }
+      }
+      return b;
+    }
+  }
+
+
+  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Docstring(text = "Create and initialize a StringBuffer object. "
+             + "Return stringbuilder with all the arguments concatenated.")
+  @Package(name = Package.BASE_TEXT)
+  public static class STRINGBUFFER extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      List<?> rest = (List<?>) eargs.get(0, backtrace);
+      final StringBuffer b  = new StringBuffer();
+      for (Object val : rest) {
+        if (null != val) {
+          b.append(Utils.asStringOrNull(val));
+        }
+      }
+      return b;
+    }
+  }
+
   @Arguments(spec = {ArgSpec.ARG_OPTIONAL, "n"})
   @Docstring(
       text =

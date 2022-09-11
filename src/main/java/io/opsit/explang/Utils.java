@@ -434,8 +434,8 @@ public class Utils {
     if (null == val) {
       return false;
     }
-    if (val instanceof String) {
-      return !((String) val).isEmpty();
+    if (val instanceof CharSequence) {
+      return !((CharSequence) val).isEmpty();
     }
     if (val instanceof Boolean) {
       return (Boolean) val;
