@@ -1690,6 +1690,153 @@ public class Funcs {
     }
   }
 
+
+  public static class IndexMap implements Map<Object, Object> {
+    protected Object src;
+    protected Set<?> filterSet;
+
+    public IndexMap(Object src, Object filter) {
+      this.src = src;
+      this.filterSet = Seq.asSet(filter);
+    }
+
+    @Override
+    public int size() {
+      return keySet().size();
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return this.keySet().isEmpty();
+    }
+
+    @Override
+    public boolean containsKey(Object key) {
+      return this.keySet().contains(key);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+      for (Object key : filterSet) {
+        if (containsKey(key)) {
+          Object val = get(key);
+          if (null == val) {
+            if (null == value) {
+              return true;
+            }
+          } else {
+            if (val.equals(value)) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    }
+
+    @Override
+    public Object get(Object key) {
+      if (containsKey(key)) {
+        return Seq.getElement(src, Utils.asNumber(key).intValue());
+      } else {
+        return null;
+      }
+    }
+
+    @Override
+    public Object put(Object key, Object value) {
+      throw new RuntimeException("not implemented for IndexMap");
+    }
+
+    @Override
+    public Object remove(Object key) {
+      throw new RuntimeException("not implemented for IndexMap");
+    }
+
+    @Override
+    public void putAll(Map<?, ?> map) {
+      throw new RuntimeException("not implemented for IndexMap");
+    }
+
+    @Override
+    public void clear() {
+      throw new RuntimeException("not implemented for IndexMap");
+    }
+
+    @Override
+    public Set<Object> keySet() {
+      final Set<Object> set = new HashSet<Object>();
+      int length = Seq.getLength(src, false);
+      for (Object key : filterSet) {
+        final Number idxNum = Utils.asNumber(key);
+        if (null != idxNum) {
+          int idx = idxNum.intValue();
+          if (idx >= 0 && idx < length) {
+            set.add(idx);
+          }
+        }
+      }
+      return set;
+    }
+
+    @Override
+    public Collection<Object> values() {
+      Set<Object> values = new HashSet<Object>();
+      for (Object key : this.keySet()) {
+        values.add(get(key));
+      }
+      return values;
+    }
+
+    @Override
+    public Set<Map.Entry<Object, Object>> entrySet() {
+      Set<Map.Entry<Object, Object>> entries = new HashSet<Map.Entry<Object, Object>>();
+      for (Object key : this.keySet()) {
+        final Object entryKey = key;
+        entries.add(new Map.Entry<Object, Object>() {
+          @Override
+          public Object getKey() {
+            return entryKey;
+          }
+
+          @Override
+          public Object getValue() {
+            return get(entryKey);
+          }
+
+          @Override
+          public Object setValue(Object value) {
+            return put(entryKey, value);
+          }
+        });
+      }
+      return entries;
+    }
+
+    @Override
+    public String toString() {
+      Iterator<Entry<Object, Object>> iter = entrySet().iterator();
+      if (!iter.hasNext()) {
+        return "{}";
+      }
+
+      StringBuilder sb = new StringBuilder();
+      sb.append('{');
+      for (;;) {
+        Entry<Object, Object> entry = iter.next();
+        Object key = entry.getKey();
+        Object value = entry.getValue();
+        sb.append(key == this ? "(this Map)" : key);
+        sb.append('=');
+        sb.append(value == this ? "(this Map)" : value);
+        if (!iter.hasNext()) {
+          return sb.append('}').toString();
+        }
+        sb.append(',').append(' ');
+      }
+    }
+  }
+
   public static class BeanMap implements Map<String, Object> {
     protected Object obj;
     // protected Backtrace backtrace;
@@ -1896,6 +2043,8 @@ public class Funcs {
       return Utils.map();
     } else if (obj instanceof Map) {
       return new FilteredMap((Map<Object, Object>) obj, ksObj);
+    } else if (Seq.isSequence(obj)) {
+      return new IndexMap(obj, ksObj);
     } else {
       return new BeanMap(obj, null, null, ksObj);
     }

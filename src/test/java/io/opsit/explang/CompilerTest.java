@@ -1973,6 +1973,15 @@ public class CompilerTest extends AbstractTest {
             beanVars,
             p
           },
+          {
+            "(SELECT-KEYS (LIST \"zero\" \"one\" \"two\" \"three\") (LIST 0 2))",
+            Utils.map(0, "zero", 2, "two"),
+            true,
+            null,
+            null,
+            p
+          },
+          
           {quine, parsedQuine, true, null, null, p},
           {"((LAMBDA (x y) (SETV x y) x) 1 2)", 2, true, null, null, p},
           {"(SETQ)", null, false, null, null, p},
