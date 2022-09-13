@@ -2043,7 +2043,7 @@ public class Funcs {
       return Utils.map();
     } else if (obj instanceof Map) {
       return new FilteredMap((Map<Object, Object>) obj, ksObj);
-    } else if (Seq.isSequence(obj)) {
+    } else if (Seq.isCollection(obj)) {
       return new IndexMap(obj, ksObj);
     } else {
       return new BeanMap(obj, null, null, ksObj);
@@ -2070,7 +2070,7 @@ public class Funcs {
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
       final Object ksObj = eargs.get(1, backtrace);
-      if (Seq.isSequence(obj) && !(obj instanceof Map)) {
+      if (Seq.isCollection(obj) && !(obj instanceof Map)) {
         final List<Object> result = Utils.list();
         Seq.forEach(
             obj,
@@ -3391,14 +3391,73 @@ public class Funcs {
   @Arguments(spec = {"object"})
   @Docstring(text = "Check if an object is a sequence.")
   @Package(name = Package.BASE_SEQ)
-  public static class SEQUENCEP extends FuncExp {
+  public static class COLLP extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object val = eargs.get(0, backtrace);
-      return Seq.isSequence(val);
+      return Seq.isCollection(val);
     }
   }
 
+
+  
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is a sequence.")
+  @Package(name = Package.BASE_SEQ)
+  public static class SEQP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return Seq.isSeq(val);
+    }
+  }
+
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is a Map.")
+  @Package(name = Package.BASE_SEQ)
+  public static class MAPP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return Seq.isMap(val);
+    }
+  }
+
+
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is a Set.")
+  @Package(name = Package.BASE_SEQ)
+  public static class SETP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return Seq.isSet(val);
+    }
+  }
+
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is an associative collection.")
+  @Package(name = Package.BASE_SEQ)
+  public static class ASSOCIATIVEP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return Seq.isAssociative(val);
+    }
+  }
+
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is an indexed collection.")
+  @Package(name = Package.BASE_SEQ)
+  public static class INDEXEDP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return Seq.isIndexed(val);
+    }
+  }
+  
+  
   @Arguments(spec = {"sequence"})
   @Docstring(text = "Reverse a sequence (destructive).")
   @Package(name = Package.BASE_SEQ)

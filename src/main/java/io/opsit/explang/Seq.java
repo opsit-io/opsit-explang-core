@@ -17,8 +17,8 @@ public class Seq {
     public boolean perform(Object obj);
   }
 
-  /** Check if object is a supported sequence. */
-  public static boolean isSequence(Object obj) {
+  /** Check if object is a supported collection. */
+  public static boolean isCollection(Object obj) {
     return (null != obj)
         && ((obj instanceof Map)
             || (obj instanceof Iterable)
@@ -27,6 +27,42 @@ public class Seq {
             || (obj.getClass().isArray()));
   }
 
+  /** Check if object is a supported sequence. */
+  public static boolean isSeq(Object obj) {
+    return (null != obj)
+      &&  ((obj instanceof Iterable)
+           || (obj instanceof CharSequence)
+           || (obj instanceof Enumeration)
+           || (obj.getClass().isArray()));
+  }
+
+
+  /** Check if object is an indexed sequence. */
+  public static boolean isIndexed(Object obj) {
+    return (null != obj)
+      && ((obj instanceof List)  
+          || (obj instanceof CharSequence)
+          || (obj.getClass().isArray()));
+  }
+
+  /** Check if object is a set. */
+  public static boolean isSet(Object obj) {
+    return obj instanceof Set;
+
+  }
+
+  /** Check if object is a set. */
+  public static boolean isMap(Object obj) {
+    return obj instanceof Map;
+
+  }
+
+  /** Check if object supports associative addressing (indices or keys). */
+  public static boolean isAssociative(Object obj) {
+    return isMap(obj) || isIndexed(obj);
+  }
+
+  
   /**
    * Run operation op on all objects in sequence.
    *
@@ -363,7 +399,7 @@ public class Seq {
       return sequal((Map<?, ?>) o1, (Map<?, ?>) o2);
     } else if ((o1 instanceof Set) && (o2 instanceof Set)) {
       return o1.equals(o2);
-    } else if (Seq.isSequence(o1) && Seq.isSequence(o2)) {
+    } else if (Seq.isCollection(o1) && Seq.isCollection(o2)) {
       int l1 = Seq.getLength(o1, false);
       int l2 = Seq.getLength(o2, false);
       if (l1 != l2) {

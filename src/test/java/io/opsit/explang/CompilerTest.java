@@ -2198,11 +2198,11 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
-          {"(SEQUENCEP ())", true, true, null, null, p},
-          {"(SEQUENCEP (MAKE-ARRAY :size 2))", true, true, null, null, p},
-          {"(SEQUENCEP \"\")", true, true, null, null, p},
-          {"(SEQUENCEP NIL)", false, false, null, null, p},
-          {"(SEQUENCEP 1)", false, false, null, null, p},
+          {"(SEQP ())", true, true, null, null, p},
+          {"(SEQP (MAKE-ARRAY :size 2))", true, true, null, null, p},
+          {"(SEQP \"\")", true, true, null, null, p},
+          {"(SEQP NIL)", false, false, null, null, p},
+          {"(SEQP 1)", false, false, null, null, p},
 
           // {"(MAKE-ARRAY 1 \"int\")", new int[3], true, null, null, p},
           // THREADS
