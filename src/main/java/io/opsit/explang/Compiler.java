@@ -530,7 +530,7 @@ public class Compiler {
             "RE-FIND", RE_FIND.class,
             "RE-SEQ", RE_SEQ.class,
             "DWIM-MATCHES", DWIM_MATCHES.class,
-            "DWIM-SEARCH", DWIM_SEARCH.class,
+            "SEARCH", SEARCH.class,
             "UPPERCASE", UPPERCASE.class,
             "LOWERCASE", LOWERCASE.class,
             "STR", STR.class,
@@ -1653,7 +1653,7 @@ public class Compiler {
   @Arguments(spec = {"sequence", "test"})
   @Package(name = Package.DWIM)
   @Docstring(text = "Perform DWIM search of an item in a sequence of objects. ")
-  public class DWIM_SEARCH extends AbstractForm {
+  public class SEARCH extends AbstractForm {
     protected ICompiled input;
     protected ICompiled predicate;
     protected ASTN testASTN;
@@ -1662,7 +1662,7 @@ public class Compiler {
     public void setRawParams(ASTNList params) throws InvalidParametersException {
       if (params.size() != 2) {
         throw new InvalidParametersException(
-            debugInfo, "DWIM-SEARCH expects 2 parameters: sequence, test");
+            debugInfo, "SEARCH expects 2 parameters: sequence, test");
       }
       input = compile(params.get(0));
       ASTN test = params.get(1);

@@ -1714,7 +1714,7 @@ public class CompilerTest extends AbstractTest {
           {"(DWIM-MATCHES 1 1.0)", list(1), true, null, null, p},
           {"(DWIM-MATCHES 1.0 1)", list(1.0), true, null, null, p},
           {
-            "(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") (EQUAL _ \"foo\"))",
+            "(SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") (EQUAL _ \"foo\"))",
             list("foo"),
             true,
             null,
@@ -1722,7 +1722,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")",
+            "(SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")",
             list("foo"),
             true,
             null,
@@ -1731,7 +1731,7 @@ public class CompilerTest extends AbstractTest {
           },
           // FIXME: no common regex syntax for sexp and lisp reader
           {
-            "(DWIM-SEARCH (LIST (HASHMAP \"foo\" \"bar\" \"baz\" \"boog\") (HASHMAP \"foo\""
+            "(SEARCH (LIST (HASHMAP \"foo\" \"bar\" \"baz\" \"boog\") (HASHMAP \"foo\""
                 + " \"bar2\" \"baz\" \"boog2\")) (EQUAL foo \"bar\") )",
             list(map("foo", "bar", "baz", "boog")),
             true,
@@ -1739,10 +1739,10 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
-          {"(DWIM-SEARCH 5 (> _ 2))", list(5), true, null, null, p},
-          {"(DWIM-SEARCH 2 (> _ 2))", list(), false, null, null, p},
-          {"(DWIM-SEARCH NIL (> _ 2))", list(), false, null, null, p},
-          // {"(DWIM-SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true,
+          {"(SEARCH 5 (> _ 2))", list(5), true, null, null, p},
+          {"(SEARCH 2 (> _ 2))", list(), false, null, null, p},
+          {"(SEARCH NIL (> _ 2))", list(), false, null, null, p},
+          // {"(SEARCH (LIST \"foo\" \"bar\" \"baz\" \"boog\") \"foo\")", list("foo"), true,
           // null,null,p},
 
           {"(GET-IN  NIL        NIL)", null, false, null, null, p},

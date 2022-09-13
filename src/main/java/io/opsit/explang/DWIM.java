@@ -10,11 +10,12 @@ import java.util.regex.Pattern;
 
 public class DWIM {
   @Arguments(
-      spec = {"arg0", ArgSpec.ARG_OPTIONAL, "arg2"},
+      spec = {"object", ArgSpec.ARG_OPTIONAL, "pattern"},
       text = "{object pattern}")
   @Docstring(
       text =
-          "Perform DWIM find operation. When pattern is an Regexp tries to find the regexp in"
+          "Perform Do What I Mean style search.\n "
+              + " When pattern is an Regexp tries to find the regexp in"
               + " String Representation of object.\n"
               + "  When pattern is a String it tries to find its occurences in the String"
               + " Representation of object.\n"
