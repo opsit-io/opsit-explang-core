@@ -203,39 +203,49 @@ public class Seq {
    * put sequence element by index. Return old value at this index.
    */
   @SuppressWarnings("unchecked")
-  public static Object putElement(Object seq, int index, Object element) {
+  public static Object putElement(Object seq, Object index, Object element) {
     if (null == seq) {
       return null;
     } else if (seq instanceof List) {
       try {
         final List<Object> list = (List<Object>) seq;
-        return list.set(index, element);
+        return list.set(Utils.asNumber(index).intValue(), element);
       } catch (IndexOutOfBoundsException bex) {
         return null;
       }
     } else if (seq.getClass().isArray()) {
       try {
-        Object result = Array.get(seq, index);
-        Utils.aset(seq, index, element);
+        int idx = Utils.asNumber(index).intValue();
+        Object result = Array.get(seq, idx);
+        Utils.aset(seq, idx, element);
         return result;
       } catch (ArrayIndexOutOfBoundsException bex) {
         return null;
       }
     } else if (seq instanceof StringBuffer) {
       try {
+        int idx = Utils.asNumber(index).intValue();
         final StringBuffer buf = (StringBuffer) seq;
-        final Character result = buf.charAt(index);
-        buf.setCharAt(index, Utils.asChar(element));
+        final Character result = buf.charAt(idx);
+        buf.setCharAt(idx, Utils.asChar(element));
         return result;
       } catch (IndexOutOfBoundsException bex) {
         return null;
       }
     } else if (seq instanceof StringBuilder) {
       try {
+        int idx = Utils.asNumber(index).intValue();
         final StringBuffer buf = (StringBuffer) seq;
-        final Character result = buf.charAt(index);
-        buf.setCharAt(index, Utils.asChar(element));
+        final Character result = buf.charAt(idx);
+        buf.setCharAt(idx, Utils.asChar(element));
         return result;
+      } catch (IndexOutOfBoundsException bex) {
+        return null;
+      }
+    } else if (seq instanceof Map) {
+      try {
+        final Map<Object,Object> map = (Map<Object,Object>) seq;
+        return map.put(index, element);
       } catch (IndexOutOfBoundsException bex) {
         return null;
       }
@@ -244,6 +254,56 @@ public class Seq {
     }
   }
 
+
+  /**
+   * put sequence element by index. Return old value at this index.
+   */
+  @SuppressWarnings("unchecked")
+  public static Object setElement(Object seq, int index, Object element) {
+    if (null == seq) {
+      return null;
+    } else if (seq instanceof List) {
+      try {
+        final List<Object> list = (List<Object>) seq;
+        return list.set(Utils.asNumber(index).intValue(), element);
+      } catch (IndexOutOfBoundsException bex) {
+        throw new RuntimeException(bex);
+      }
+    } else if (seq.getClass().isArray()) {
+      try {
+        int idx = Utils.asNumber(index).intValue();
+        Object result = Array.get(seq, idx);
+        Utils.aset(seq, idx, element);
+        return result;
+      } catch (ArrayIndexOutOfBoundsException bex) {
+        throw new RuntimeException(bex);
+      }
+    } else if (seq instanceof StringBuffer) {
+      try {
+        int idx = Utils.asNumber(index).intValue();
+        final StringBuffer buf = (StringBuffer) seq;
+        final Character result = buf.charAt(idx);
+        buf.setCharAt(idx, Utils.asChar(element));
+        return result;
+      } catch (IndexOutOfBoundsException bex) {
+        throw new RuntimeException(bex);
+      }
+    } else if (seq instanceof StringBuilder) {
+      try {
+        int idx = Utils.asNumber(index).intValue();
+        final StringBuffer buf = (StringBuffer) seq;
+        final Character result = buf.charAt(idx);
+        buf.setCharAt(idx, Utils.asChar(element));
+        return result;
+      } catch (IndexOutOfBoundsException bex) {
+        throw new RuntimeException(bex);
+      }
+    }  else {
+      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
+    }
+  }
+
+  
 
   /**
    * Get length of sequence.

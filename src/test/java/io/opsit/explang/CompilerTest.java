@@ -262,7 +262,7 @@ public class CompilerTest extends AbstractTest {
           {"(== (HASHMAP 2 1000) (HASHMAP 2 10.1))", false, false, null, null, p},
           {"(== (HASHMAP 3 (LIST 1)) (HASHMAP 3 (LIST 1.0)))", true, true, null, null, p},
           {
-            "(LET ((A (MAKE-ARRAY :size 2))) (ASET A 0 1000) (ASET A 1 2000) (== (LIST 1000 2000) A))",
+            "(LET ((A (MAKE-ARRAY :size 2))) (PUT! A 0 1000) (PUT! A 1 2000) (== (LIST 1000 2000) A))",
             true,
             true,
             null,
@@ -270,7 +270,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((A (MAKE-ARRAY :size 2))) (ASET A 0 1000.0) (ASET A 1 2000) (== (LIST 1000 2000.0)"
+            "(LET ((A (MAKE-ARRAY :size 2))) (PUT! A 0 1000.0) (PUT! A 1 2000) (== (LIST 1000 2000.0)"
                 + " A))",
             true,
             true,
@@ -491,7 +491,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH"
+            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (PUT! ar 0 2) (PUT! ar 1 3) (PUT! ar 2 4) (FOREACH"
                 + " (a ar)  (SETV r (APPEND r (LIST 1 a)))) r)",
             list(1, 2, 1, 3, 1, 4),
             true,
@@ -500,10 +500,19 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH"
+            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (PUT! ar 0 2) (PUT! ar 1 3) (PUT! ar 2 4) (FOREACH"
                 + " (a ar)  (SETV r (APPEND r (LIST 1 a)))))",
             null,
             false,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (PUT! ar 0 2) (PUT! ar 1 3) (PUT! ar 2 4) (FOREACH"
+                + " (a ar r)  (SETV r (APPEND r (LIST 1 a)))))",
+            list(1, 2, 1, 3, 1, 4),
+            true,
             null,
             null,
             p
@@ -517,6 +526,15 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          {
+            "(LET ((r ()) (ar (LIST NIL NIL NIL))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH"
+                + " (a ar r)  (SETV r (APPEND r (LIST 1 a)))))",
+            list(1, 2, 1, 3, 1, 4),
+            true,
+            null,
+            null,
+            p
+          },          
           {"(AS-> (+ 1 0) foo)", 1, true, null, null, p},
           {"(AS-> (+ 1 0) foo (* 10 foo))", 10, true, null, null, p},
           {"(AS-> (+ 1 0) foo (* 10 foo) (* 2 foo))", 20, true, null, null, p},
@@ -1033,7 +1051,7 @@ public class CompilerTest extends AbstractTest {
           {"(IN \"FOO\"   (LIST \"BAR\" \"BAZ\"))", false, false, null, null, p},
           {"(IN \"QQQ\"   (LIST \"BAR\" \"FOO\" \"QQQ\"))", true, true, null, null, p},
           {
-            "(LET ((A (MAKE-ARRAY :size 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ"
+            "(LET ((A (MAKE-ARRAY :size 4))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2 3) (PUT! A 3 4)  (SUBSEQ"
                 + " A 0))",
             new Object[] {1, 2, 3, 4},
             true,
@@ -1042,7 +1060,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((A (MAKE-ARRAY :size 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ"
+            "(LET ((A (MAKE-ARRAY :size 4))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2 3) (PUT! A 3 4)  (SUBSEQ"
                 + " A 1))",
             new Object[] {2, 3, 4},
             true,
@@ -1051,7 +1069,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((A (MAKE-ARRAY :size 4))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3) (ASET A 3 4)  (SUBSEQ"
+            "(LET ((A (MAKE-ARRAY :size 4))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2 3) (PUT! A 3 4)  (SUBSEQ"
                 + " A 4))",
             new Object[] {},
             false,
@@ -1060,8 +1078,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((A (MAKE-ARRAY :size 4 :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3)"
-                + " (ASET A 3 4)  (SUBSEQ A 0))",
+            "(LET ((A (MAKE-ARRAY :size 4 :element-type \"int\"))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2 3)"
+                + " (PUT! A 3 4)  (SUBSEQ A 0))",
             new int[] {1, 2, 3, 4},
             true,
             null,
@@ -1069,8 +1087,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((A (MAKE-ARRAY :size 4 :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2 3)"
-                + " (ASET A 3 4)  (SUBSEQ A 1))",
+            "(LET ((A (MAKE-ARRAY :size 4 :element-type \"int\"))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2 3)"
+                + " (PUT! A 3 4)  (SUBSEQ A 1))",
             new int[] {2, 3, 4},
             true,
             null,
@@ -1078,8 +1096,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((A (MAKE-ARRAY :size 4  :element-type \"int\"))) (ASET A 0 1) (ASET A 1 2) (ASET A 2"
-                + " 3) (ASET A 3 4)  (SUBSEQ A 4))",
+            "(LET ((A (MAKE-ARRAY :size 4  :element-type \"int\"))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2"
+                + " 3) (PUT! A 3 4)  (SUBSEQ A 4))",
             new int[] {},
             false,
             null,
@@ -1817,7 +1835,7 @@ public class CompilerTest extends AbstractTest {
           {"(ASSOC!  (HASHMAP 1 2) 3 4 5 6)", map(1, 2, 3, 4, 5, 6), true, null, null, p},
           {"(PROGN (SETQ m (HASHMAP)) (ASSOC! m 2 3) m)", map(2, 3), true, null, null, p},
           {
-            "(LET ((a (MAKE-ARRAY :size 1 :element-type (QUOTE int)))) (ASET a 0 8) (GET-IN a (LIST 0)))",
+            "(LET ((a (MAKE-ARRAY :size 1 :element-type (QUOTE int)))) (PUT! a 0 8) (GET-IN a (LIST 0)))",
             8,
             true,
             null,
@@ -2071,7 +2089,7 @@ public class CompilerTest extends AbstractTest {
           {"(MAKE-ARRAY :size 3 :element-type \"Integer\")", new Object[3], true, null, null, p},
           {"(MAKE-ARRAY :size 3 :element-type \"int\")", new int[3], true, null, null, p},
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"int\"))) (ASET a 0 1) a) ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"int\"))) (PUT! a 0 1) a) ",
             Utils.array(1, 0, 0),
             true,
             null,
@@ -2079,7 +2097,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"short\"))) (ASET a 0 1) a) ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"short\"))) (PUT! a 0 1) a) ",
             Utils.array((short) 1, (short) 0, (short) 0),
             true,
             null,
@@ -2087,7 +2105,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Short\"))) (ASET a 0 1) a) ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Short\"))) (PUT! a 0 1) a) ",
             new Short[] {1, null, null},
             true,
             null,
@@ -2095,7 +2113,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"float\"))) (ASET a 0 1.1) a)  ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"float\"))) (PUT! a 0 1.1) a)  ",
             Utils.array((float) 1.1, (float) 0, (float) 0),
             true,
             null,
@@ -2103,7 +2121,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Float\"))) (ASET a 0 1.1) a)  ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Float\"))) (PUT! a 0 1.1) a)  ",
             new Float[] {1.1F, null, null},
             true,
             null,
@@ -2111,8 +2129,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 4 :element-type \"byte\"))) (ASET a 0 1.1) (ASET a 1 2) (ASET a 2"
-                + " (CHAR 97)) (ASET a 3 true) a)",
+            "(LET ((a (MAKE-ARRAY :size 4 :element-type \"byte\"))) (PUT! a 0 1.1) (PUT! a 1 2) (PUT! a 2"
+                + " (CHAR 97)) (PUT! a 3 true) a)",
             Utils.array((byte) 1, (byte) 2, (byte) 97, (byte) 1),
             true,
             null,
@@ -2120,8 +2138,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 4 :element-type \"Byte\"))) (ASET a 0 1.1) (ASET a 1 2) (ASET a 2"
-                + " (CHAR 97)) (ASET a 3 true) a)",
+            "(LET ((a (MAKE-ARRAY :size 4 :element-type \"Byte\"))) (PUT! a 0 1.1) (PUT! a 1 2) (PUT! a 2"
+                + " (CHAR 97)) (PUT! a 3 true) a)",
             new Byte[] {(byte) 1, (byte) 2, (byte) 97, (byte) 1},
             true,
             null,
@@ -2131,7 +2149,7 @@ public class CompilerTest extends AbstractTest {
           {"(MAKE-ARRAY :size 1 :element-type \"char\")", new char[1], true, null, null, p},
           {"(MAKE-ARRAY :size 1 :element-type \"Character\")", new Character[1], true, null, null, p},
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"char\"))) (ASET a 0 (CHAR 83)) a)",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"char\"))) (PUT! a 0 (CHAR 83)) a)",
             Utils.array('S', '\0', '\0'),
             true,
             null,
@@ -2139,7 +2157,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Character\"))) (ASET a 0 (CHAR 83)) a)",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Character\"))) (PUT! a 0 (CHAR 83)) a)",
             new Character[] {'S', null, null},
             true,
             null,
@@ -2147,7 +2165,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"double\"))) (ASET a 0 83.0) a) ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"double\"))) (PUT! a 0 83.0) a) ",
             Utils.array(83.0, 0.0, 0.0),
             true,
             null,
@@ -2155,7 +2173,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Double\"))) (ASET a 0 83.0) a) ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Double\"))) (PUT! a 0 83.0) a) ",
             new Double[] {83.0, null, null},
             true,
             null,
@@ -2163,8 +2181,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 7 :element-type \"boolean\"))) (ASET a 0 true)  (ASET a 1 false) "
-                + " (ASET a 2 1)  (ASET a 3 0)  (ASET a 4 (CHAR 67))  (ASET a 5 (CHAR 0)) a) ",
+            "(LET ((a (MAKE-ARRAY :size 7 :element-type \"boolean\"))) (PUT! a 0 true)  (PUT! a 1 false) "
+                + " (PUT! a 2 1)  (PUT! a 3 0)  (PUT! a 4 (CHAR 67))  (PUT! a 5 (CHAR 0)) a) ",
             Utils.array(true, false, true, false, true, false, false),
             true,
             null,
@@ -2172,8 +2190,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 7 :element-type \"Boolean\"))) (ASET a 0 true)  (ASET a 1 false) "
-                + " (ASET a 2 1)  (ASET a 3 0)  (ASET a 4 (CHAR 67))  (ASET a 5 (CHAR 0)) a) ",
+            "(LET ((a (MAKE-ARRAY :size 7 :element-type \"Boolean\"))) (PUT! a 0 true)  (PUT! a 1 false) "
+                + " (PUT! a 2 1)  (PUT! a 3 0)  (PUT! a 4 (CHAR 67))  (PUT! a 5 (CHAR 0)) a) ",
             new Boolean[] {true, false, true, false, true, false, null},
             true,
             null,
@@ -2181,7 +2199,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"int\"))) (ASET a 0 1)  (ASET a 0 false)  (ASET"
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"int\"))) (PUT! a 0 1)  (PUT! a 0 false)  (PUT!"
                 + " a 1 true) a) ",
             Utils.array(0, 1, 0),
             true,
@@ -2190,8 +2208,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Integer\"))) (ASET a 0 1)  (ASET a 0 false) "
-                + " (ASET a 1 true) a) ",
+            "(LET ((a (MAKE-ARRAY :size 3 :element-type \"Integer\"))) (PUT! a 0 1)  (PUT! a 0 false) "
+                + " (PUT! a 1 true) a) ",
             new Integer[] {0, 1, null},
             true,
             null,
@@ -2207,7 +2225,7 @@ public class CompilerTest extends AbstractTest {
           // {"(MAKE-ARRAY 1 \"int\")", new int[3], true, null, null, p},
           // THREADS
           {
-            "(LET ((a (MAKE-ARRAY :size 1)) (t1 (NEW-THREAD (LAMBDA () (ASET a 0 2)))))  (. t1"
+            "(LET ((a (MAKE-ARRAY :size 1)) (t1 (NEW-THREAD (LAMBDA () (PUT! a 0 2)))))  (. t1"
                 + " \"start()\") (. t1 \"join()\") (AREF a 0))",
             2,
             true,

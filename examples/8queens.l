@@ -26,8 +26,11 @@
       (foreach (c (range 0 N))   ; try to place next queen
 	       (if (check-placement a n c)
 		   (progn 
-		     (aset a n c)
+		     (put! a n c)
 		     (add-queen a (+ n 1)))))))
 
-(add-queen (make-array :size N :element-type "int") 0)
+;;(add-queen (make-array :size N :element-type "int") 0)
+;;(add-queen '(0 0 0 0 0 0 0 0) 0)
+;;(add-queen (hashmap) 0)
+(add-queen (make-array :size N ) 0)
 

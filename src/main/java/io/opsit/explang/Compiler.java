@@ -503,6 +503,7 @@ public class Compiler {
             "IN", IN.class,
             "GET-IN", GET_IN.class,
             "GET", GET.class,
+            "PUT!", NPUT.class,
             "ASSOC", ASSOC.class,
             "ASSOC!", NASSOC.class,
             "REPLACE", REPLACE.class,
@@ -546,9 +547,9 @@ public class Compiler {
             "BACKTRACE", BACKTRACE.class,
             "THROW", THROW.class,
             // arrays
-            "ASET", ASET.class,
             "MAKE-ARRAY", MAKE_ARRAY.class,
             "AREF", AREF.class,
+            "ASET", ASET.class,
             // help system
             "DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class,
             "DOCUMENTATION", Funcs.DOCUMENTATION.class,

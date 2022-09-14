@@ -3939,13 +3939,38 @@ public class Funcs {
   }
 
   @Docstring(
-      text =
-          "Sat array element value. Set value of array element at index to object. If java array is"
-              + " typed (i.e. not array of java.lang.Objects) and object type does not match this"
-              + " function will attempt to perform necessary coercion operations. The coercions"
+      text = "Put element value into an associative structure."
+              + " Set value of element at index/key to object. "
+              + " If target ibject is a Java array and object type does not match type of this array"
+              + " this function will attempt to perform necessary coercion operations. The coercions"
               + " work in the same way as INT, FLOAT, STRING and rest of the built-in coercion"
-              + " functions.")
-  @Arguments(spec = {"array", "index", "object"})
+              + " functions. If target object is a list or array and happens out of bound exception"
+              + " the function returns normally without any change to the target structure"
+              + " The function returns previous value of the element or NIL if it did not exist")
+  @Arguments(spec = {"obj", "key", "object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class NPUT extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
+      final Object index = Utils.asObject(eargs.get(1, backtrace));
+      final Object obj = Utils.asObject(eargs.get(2, backtrace));
+      Seq.putElement(arrayObj, index, obj);
+      return obj;
+    }
+  }
+
+
+  @Docstring(
+      text = "Set indexed sequence (array, list, character sequence) element value."
+              + " Set value of element at index to object. "
+              + " If target ibject is a Java array and object type does not match type of this array"
+              + " this function will attempt to perform necessary coercion operations. The coercions"
+              + " work in the same way as INT, FLOAT, STRING and rest of the built-in coercion"
+              + " functions. May fail with index out of bound exception."
+              + " The function returns normally without any change to the target structure"
+              + " The function returns previous value of the element or NIL if it did not exist")
+  @Arguments(spec = {"obj", "key", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class ASET extends FuncExp {
     @Override
@@ -3953,11 +3978,12 @@ public class Funcs {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       final Object obj = Utils.asObject(eargs.get(2, backtrace));
-      Seq.putElement(arrayObj, index, obj);
+      Seq.setElement(arrayObj, index, obj);
       return obj;
     }
   }
 
+  
   @Arguments(spec = {"array", "index"})
   @Docstring(
       text =
