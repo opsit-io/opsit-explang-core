@@ -2692,6 +2692,70 @@ public class Funcs {
     }
   }
 
+  protected static Object setIn(final Object target,
+                                final List<Object> path,
+                                Object value) {
+    return setIn(target, path, value, 0);
+  }
+
+  protected static Object setIn(final Object target,
+                                final List<Object> path,
+                                Object value,
+                                int index) {
+    final int size = path.size();
+    if (size == 0) {
+      return value;
+    }
+    //Map<Object,Object> updateMap = (Map) target;
+    if (size - index == 1) {
+      Seq.putElement(target, path.get(index), value);
+      return target;
+    }
+    Object key = path.get(index);
+    Object subTarget = Seq.getElementByKeyOrIndex(target, key);
+    boolean cont = false;
+    if (Seq.isAssociative(subTarget)) {
+      cont = true;
+    } else {
+      if (subTarget == null) {
+        // FIXME: must be configurable by key args
+        subTarget = new HashMap<>();
+        Seq.putElement(target, key, subTarget);
+        cont = true;
+      } else {
+        // FIXME: must be configurable by key args
+        subTarget = new HashMap<>();
+        Seq.putElement(target, key, subTarget);
+        cont = true;
+      }
+    }
+    if (cont) {
+      setIn(subTarget, path, value, index + 1);
+    }
+    setIn(subTarget, path, value, index + 1);    
+    return target;
+  }
+
+
+  @Arguments(spec = {"structure", "ks", "&OPTIONAL", "not-found"})
+  @Docstring(text = "TBD")
+  @Package(name = Package.BASE_SEQ)
+  public static class NPUT_IN extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final int argsnum = eargs.size();
+      if (argsnum != 3) {
+        throw new ExecutionException(
+            backtrace, "Unexpected number of arguments: expected 3, but got " + eargs.size());
+      }
+      final Object target = eargs.get(0, backtrace);
+      final List<Object> ksObj = (List<Object>)eargs.get(1, backtrace);
+      final Object object = eargs.get(2, backtrace);
+      final Object result = setIn(target, ksObj, object);
+      return result;
+    }
+  }
+
   @Arguments(spec = {"structure", "key", "&OPTIONAL", "not-found"})
   @Docstring(
       text =

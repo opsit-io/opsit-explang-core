@@ -168,6 +168,21 @@ public class Seq {
     }
   }
 
+
+  /**
+   * Get sequence element by key;
+   */
+  public static Object getElementByKeyOrIndex(Object seq, Object key) {
+    if (null == seq) {
+      return null;
+    } else if (seq instanceof Map) {
+      return ((Map) seq).get(key);
+    } else {
+      return getElement(seq, Utils.asNumber(key).intValue());
+    }
+  }
+
+  
   /**
    * Get sequence element by index.
    */

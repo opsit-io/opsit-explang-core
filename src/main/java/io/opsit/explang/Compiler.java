@@ -504,6 +504,7 @@ public class Compiler {
             "GET-IN", GET_IN.class,
             "GET", GET.class,
             "PUT!", NPUT.class,
+            "PUT-IN!", NPUT_IN.class,
             "ASSOC", ASSOC.class,
             "ASSOC!", NASSOC.class,
             "REPLACE", REPLACE.class,

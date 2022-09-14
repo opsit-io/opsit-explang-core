@@ -1808,6 +1808,25 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          {
+            "(LET ((m (HASHMAP \"a\" 1 \"b\" 2 \"c\" (HASHMAP \"d\" 1 \"e\" 2)))) "+
+            "       (PUT-IN! m (LIST \"f\") 3) m)",
+            map("a",1,"b",2,"f",3,"c",(map("d",1,"e",2))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (HASHMAP \"a\" 1 \"b\" 2 \"c\" (HASHMAP \"d\" 1 \"e\" 2)))) "+
+            "       (PUT-IN! m (LIST \"c\" \"f\") 3) m)",
+            map("a",1,"b",2,"c",(map("d",1,"e",2, "f", 3))),
+            true,
+            null,
+            null,
+            p
+          },
+
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"foo\"  \"Nope\")", "bar", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\"  \"Nope\")", "Nope", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\")", null, false, null, null, p},
