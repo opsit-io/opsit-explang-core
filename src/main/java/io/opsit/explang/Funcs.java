@@ -72,6 +72,8 @@ public class Funcs {
       try {
         backtrace.push(getTraceName(), this.debugInfo, ctx);
         return doEvaluate(backtrace, ctx);
+      } catch (ReturnException ex) {
+        throw ex;
       } catch (ExecutionException ex) {
         throw ex;
       } catch (Throwable t) {
@@ -2333,6 +2335,18 @@ public class Funcs {
     }
   }
 
+
+  @Arguments(spec = {"value"})
+  @Docstring(text = "Return value from function")
+  @Package(name = Package.BASE_CONTROL)
+  public static class RETURN extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      Object val = eargs.get(0, backtrace);
+      throw new ReturnException(val);
+    }
+  }
+  
   // **** STRING HANDLING
   @Arguments(spec = {"pattern"})
   @Docstring(

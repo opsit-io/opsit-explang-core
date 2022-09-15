@@ -456,6 +456,7 @@ public class Compiler {
 
             // functional programming
             "LAMBDA", LAMBDA.class,
+            "RETURN", RETURN.class,
             "FUNCALL", FUNCALL.class,
             "DEFUN", DEFUN.class,
             "FUNCTION", FUNCTION.class,
@@ -731,6 +732,8 @@ public class Compiler {
         b.append("(").append(getName()).append(")");
         backtrace.push(b.toString(), this.debugInfo, ctx);
         return doEvaluate(backtrace, ctx);
+      } catch (ReturnException rex) {
+        throw rex;
       } catch (ExecutionException ex) {
         throw ex;
       } catch (Throwable t) {
@@ -1315,7 +1318,11 @@ public class Compiler {
             @Override
             public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
               Eargs localCtx = argList.evaluateArguments(backtrace, ctx);
-              return evalBlocks(backtrace, blocks, localCtx);
+              try {
+                return evalBlocks(backtrace, blocks, localCtx);
+              } catch (ReturnException rex) {
+                return rex.getPayload();
+              }
             }
 
             @Override
