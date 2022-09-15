@@ -508,6 +508,12 @@ public class Utils {
     return args;
   }
 
+  /** Make array of Objects. */
+  public static Object[] arrayOfObjects(Object... args) {
+    return args;
+  }
+
+  
   /** Set array element. */
   public static void aset(Object arrayObj, int index, Object obj) {
     try {

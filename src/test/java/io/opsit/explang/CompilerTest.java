@@ -278,6 +278,35 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          {"(PUT! (HASHMAP) 1 2)", null, false, null, null, p},
+          {"(PUT! (HASHMAP 1 1) 1 2)", 1, true, null, null, p},
+          {"(LET ((m (HASHMAP))) (PUT! m 1 2) m)", map(1,2), true, null, null, p},
+          {"(LET ((m (HASHMAP))) (PUT! m \"f\" 1) m)", map("f",1), true, null, null, p},
+          
+          {"(LET ((m (LIST))) (PUT! m 0 1) m)", list(1), true, null, null, p},
+          {"(LET ((m (LIST 1))) (PUT! m 0 2) m)", list(2), true, null, null, p},
+          {"(LET ((m (LIST 1))) (PUT! m 1 2) m)", list(1,2), true, null, null, p},
+          {"(PUT! (LIST) 0 2)", null, false, null, null, p},
+          {"(PUT! (LIST 1) 0 2)", 1, true, null, null, p},
+          {"(PUT! (LIST 1) 1 2)", null, false, null, null, p},
+          
+          {"(PUT! (STRING-BUFFER) 0 33)", null, false, null, null, p},
+          {"(PUT! (STRING-BUILDER) 0 33)", null, false, null, null, p},
+          {"(PUT! (STRING-BUFFER \"ab\") 0 33)", 'a', true, null, null, p},
+          {"(PUT! (STRING-BUILDER \"ab\") 0 33)", 'a', true, null, null, p},
+
+          {"(LET ((m (STRING-BUFFER))) (PUT! m 0 33) m)", new StringBuffer("!"), true, null, null, p},
+          {"(LET ((m (STRING-BUILDER))) (PUT! m 0 33) m)", new StringBuilder("!"), true, null, null, p},
+
+          {"(PUT! (MAKE-ARRAY NIL) 0 2)", null, false, null, null, p},
+          {"(PUT! (MAKE-ARRAY 1) 0 2)",1, true, null, null, p},
+          {"(PUT! (MAKE-ARRAY NIL :element-type \"int\") 0 2)", null, false, null, null, p},
+          {"(PUT! (MAKE-ARRAY 1 :element-type \"int\") 0 2)",1, true, null, null, p},
+         
+          {"(LET ((a (MAKE-ARRAY 1))) (PUT! a 0 2) a)", Utils.arrayOfObjects(2), true, null, null, p},
+          {"(LET ((a (MAKE-ARRAY :element-type \"int\" 1))) (PUT! a 0 2) a)", Utils.array((int)2), true, null, null, p},
+          {"(PUT! (MAKE-ARRAY 1) 0 2)",1, true, null, null, p},
+          
           {
             "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))",
             true,
@@ -1826,7 +1855,40 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
-
+          {
+            "(LET ((m (LIST 1  2 (LIST 3 4)))) "+
+            "       (PUT-IN! m (LIST 2 1) 5) m)",
+            list(1,2,(list(3,5))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (LIST))) "+
+            "       (PUT-IN! m (LIST 0) 1) m)",
+            list(1),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (HASHMAP))) (PUT-IN! m (LIST 1 2 3) 1 (HASHMAP)) m)",
+            map(1,map(2,map(3,1))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((L (LIST))) (PUT-IN! L (LIST 0 0 0) 1 (LIST)) L)",
+            list(list(list(1))),
+            true,
+            null,
+            null,
+            p
+          },
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"foo\"  \"Nope\")", "bar", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\"  \"Nope\")", "Nope", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\")", null, false, null, null, p},

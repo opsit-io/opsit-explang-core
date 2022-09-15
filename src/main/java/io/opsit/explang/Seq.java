@@ -1,6 +1,8 @@
 package io.opsit.explang;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -170,7 +172,7 @@ public class Seq {
 
 
   /**
-   * Get sequence element by key;
+   * Get sequence element by key.
    */
   public static Object getElementByKeyOrIndex(Object seq, Object key) {
     if (null == seq) {
@@ -178,148 +180,273 @@ public class Seq {
     } else if (seq instanceof Map) {
       return ((Map) seq).get(key);
     } else {
-      return getElement(seq, Utils.asNumber(key).intValue());
+      return getElementByIndex(seq, Utils.asNumber(key).intValue());
     }
+  }
+
+  protected static interface IndexedSeqAdapter {
+    Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
+
+    Object get(Object seq, int idx) throws IndexOutOfBoundsException;
+
+    Object shallowClone(Object seq);
+  }
+
+  @SuppressWarnings("unchecked")
+  protected static final IndexedSeqAdapter listAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final List<Object> lst = (List<Object>)seq;
+      try {
+        return lst.set(idx, element);
+      } catch (IndexOutOfBoundsException ex) {
+        if (idx == lst.size()) {
+          lst.add(element);
+          return null;
+        } else {
+          throw ex;
+        }
+      }
+    }
+
+    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+      return ((List) seq).get(idx);
+    }
+      
+    public Object shallowClone(Object seq) {
+      Class<?> clz = seq.getClass();
+      try {
+        Constructor<?> constr = clz.getConstructor();
+        if (null == constr) {
+          throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+        }
+        List<Object> lst = (List<Object>)constr.newInstance();
+        lst.addAll((List<Object>)seq);
+        return lst;
+      } catch (InstantiationException ex) {
+        throw new RuntimeException(ex);
+      } catch (InvocationTargetException ex) {
+        throw new RuntimeException(ex);
+      } catch (IllegalAccessException ex) {
+        throw new RuntimeException(ex);
+      } catch (NoSuchMethodException ex) {
+        throw new RuntimeException(ex);
+      }
+
+    }
+  };
+  
+  protected static final IndexedSeqAdapter stringBufferAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final StringBuffer buf = (StringBuffer)seq;
+      try {
+        final Character result = buf.charAt(idx);
+        buf.setCharAt(idx, Utils.asChar(element));
+        return result;
+      } catch (IndexOutOfBoundsException ex) {
+        if (idx == buf.length()) {
+          buf.append(Utils.asChar(element));
+          return null;
+        } else {
+          throw ex;
+        }
+      }
+    }
+
+    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+      return ((StringBuffer) seq).charAt(idx);
+    }
+
+    public Object shallowClone(Object seq) {
+      return new StringBuffer((StringBuffer) seq);
+    }
+  };  
+  
+
+  protected static final IndexedSeqAdapter stringBuilderAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final StringBuilder buf = (StringBuilder)seq;
+      try {
+        final Character result = buf.charAt(idx);
+        buf.setCharAt(idx, Utils.asChar(element));
+        return result;
+      } catch (IndexOutOfBoundsException ex) {
+        if (idx == buf.length()) {
+          buf.append(Utils.asChar(element));
+          return null;
+        } else {
+          throw ex;
+        }
+      }
+    }
+
+    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+      return ((StringBuilder) seq).charAt(idx);
+    }
+
+      public Object shallowClone(Object seq) {
+      return new StringBuilder((StringBuilder) seq);
+    }
+  };
+
+  protected static final IndexedSeqAdapter charSequenceAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element)  {
+      throw new RuntimeException("Cannot modify object of type " + seq.getClass());
+    }
+
+    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+      return ((CharSequence) seq).charAt(idx);
+    }
+
+    public Object shallowClone(Object seq) {
+      throw new RuntimeException("Cannot shallow clone object of type " + seq.getClass());
+    }
+  };
+
+  
+  protected static final IndexedSeqAdapter arrayAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final Object result = Array.get(seq, idx);
+      Utils.aset(seq, idx, element);
+      return result;
+    }
+
+    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+      return Array.get(seq, idx);
+    }
+
+    public Object shallowClone(Object seq) {
+      //FIXME: do it
+      throw new RuntimeException("Cannot shallow clone object of type " + seq.getClass());
+    }
+  };
+
+  @SuppressWarnings("unchecked")
+  protected static final IndexedSeqAdapter mapAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element)  {
+      return ((Map<Object,Object>)seq).put(idx,element);
+    }
+
+    public Object get(Object seq, int idx)  {
+      return ((Map<Object,Object>)seq).get(idx);
+    }
+
+ 
+    public Object shallowClone(Object seq) {
+      Class<?> clz = seq.getClass();
+      try {
+        Constructor<?> constr = clz.getConstructor(Map.class);
+        if (null == constr) {
+          throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+        }
+        return constr.newInstance((Map)seq);
+      } catch (InstantiationException ex) {
+        throw new RuntimeException(ex);
+      } catch (InvocationTargetException ex) {
+        throw new RuntimeException(ex);
+      } catch (IllegalAccessException ex) {
+        throw new RuntimeException(ex);
+      } catch (NoSuchMethodException ex) {
+        throw new RuntimeException(ex);
+      }
+    }      
+  };
+
+  protected static final IndexedSeqAdapter nullAdapter = new IndexedSeqAdapter() {
+    public Object set(Object seq, int idx, Object element)  {
+      return null;
+    }
+
+    public Object get(Object seq, int idx)  {
+      return null;
+    }
+
+    public Object shallowClone(Object seq) {
+      return null;
+    }
+  };
+
+  
+  
+  protected static IndexedSeqAdapter getIndexedSeqAdapter(Object seq) {
+    if (null == seq) {
+      return nullAdapter;
+    } else if (seq instanceof List) {
+      return listAdapter;
+    } else if (seq instanceof Map) {
+      return mapAdapter;
+    } else if (seq.getClass().isArray()) {
+      return arrayAdapter;
+    } else if (seq instanceof StringBuffer) {
+      return stringBufferAdapter;
+    } else if (seq instanceof StringBuilder) {
+      return stringBuilderAdapter;
+    } else if (seq instanceof CharSequence) {
+      return charSequenceAdapter;
+    } else {
+      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
+    }
+  }
+
+  public static Object shallowClone(Object seq) {
+    IndexedSeqAdapter adapter = getIndexedSeqAdapter(seq);
+    return adapter.shallowClone(seq);
   }
 
   
   /**
    * Get sequence element by index.
    */
-  public static Object getElement(Object seq, int index) {
-    if (null == seq) {
+  public static Object getElementByIndex(Object seq, int index) {
+    IndexedSeqAdapter adapter = getIndexedSeqAdapter(seq);
+    try {
+      return adapter.get(seq, index);
+    } catch (IndexOutOfBoundsException ex) {
       return null;
-    } else if (seq instanceof List) {
-      try {
-        final List<?> list = (List<?>) seq;
-        return list.get(index);
-      } catch (IndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else if (seq.getClass().isArray()) {
-      try {
-        return Array.get(seq, index);
-      } catch (ArrayIndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else if (seq instanceof CharSequence) {
-      try {
-        final CharSequence cs = (CharSequence) seq;
-        return cs.charAt(index);
-      } catch (IndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else {
-      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
-    }
-  }
-
-  /**
-   * put sequence element by index. Return old value at this index.
-   */
-  @SuppressWarnings("unchecked")
-  public static Object putElement(Object seq, Object index, Object element) {
-    if (null == seq) {
-      return null;
-    } else if (seq instanceof List) {
-      try {
-        final List<Object> list = (List<Object>) seq;
-        return list.set(Utils.asNumber(index).intValue(), element);
-      } catch (IndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else if (seq.getClass().isArray()) {
-      try {
-        int idx = Utils.asNumber(index).intValue();
-        Object result = Array.get(seq, idx);
-        Utils.aset(seq, idx, element);
-        return result;
-      } catch (ArrayIndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else if (seq instanceof StringBuffer) {
-      try {
-        int idx = Utils.asNumber(index).intValue();
-        final StringBuffer buf = (StringBuffer) seq;
-        final Character result = buf.charAt(idx);
-        buf.setCharAt(idx, Utils.asChar(element));
-        return result;
-      } catch (IndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else if (seq instanceof StringBuilder) {
-      try {
-        int idx = Utils.asNumber(index).intValue();
-        final StringBuffer buf = (StringBuffer) seq;
-        final Character result = buf.charAt(idx);
-        buf.setCharAt(idx, Utils.asChar(element));
-        return result;
-      } catch (IndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else if (seq instanceof Map) {
-      try {
-        final Map<Object,Object> map = (Map<Object,Object>) seq;
-        return map.put(index, element);
-      } catch (IndexOutOfBoundsException bex) {
-        return null;
-      }
-    } else {
-      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
-    }
-  }
-
-
-  /**
-   * put sequence element by index. Return old value at this index.
-   */
-  @SuppressWarnings("unchecked")
-  public static Object setElement(Object seq, int index, Object element) {
-    if (null == seq) {
-      return null;
-    } else if (seq instanceof List) {
-      try {
-        final List<Object> list = (List<Object>) seq;
-        return list.set(Utils.asNumber(index).intValue(), element);
-      } catch (IndexOutOfBoundsException bex) {
-        throw new RuntimeException(bex);
-      }
-    } else if (seq.getClass().isArray()) {
-      try {
-        int idx = Utils.asNumber(index).intValue();
-        Object result = Array.get(seq, idx);
-        Utils.aset(seq, idx, element);
-        return result;
-      } catch (ArrayIndexOutOfBoundsException bex) {
-        throw new RuntimeException(bex);
-      }
-    } else if (seq instanceof StringBuffer) {
-      try {
-        int idx = Utils.asNumber(index).intValue();
-        final StringBuffer buf = (StringBuffer) seq;
-        final Character result = buf.charAt(idx);
-        buf.setCharAt(idx, Utils.asChar(element));
-        return result;
-      } catch (IndexOutOfBoundsException bex) {
-        throw new RuntimeException(bex);
-      }
-    } else if (seq instanceof StringBuilder) {
-      try {
-        int idx = Utils.asNumber(index).intValue();
-        final StringBuffer buf = (StringBuffer) seq;
-        final Character result = buf.charAt(idx);
-        buf.setCharAt(idx, Utils.asChar(element));
-        return result;
-      } catch (IndexOutOfBoundsException bex) {
-        throw new RuntimeException(bex);
-      }
-    }  else {
-      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
     }
   }
 
   
+  /**
+   * put sequence element by key. Return old value at this index.
+   */
+  @SuppressWarnings("unchecked")
+  public static Object putElement(Object seq, Object key, Object element) {
+    if (seq instanceof Map) {
+      return ((Map)seq).put(key, element);
+    } else {
+      try {
+        return setElementByIndex(seq, Utils.asNumber(key).intValue(), element);
+      } catch (IndexOutOfBoundsException ex) {
+        return null;
+      }
+    }
+  }
 
+
+  /**
+   * put sequence element by index. Return old value at this index.
+   */
+  public static Object setElementByIndex(Object seq, int index, Object element)
+      throws IndexOutOfBoundsException {
+    IndexedSeqAdapter adapter = getIndexedSeqAdapter(seq);
+    return adapter.set(seq, index, element);
+  }
+
+
+  /**
+   * put sequence element by key. Return old value at this index.
+   */
+  @SuppressWarnings("unchecked")
+  public static Object setElement(Object seq, Object key, Object element)
+      throws IndexOutOfBoundsException {
+    if (seq instanceof Map) {
+      return ((Map)seq).put(key, element);
+    } else {
+      return setElementByIndex(seq, Utils.asNumber(key).intValue(), element);
+    }
+  }
+
+  
   /**
    * Get length of sequence.
    */
@@ -432,7 +559,7 @@ public class Seq {
     Object[] args = new Object[seqs.length];
     for (int i = 0; i < maxlen; i++) {
       for (int j = 0; j < seqs.length; j++) {
-        args[j] = getElement(seqs[j], i);
+        args[j] = getElementByIndex(seqs[j], i);
       }
       result.add(i, op.perform(args));
     }
@@ -481,8 +608,8 @@ public class Seq {
         return false;
       }
       for (int i = 0; i < l1; i++) {
-        final Object el1 = getElement(o1, i);
-        final Object el2 = getElement(o2, i);
+        final Object el1 = getElementByIndex(o1, i);
+        final Object el2 = getElementByIndex(o2, i);
         // compare non-sequence objects
         // if both of them is sequnces and x.equals(y) == true
         //  it's ok as well.

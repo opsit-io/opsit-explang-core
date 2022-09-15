@@ -1386,7 +1386,7 @@ public class Funcs {
           loopCtx.put(
               ((VarExp) callParams.get(seqNo)).getName(),
               // seq.get(indices[seqNo])
-              Seq.getElement(seq, indices[seqNo]));
+              Seq.getElementByIndex(seq, indices[seqNo]));
         } else {
           return seqNo;
         }
@@ -1737,7 +1737,7 @@ public class Funcs {
     @Override
     public Object get(Object key) {
       if (containsKey(key)) {
-        return Seq.getElement(src, Utils.asNumber(key).intValue());
+        return Seq.getElementByIndex(src, Utils.asNumber(key).intValue());
       } else {
         return null;
       }
@@ -2671,7 +2671,7 @@ public class Funcs {
   @Arguments(spec = {"structure", "ks", "&OPTIONAL", "not-found"})
   @Docstring(
       text =
-          "Returns the value from an associative structure. \n"
+          "Returns the value from an hierarchy of associative structures. \n"
               + "Return value from an associative structure struct, \n"
               + "where ks is a sequence of keys. Returns NIL if the key\n "
               + "is not present, or the not-found value if supplied.")
@@ -2693,65 +2693,76 @@ public class Funcs {
   }
 
   protected static Object setIn(final Object target,
-                                final List<Object> path,
-                                Object value) {
-    return setIn(target, path, value, 0);
+                                final List<?> path,
+                                Object value,
+                                Object newCol) {
+    return setIn(target, path, value, 0, newCol);
   }
 
   protected static Object setIn(final Object target,
-                                final List<Object> path,
+                                final List<?> path,
                                 Object value,
-                                int index) {
-    final int size = path.size();
-    if (size == 0) {
-      return value;
-    }
-    //Map<Object,Object> updateMap = (Map) target;
-    if (size - index == 1) {
-      Seq.putElement(target, path.get(index), value);
-      return target;
-    }
-    Object key = path.get(index);
-    Object subTarget = Seq.getElementByKeyOrIndex(target, key);
-    boolean cont = false;
-    if (Seq.isAssociative(subTarget)) {
-      cont = true;
-    } else {
-      if (subTarget == null) {
-        // FIXME: must be configurable by key args
-        subTarget = new HashMap<>();
-        Seq.putElement(target, key, subTarget);
+                                int index,
+                                Object newCol) {
+    try {
+      final int size = path.size();
+      if (size == 0) {
+        return value;
+      }
+      //Map<Object,Object> updateMap = (Map) target;
+      if (size - index == 1) {
+        Seq.setElement(target, path.get(index), value);
+        return target;
+      }
+      Object key = path.get(index);
+      Object subTarget = Seq.getElementByKeyOrIndex(target, key);
+      boolean cont = false;
+      if (Seq.isAssociative(subTarget)) {
         cont = true;
       } else {
-        // FIXME: must be configurable by key args
-        subTarget = new HashMap<>();
-        Seq.putElement(target, key, subTarget);
-        cont = true;
+        if (subTarget == null) {
+          // FIXME: must be configurable by key args
+          if (null == newCol) {
+            throw new RuntimeException("Cannot set key at level "
+                                       + index + " because current item is NIL");
+          }
+          subTarget = Seq.shallowClone(newCol);
+          Seq.setElement(target, key, subTarget);
+          cont = true;
+        } else {
+          throw new RuntimeException("Cannot set key at level "
+                                     + index + " because current item is " + subTarget.getClass());
+        }
       }
+      if (cont) {
+        setIn(subTarget, path, value, index + 1, newCol);
+      }
+      //setIn(subTarget, path, value, index + 1, newCol);    
+      return target;
+    } catch (IndexOutOfBoundsException ex) {
+      throw new ExecutionException(ex);
     }
-    if (cont) {
-      setIn(subTarget, path, value, index + 1);
-    }
-    setIn(subTarget, path, value, index + 1);    
-    return target;
   }
 
 
-  @Arguments(spec = {"structure", "ks", "&OPTIONAL", "not-found"})
-  @Docstring(text = "TBD")
+  @Arguments(spec = {"structure", "ks", "value","&OPTIONAL", "new-col"})
+  @Docstring(text = "Put value into an hierarchy of associative structures "
+             + "according list of keys ks.")
   @Package(name = Package.BASE_SEQ)
+  @SuppressWarnings("unchecked")
   public static class NPUT_IN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int argsnum = eargs.size();
-      if (argsnum != 3) {
+      if (argsnum != 4) {
         throw new ExecutionException(
-            backtrace, "Unexpected number of arguments: expected 3, but got " + eargs.size());
+            backtrace, "Unexpected number of arguments: expected 4, but got " + eargs.size());
       }
       final Object target = eargs.get(0, backtrace);
       final List<Object> ksObj = (List<Object>)eargs.get(1, backtrace);
       final Object object = eargs.get(2, backtrace);
-      final Object result = setIn(target, ksObj, object);
+      final Object nf = eargs.get(3, backtrace);
+      final Object result = setIn(target, ksObj, object, nf);
       return result;
     }
   }
@@ -3373,7 +3384,7 @@ public class Funcs {
     // @SuppressWarnings("unchecked")
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       Object seq = eargs.get(0, backtrace);
-      return Seq.getElement(seq, 0);
+      return Seq.getElementByIndex(seq, 0);
     }
   }
 
@@ -3435,7 +3446,7 @@ public class Funcs {
         throw new RuntimeException(
             getName() + "expected non-negative index index, but got" + index);
       }
-      return Seq.getElement(seq, index);
+      return Seq.getElementByIndex(seq, index);
     }
   }
 
@@ -4005,10 +4016,11 @@ public class Funcs {
   @Docstring(
       text = "Put element value into an associative structure."
               + " Set value of element at index/key to object. "
-              + " If target ibject is a Java array and object type does not match type of this array"
-              + " this function will attempt to perform necessary coercion operations. The coercions"
-              + " work in the same way as INT, FLOAT, STRING and rest of the built-in coercion"
-              + " functions. If target object is a list or array and happens out of bound exception"
+              + " If target ibject is a Java array and object type does not match type"
+              + " of this array this function will attempt to perform necessary coercion"
+              + " operations. The coercions  work in the same way as INT, FLOAT, STRING"
+              + " and rest of the built-in coercion functions."
+              + " If target object is a list or array and happens out of bound exception"
               + " the function returns normally without any change to the target structure"
               + " The function returns previous value of the element or NIL if it did not exist")
   @Arguments(spec = {"obj", "key", "object"})
@@ -4019,8 +4031,7 @@ public class Funcs {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final Object index = Utils.asObject(eargs.get(1, backtrace));
       final Object obj = Utils.asObject(eargs.get(2, backtrace));
-      Seq.putElement(arrayObj, index, obj);
-      return obj;
+      return Seq.putElement(arrayObj, index, obj);
     }
   }
 
@@ -4028,10 +4039,10 @@ public class Funcs {
   @Docstring(
       text = "Set indexed sequence (array, list, character sequence) element value."
               + " Set value of element at index to object. "
-              + " If target ibject is a Java array and object type does not match type of this array"
-              + " this function will attempt to perform necessary coercion operations. The coercions"
-              + " work in the same way as INT, FLOAT, STRING and rest of the built-in coercion"
-              + " functions. May fail with index out of bound exception."
+              + " If target ibject is a Java array and object type does not match type of this"
+              + " array this function will attempt to perform necessary coercion operations. "
+              + " The coercions  work in the same way as INT, FLOAT, STRING and rest of the "
+              + " built-in coercion functions. May fail with index out of bound exception."
               + " The function returns normally without any change to the target structure"
               + " The function returns previous value of the element or NIL if it did not exist")
   @Arguments(spec = {"obj", "key", "object"})
@@ -4042,8 +4053,11 @@ public class Funcs {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       final Object obj = Utils.asObject(eargs.get(2, backtrace));
-      Seq.setElement(arrayObj, index, obj);
-      return obj;
+      try {
+        return Seq.setElementByIndex(arrayObj, index, obj);
+      } catch (IndexOutOfBoundsException ex) {
+        throw new ExecutionException(ex);
+      }
     }
   }
 
