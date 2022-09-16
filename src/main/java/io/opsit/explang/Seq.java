@@ -184,7 +184,7 @@ public class Seq {
     }
   }
 
-  protected static interface IndexedSeqAdapter {
+  protected static interface SeqAdapter {
     Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
 
     Object get(Object seq, int idx) throws IndexOutOfBoundsException;
@@ -193,7 +193,7 @@ public class Seq {
   }
 
   @SuppressWarnings("unchecked")
-  protected static final IndexedSeqAdapter listAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter listAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final List<Object> lst = (List<Object>)seq;
       try {
@@ -235,7 +235,7 @@ public class Seq {
     }
   };
   
-  protected static final IndexedSeqAdapter stringBufferAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter stringBufferAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final StringBuffer buf = (StringBuffer)seq;
       try {
@@ -262,7 +262,7 @@ public class Seq {
   };  
   
 
-  protected static final IndexedSeqAdapter stringBuilderAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter stringBuilderAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final StringBuilder buf = (StringBuilder)seq;
       try {
@@ -288,7 +288,7 @@ public class Seq {
     }
   };
 
-  protected static final IndexedSeqAdapter charSequenceAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter charSequenceAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element)  {
       throw new RuntimeException("Cannot modify object of type " + seq.getClass());
     }
@@ -303,7 +303,7 @@ public class Seq {
   };
 
   
-  protected static final IndexedSeqAdapter arrayAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter arrayAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final Object result = Array.get(seq, idx);
       Utils.aset(seq, idx, element);
@@ -325,7 +325,7 @@ public class Seq {
   };
 
   @SuppressWarnings("unchecked")
-  protected static final IndexedSeqAdapter mapAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter mapAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element)  {
       return ((Map<Object,Object>)seq).put(idx,element);
     }
@@ -355,7 +355,7 @@ public class Seq {
     }      
   };
 
-  protected static final IndexedSeqAdapter nullAdapter = new IndexedSeqAdapter() {
+  protected static final SeqAdapter nullAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element)  {
       return null;
     }
@@ -371,7 +371,7 @@ public class Seq {
 
   
   
-  protected static IndexedSeqAdapter getIndexedSeqAdapter(Object seq) {
+  protected static SeqAdapter getAssociativeSeqAdapter(Object seq) {
     if (null == seq) {
       return nullAdapter;
     } else if (seq instanceof List) {
@@ -392,7 +392,7 @@ public class Seq {
   }
 
   public static Object shallowClone(Object seq) {
-    IndexedSeqAdapter adapter = getIndexedSeqAdapter(seq);
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
     return adapter.shallowClone(seq);
   }
 
@@ -401,7 +401,7 @@ public class Seq {
    * Get sequence element by index.
    */
   public static Object getElementByIndex(Object seq, int index) {
-    IndexedSeqAdapter adapter = getIndexedSeqAdapter(seq);
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
     try {
       return adapter.get(seq, index);
     } catch (IndexOutOfBoundsException ex) {
@@ -432,7 +432,7 @@ public class Seq {
    */
   public static Object setElementByIndex(Object seq, int index, Object element)
       throws IndexOutOfBoundsException {
-    IndexedSeqAdapter adapter = getIndexedSeqAdapter(seq);
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
     return adapter.set(seq, index, element);
   }
 
