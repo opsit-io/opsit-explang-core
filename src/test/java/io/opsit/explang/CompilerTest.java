@@ -304,7 +304,7 @@ public class CompilerTest extends AbstractTest {
           {"(PUT! (MAKE-ARRAY 1 :element-type \"int\") 0 2)",1, true, null, null, p},
          
           {"(LET ((a (MAKE-ARRAY 1))) (PUT! a 0 2) a)", Utils.arrayOfObjects(2), true, null, null, p},
-          {"(LET ((a (MAKE-ARRAY :element-type \"int\" 1))) (PUT! a 0 2) a)", Utils.array((int)2), true, null, null, p},
+          {"(LET ((a (MAKE-ARRAY :element-type \"int\" 1))) (PUT! a 0 2) a)", Utils.array(2), true, null, null, p},
           {"(PUT! (MAKE-ARRAY 1) 0 2)",1, true, null, null, p},
           
           {
@@ -502,6 +502,63 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          // NON-LOCAL EXIT
+          {
+            "(PROGN "
+                + " (DEFUN TESTRET (x) 1 (RETURN x) (SETV x 2)) "
+                + " (TESTRET 3))"   ,
+            3,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                + " (DEFUN TESTRET (x) (FOREACH (i (RANGE 1 10)) (IF (< i x) i (RETURN i))) NIL)  "
+                + " (TESTRET 3))"   ,
+            3,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                + " (DEFUN TESTRET1 (x) (RETURN x) 1) "
+                + " (DEFUN TESTRET2 (x) (+ (TESTRET1 x) 2)) "
+                + " (TESTRET2 3))"   ,
+            5,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                 + "(DEFUN TESTRET (x) "
+                 + "(TRY \"aa\" (RETURN x) \"cc\" "
+                 + "(CATCH java.lang.Exception ex (RETURN (+ x 1))) "
+                 + "(FINALLY (RETURN (+ x 2)))))"
+                 + "(TESTRET 3))",
+            5,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                 + "(DEFUN TESTRET (x) "
+                 + "(TRY \"aa\" (RETURN x) \"cc\" "
+                 + "(CATCH java.lang.Exception ex (RETURN (+ x 1))))) "
+                 + "(TESTRET 3))",
+            3,
+            true,
+            null,
+            null,
+            p
+          },          
           // LOOPS
           {
             "(LET ((r ())) (LIST (FOREACH (a \"ABC\")  (SETV r (APPEND r (LIST 1 a)))) r))",

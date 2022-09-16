@@ -881,7 +881,10 @@ public class Compiler {
 
       try {
         return evalBlocks(backtrace, blocks, ctx);
+      } catch (ReturnException r) {
+        throw r;
       } catch (Throwable t) {
+
         Throwable realT = t;
         if ((t instanceof ExecutionException) && t.getCause() != null) {
           // should always happen
