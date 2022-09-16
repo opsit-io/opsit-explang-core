@@ -315,8 +315,12 @@ public class Seq {
     }
 
     public Object shallowClone(Object seq) {
-      //FIXME: do it
-      throw new RuntimeException("Cannot shallow clone object of type " + seq.getClass());
+      final int length = Array.getLength(seq);
+      final Object copy = Array.newInstance(seq.getClass().getComponentType(), length);
+      for (int i = 0; i < length; i++) {
+        Array.set(copy, i, Array.get(seq, i));
+      }
+      return copy;
     }
   };
 

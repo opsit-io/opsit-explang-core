@@ -1946,6 +1946,14 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          {
+            "(LET ((L (MAKE-ARRAY :size 1))) (PUT-IN! L (LIST 0 0) 1 (MAKE-ARRAY :size 1)) L)",
+            Utils.arrayOfObjects((Object)Utils.arrayOfObjects(1)),
+            true,
+            null,
+            null,
+            p
+          },
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"foo\"  \"Nope\")", "bar", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\"  \"Nope\")", "Nope", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\")", null, false, null, null, p},
