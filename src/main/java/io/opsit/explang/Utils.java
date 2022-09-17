@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -691,9 +693,63 @@ public class Utils {
     return false;
   }
 
+  /**
+   * Tries to copy objects using its copy constructor.
+   */
+  public static Object copyObjectByCopyConstructor(Object obj) {
+    if (null != obj) {
+      try {
+        final Constructor<?> c = obj.getClass().getConstructor(obj.getClass());
+        return c.newInstance(obj);
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Tries to copy a Cloneable object using its clone() method.
+   */
+  public static Object cloneObjectByClone(Cloneable obj) {
+    if (null != obj) {
+      try {
+        Method m = obj.getClass().getMethod("clone");
+        return m.invoke(obj);
+      } catch (Exception ex) {
+        throw new RuntimeException(ex);
+      }
+    } else {
+      return null;
+    }
+  }
+
+  // FIXME: make configurable
+  //        to enable user to add handling of
+  //        various kinds of @Immutable annotations
+  /**
+   * Return true if Object is known to be immutable.
+   *
+   * <p>Currently using list of types that known to be Immutable.
+   */
+  public static boolean isKnownImmutable(Object obj) {
+    return null == obj 
+      || obj instanceof Character
+      || obj instanceof String
+      || obj instanceof Number
+      || obj instanceof Boolean
+      || obj instanceof Enum 
+      || obj instanceof Class
+      || obj instanceof Void
+      || obj instanceof java.util.regex.Pattern 
+      // FIXME: kluge?
+      || obj.getClass().toString().startsWith("java.util.ImmutableCollections$");
+  }
+  
   public static final String MAVEN_PROPS =
       "META-INF/maven/io.opsit/opsit-explang-core/pom.properties";
-
+  
   /**
    * Return explang core jar version.
    */

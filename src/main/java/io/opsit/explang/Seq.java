@@ -234,6 +234,39 @@ public class Seq {
 
     }
   };
+
+  @SuppressWarnings("unchecked")
+  protected static final SeqAdapter setAdapter = new SeqAdapter() {
+      public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+        throw new RuntimeException("Set by index not supported for Set objects");
+      }
+
+
+      public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+        throw new RuntimeException("Get by index not supported for Set objects");
+      }
+
+      public Object shallowClone(Object seq) {
+        Class<?> clz = seq.getClass();
+        try {
+          Constructor<?> constr = clz.getConstructor();
+          if (null == constr) {
+            throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+          }
+          Set<Object> set = (Set<Object>)constr.newInstance();
+          set.addAll((List<Object>)seq);
+          return set;
+        } catch (InstantiationException ex) {
+          throw new RuntimeException(ex);
+        } catch (InvocationTargetException ex) {
+          throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+          throw new RuntimeException(ex);
+        } catch (NoSuchMethodException ex) {
+          throw new RuntimeException(ex);
+        }
+      }
+    };
   
   protected static final SeqAdapter stringBufferAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
@@ -369,7 +402,27 @@ public class Seq {
     }
   };
 
-  
+  protected static SeqAdapter getSeqAdapter(Object seq) {
+    if (null == seq) {
+      return nullAdapter;
+    } else if (seq instanceof List) {
+      return listAdapter;
+    } else if (seq instanceof Map) {
+      return mapAdapter;
+    } else if (seq instanceof Set) {
+      return setAdapter;
+    } else if (seq.getClass().isArray()) {
+      return arrayAdapter;
+    } else if (seq instanceof StringBuffer) {
+      return stringBufferAdapter;
+    } else if (seq instanceof StringBuilder) {
+      return stringBuilderAdapter;
+    } else if (seq instanceof CharSequence) {
+      return charSequenceAdapter;
+    } else {
+      throw new RuntimeException("Unupported sequence type " + seq.getClass().getName());
+    }
+  }
   
   protected static SeqAdapter getAssociativeSeqAdapter(Object seq) {
     if (null == seq) {
@@ -392,7 +445,7 @@ public class Seq {
   }
 
   public static Object shallowClone(Object seq) {
-    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
+    SeqAdapter adapter = getSeqAdapter(seq);
     return adapter.shallowClone(seq);
   }
 

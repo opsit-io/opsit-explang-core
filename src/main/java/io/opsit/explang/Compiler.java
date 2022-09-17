@@ -519,6 +519,7 @@ public class Compiler {
             "SELECT-KEYS", SELECT_KEYS.class,
             "DWIM_FIELDS", DWIM_FIELDS.class,
             "TYPEP", TYPEP.class,
+            "COPY", COPY.class,
             // mapping functions
             "MAP", MAP.class,
             "MAPPROD", MAPPROD.class,
@@ -884,7 +885,6 @@ public class Compiler {
       } catch (ReturnException r) {
         throw r;
       } catch (Throwable t) {
-
         Throwable realT = t;
         if ((t instanceof ExecutionException) && t.getCause() != null) {
           // should always happen

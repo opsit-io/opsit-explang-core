@@ -3211,6 +3211,50 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Perform shallow copy of an object.")
+  @Package(name = Package.BASE_SEQ)
+  public static class COPY extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final int size = eargs.size();
+      if (1 != size) {
+        throw new ExecutionException(backtrace, "Unexpected number of arguments: " + size);
+      }
+      final Object obj = eargs.get(0, backtrace);
+      // null, Numbers, Char so on
+      if (Utils.isKnownImmutable(obj)) {
+        return obj;
+      }
+      Exception seqError = null;
+      if (Seq.isSeq(obj)) {
+        try {
+          return Seq.shallowClone(obj);
+        } catch (Exception ex) {
+          seqError = ex;
+        }
+      }
+      Exception cloneError = null;
+      if (obj instanceof Cloneable) {
+        try {
+          return Utils.cloneObjectByClone((Cloneable) obj);
+        } catch (Exception ex) {
+          cloneError = ex;
+        }
+      }
+      Exception constrError = null;
+      try {
+        return Utils.copyObjectByCopyConstructor(obj);
+      } catch (Exception ex) {
+        constrError = ex;
+      }
+      throw new ExecutionException(backtrace, "Failed to copy object:"
+          + (null != seqError ? " Seq.shallowClone: " + seqError.getMessage() + ";" : "")
+          + (null != cloneError ? " clone: " + cloneError.getMessage() + ";" : "")
+          + (null != constrError ? " copy constr uctor: " + constrError.getMessage() + ";" : ""));
+    }
+  }
+
   @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
   @Docstring(
       text =
