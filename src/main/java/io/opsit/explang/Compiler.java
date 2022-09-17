@@ -444,6 +444,7 @@ public class Compiler {
 
             // execution control
             "IF", IF.class,
+            "WHEN", WHEN.class,            
             "COND", COND.class,
             "WHILE", WHILE.class,
             "FOREACH", FOREACH.class,
@@ -1250,6 +1251,43 @@ public class Compiler {
     }
   }
 
+  @Package(name = Package.BASE_CONTROL)
+  @Docstring(text = "When conditional construct.")
+  public class WHEN extends AbstractForm {
+    private List<ICompiled> blocks = null;
+    private ICompiled condition = null;
+
+    @Override
+    public void setRawParams(ASTNList params) throws InvalidParametersException {
+      if (params.size() < 2) {
+        throw new InvalidParametersException(debugInfo, "WHEN expects at least 1 parameter");
+      }
+      this.condition = compile(params.get(0));
+      this.blocks = compileExpList(params.subList(1, params.size()));
+    }
+
+    protected Object evalWithArgs(Backtrace backtrace, List<Object> eargs, ICtx ctx) {
+      Object condVal = eargs.get(0);
+      if (Utils.asBoolean(condVal)) {
+        return evalBlocks(backtrace, blocks, ctx);
+      } else {
+        return null;
+      }
+    }
+
+    protected List<Object> evaluateParameters(Backtrace backtrace, ICtx ctx) {
+      List<Object> eargs = new ArrayList<Object>(1);
+      eargs.add(condition.evaluate(backtrace, ctx));
+      return eargs;
+    }
+
+    @Override
+    public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
+      return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx), ctx);
+    }
+  }
+
+  
   /** (DEFUN FOO (arg1 arg2...) block block...) */
   @Package(name = Package.BASE_FUNCS)
   @Docstring(text = "Define named function")
