@@ -4094,6 +4094,19 @@ public class Funcs {
     }
   }
 
+  @Docstring(text = "Append element to the end of a seqence modifying the sequence."
+             + " Returns the sequence")
+  @Arguments(spec = {"seq", "object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class NPUSH extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object list = Utils.asObject(eargs.get(0, backtrace));
+      final Object obj = Utils.asObject(eargs.get(1, backtrace));
+      Seq.putElement(list, Seq.getLength(list, false), obj);
+      return list;
+    }
+  }
 
   @Docstring(
       text = "Set indexed sequence (array, list, character sequence) element value."
