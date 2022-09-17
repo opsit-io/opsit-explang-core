@@ -3408,7 +3408,7 @@ public class Funcs {
   }
 
   @Arguments(spec = {"object-1", "object-2"})
-  @Docstring(text = "Prepend element to a sequence.")
+  @Docstring(text = "Prepend element to a list.")
   @Package(name = Package.BASE_SEQ)
   public static class CONS extends FuncExp {
     @Override
@@ -3417,6 +3417,7 @@ public class Funcs {
       final Object v1 = eargs.get(0, backtrace);
       final Object v2 = eargs.get(1, backtrace);
       List<Object> resultList;
+      // FIXME:  use same list type, handle immutable lists
       if (Utils.asObject(v2) instanceof List) {
         final List<Object> l2 = (List<Object>) Utils.asObject(v2);
         resultList = new ArrayList<Object>(l2.size() + 1);
