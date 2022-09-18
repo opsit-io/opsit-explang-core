@@ -184,12 +184,30 @@ public class Seq {
     }
   }
 
+  /**
+   * Remove element from  sequence  by key or index.
+   */
+  public static Object removeElementByKeyOrIndex(Object seq, Object key) {
+    if (null == seq) {
+      return null;
+    } else if (seq instanceof Map) {
+      return ((Map<?,?>) seq).remove(key);
+    } else if (seq instanceof Set) {
+      boolean removed =  ((Set<?>) seq).remove(key);
+      return removed ? key : null;
+    } else {
+      return removeElementByIndex(seq, Utils.asNumber(key).intValue());
+    }
+  }
+
   protected static interface SeqAdapter {
     Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
 
     Object get(Object seq, int idx) throws IndexOutOfBoundsException;
 
     Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
+
+    Object remove(Object seq, int idx) throws IndexOutOfBoundsException;
 
     Object shallowClone(Object seq);
   }
@@ -216,6 +234,11 @@ public class Seq {
       return lst;
     }
 
+    public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+      final List<Object> lst = (List<Object>)seq;
+      return lst.remove(idx);
+    }
+      
     public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
       return ((List) seq).get(idx);
     }
@@ -244,230 +267,269 @@ public class Seq {
   };
 
   @SuppressWarnings("unchecked")
-  protected static final SeqAdapter setAdapter = new SeqAdapter() {
-      public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-        throw new RuntimeException("Set by index not supported for Set objects");
-      }
+  protected static final SeqAdapter setAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Set by index not supported for Set objects");
+        }
 
-      public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-         throw new RuntimeException("Insert by index not supported for Set objects");
-      }
+        public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Insert by index not supported for Set objects");
+        }
 
-      public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-        throw new RuntimeException("Get by index not supported for Set objects");
-      }
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Get by index not supported for Set objects");
+        }
 
-      public Object shallowClone(Object seq) {
-        Class<?> clz = seq.getClass();
-        try {
-          Constructor<?> constr = clz.getConstructor();
-          if (null == constr) {
-            throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          final Set<Object> set = (Set<Object>) seq;
+          return set.remove(idx);
+        }
+
+        public Object shallowClone(Object seq) {
+          Class<?> clz = seq.getClass();
+          try {
+            Constructor<?> constr = clz.getConstructor();
+            if (null == constr) {
+              throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+            }
+            Set<Object> set = (Set<Object>) constr.newInstance();
+            set.addAll((List<Object>) seq);
+            return set;
+          } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+          } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+          } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+          } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
           }
-          Set<Object> set = (Set<Object>)constr.newInstance();
-          set.addAll((List<Object>)seq);
-          return set;
-        } catch (InstantiationException ex) {
-          throw new RuntimeException(ex);
-        } catch (InvocationTargetException ex) {
-          throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-          throw new RuntimeException(ex);
-        } catch (NoSuchMethodException ex) {
-          throw new RuntimeException(ex);
         }
-      }
-    };
-  
-    protected static final SeqAdapter stringBufferAdapter = new SeqAdapter() {
-    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final StringBuffer buf = (StringBuffer)seq;
-      try {
-        final Character result = buf.charAt(idx);
-        buf.setCharAt(idx, Utils.asChar(element));
-        return result;
-      } catch (IndexOutOfBoundsException ex) {
-        if (idx == buf.length()) {
-          buf.append(Utils.asChar(element));
-          return null;
-        } else {
-          throw ex;
+      };
+
+  protected static final SeqAdapter stringBufferAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final StringBuffer buf = (StringBuffer) seq;
+          try {
+            final Character result = buf.charAt(idx);
+            buf.setCharAt(idx, Utils.asChar(element));
+            return result;
+          } catch (IndexOutOfBoundsException ex) {
+            if (idx == buf.length()) {
+              buf.append(Utils.asChar(element));
+              return null;
+            } else {
+              throw ex;
+            }
+          }
         }
-      }
-    }
 
-    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final StringBuffer buf = (StringBuffer)seq;
-      if (element instanceof CharSequence) {
-        buf.insert(idx, (CharSequence) element);
-      } else if (element instanceof Character) {
-        buf.insert(idx, (Character) element);
-      } else if (null == element) {
-        buf.insert(idx, (Character) element);
-      } else if (element.getClass().isArray()
-                 && element.getClass().getComponentType() == Character.TYPE) {
-        buf.insert(idx, (char[]) element);
-      } else if (element.getClass().isArray()
-                 && element.getClass().getComponentType() == Byte.TYPE) {
-        buf.insert(idx, (byte[]) element);
-      } else {
-        buf.insert(idx, element);
-      }
-      return seq;
-    }
-
-    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-      return ((StringBuffer) seq).charAt(idx);
-    }
-
-    public Object shallowClone(Object seq) {
-      return new StringBuffer((StringBuffer) seq);
-    }
-  };
-
-
-    protected static final SeqAdapter stringBuilderAdapter = new SeqAdapter() {
-    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final StringBuilder buf = (StringBuilder)seq;
-      try {
-        final Character result = buf.charAt(idx);
-        buf.setCharAt(idx, Utils.asChar(element));
-        return result;
-      } catch (IndexOutOfBoundsException ex) {
-        if (idx == buf.length()) {
-          buf.append(Utils.asChar(element));
-          return null;
-        } else {
-          throw ex;
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          final StringBuffer buf = (StringBuffer) seq;
+          final Character chr = buf.charAt(idx);
+          buf.deleteCharAt(idx);
+          return chr;
         }
-      }
-    }
 
-    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final StringBuilder buf = (StringBuilder)seq;
-      if (element instanceof CharSequence) {
-        buf.insert(idx, (CharSequence) element);
-      } else if (element instanceof Character) {
-        buf.insert(idx, (Character) element);
-      } else if (null == element) {
-        buf.insert(idx, (Character) element);
-      } else if (element.getClass().isArray()
-                 && element.getClass().getComponentType() == Character.TYPE) {
-        buf.insert(idx, (char[]) element);
-      } else if (element.getClass().isArray()
-                 && element.getClass().getComponentType() == Byte.TYPE) {
-        buf.insert(idx, (byte[]) element);
-      } else {
-        buf.insert(idx, element);
-      }
-      return seq;
-    }
+        public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final StringBuffer buf = (StringBuffer) seq;
+          if (element instanceof CharSequence) {
+            buf.insert(idx, (CharSequence) element);
+          } else if (element instanceof Character) {
+            buf.insert(idx, (Character) element);
+          } else if (null == element) {
+            buf.insert(idx, (Character) element);
+          } else if (element.getClass().isArray()
+              && element.getClass().getComponentType() == Character.TYPE) {
+            buf.insert(idx, (char[]) element);
+          } else if (element.getClass().isArray()
+              && element.getClass().getComponentType() == Byte.TYPE) {
+            buf.insert(idx, (byte[]) element);
+          } else {
+            buf.insert(idx, element);
+          }
+          return seq;
+        }
 
-    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-      return ((StringBuilder) seq).charAt(idx);
-    }
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          return ((StringBuffer) seq).charAt(idx);
+        }
 
-      public Object shallowClone(Object seq) {
-      return new StringBuilder((StringBuilder) seq);
-    }
-  };
+        public Object shallowClone(Object seq) {
+          return new StringBuffer((StringBuffer) seq);
+        }
+      };
 
-  protected static final SeqAdapter charSequenceAdapter = new SeqAdapter() {
-    public Object set(Object seq, int idx, Object element)  {
-      throw new RuntimeException("Cannot modify object of type " + seq.getClass());
-    }
+  protected static final SeqAdapter stringBuilderAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final StringBuilder buf = (StringBuilder) seq;
+          try {
+            final Character result = buf.charAt(idx);
+            buf.setCharAt(idx, Utils.asChar(element));
+            return result;
+          } catch (IndexOutOfBoundsException ex) {
+            if (idx == buf.length()) {
+              buf.append(Utils.asChar(element));
+              return null;
+            } else {
+              throw ex;
+            }
+          }
+        }
 
-    public Object insert(Object seq, int idx, Object element)  {
-      throw new RuntimeException("Cannot insert into  object of type " + seq.getClass());
-    }
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          final StringBuilder buf = (StringBuilder) seq;
+          final Character chr = buf.charAt(idx);
+          buf.deleteCharAt(idx);
+          return chr;
+        }
 
-    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-      return ((CharSequence) seq).charAt(idx);
-    }
+        public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final StringBuilder buf = (StringBuilder) seq;
+          if (element instanceof CharSequence) {
+            buf.insert(idx, (CharSequence) element);
+          } else if (element instanceof Character) {
+            buf.insert(idx, (Character) element);
+          } else if (null == element) {
+            buf.insert(idx, (Character) element);
+          } else if (element.getClass().isArray()
+              && element.getClass().getComponentType() == Character.TYPE) {
+            buf.insert(idx, (char[]) element);
+          } else if (element.getClass().isArray()
+              && element.getClass().getComponentType() == Byte.TYPE) {
+            buf.insert(idx, (byte[]) element);
+          } else {
+            buf.insert(idx, element);
+          }
+          return seq;
+        }
 
-    public Object shallowClone(Object seq) {
-      throw new RuntimeException("Cannot shallow clone object of type " + seq.getClass());
-    }
-  };
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          return ((StringBuilder) seq).charAt(idx);
+        }
 
-  
-  protected static final SeqAdapter arrayAdapter = new SeqAdapter() {
-    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final Object result = Array.get(seq, idx);
-      Utils.aset(seq, idx, element);
-      return result;
-    }
+        public Object shallowClone(Object seq) {
+          return new StringBuilder((StringBuilder) seq);
+        }
+      };
 
-    public Object insert(Object seq, int idx, Object element)  {
-      throw new RuntimeException("Cannot insert into object of type " + seq.getClass());
-    }
-      
-    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-      return Array.get(seq, idx);
-    }
+  protected static final SeqAdapter charSequenceAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) {
+          throw new RuntimeException("Cannot modify object of type " + seq.getClass());
+        }
 
-    public Object shallowClone(Object seq) {
-      final int length = Array.getLength(seq);
-      final Object copy = Array.newInstance(seq.getClass().getComponentType(), length);
-      for (int i = 0; i < length; i++) {
-        Array.set(copy, i, Array.get(seq, i));
-      }
-      return copy;
-    }
-  };
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
+        }
+
+        public Object insert(Object seq, int idx, Object element) {
+          throw new RuntimeException("Cannot insert into  object of type " + seq.getClass());
+        }
+
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          return ((CharSequence) seq).charAt(idx);
+        }
+
+        public Object shallowClone(Object seq) {
+          throw new RuntimeException("Cannot shallow clone object of type " + seq.getClass());
+        }
+      };
+
+  protected static final SeqAdapter arrayAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final Object result = Array.get(seq, idx);
+          Utils.aset(seq, idx, element);
+          return result;
+        }
+
+        public Object insert(Object seq, int idx, Object element) {
+          throw new RuntimeException("Cannot insert into object of type " + seq.getClass());
+        }
+
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          return Array.get(seq, idx);
+        }
+
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
+        }
+
+        public Object shallowClone(Object seq) {
+          final int length = Array.getLength(seq);
+          final Object copy = Array.newInstance(seq.getClass().getComponentType(), length);
+          for (int i = 0; i < length; i++) {
+            Array.set(copy, i, Array.get(seq, i));
+          }
+          return copy;
+        }
+      };
 
   @SuppressWarnings("unchecked")
-  protected static final SeqAdapter mapAdapter = new SeqAdapter() {
-    public Object set(Object seq, int idx, Object element)  {
-      return ((Map<Object,Object>)seq).put(idx,element);
-    }
-
-    public Object insert(Object seq, int idx, Object element)  {
-      return ((Map<Object,Object>)seq).put(idx,element);
-    }
-
-    public Object get(Object seq, int idx)  {
-      return ((Map<Object,Object>)seq).get(idx);
-    }
-
- 
-    public Object shallowClone(Object seq) {
-      Class<?> clz = seq.getClass();
-      try {
-        Constructor<?> constr = clz.getConstructor(Map.class);
-        if (null == constr) {
-          throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+  protected static final SeqAdapter mapAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) {
+          return ((Map<Object, Object>) seq).put(idx, element);
         }
-        return constr.newInstance((Map)seq);
-      } catch (InstantiationException ex) {
-        throw new RuntimeException(ex);
-      } catch (InvocationTargetException ex) {
-        throw new RuntimeException(ex);
-      } catch (IllegalAccessException ex) {
-        throw new RuntimeException(ex);
-      } catch (NoSuchMethodException ex) {
-        throw new RuntimeException(ex);
-      }
-    }      
-  };
 
-  protected static final SeqAdapter nullAdapter = new SeqAdapter() {
-    public Object set(Object seq, int idx, Object element)  {
-      return null;
-    }
+        public Object insert(Object seq, int idx, Object element) {
+          return ((Map<Object, Object>) seq).put(idx, element);
+        }
 
-    public Object insert(Object seq, int idx, Object element)  {
-      return null;
-    }
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          return ((Map<Object, Object>) seq).remove(idx);
+        }
 
-    public Object get(Object seq, int idx)  {
-      return null;
-    }
+        public Object get(Object seq, int idx) {
+          return ((Map<Object, Object>) seq).get(idx);
+        }
 
-    public Object shallowClone(Object seq) {
-      return null;
-    }
-  };
+        public Object shallowClone(Object seq) {
+          Class<?> clz = seq.getClass();
+          try {
+            Constructor<?> constr = clz.getConstructor(Map.class);
+            if (null == constr) {
+              throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+            }
+            return constr.newInstance((Map) seq);
+          } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+          } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+          } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+          } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+          }
+        }
+      };
+
+  protected static final SeqAdapter nullAdapter =
+      new SeqAdapter() {
+        public Object set(Object seq, int idx, Object element) {
+          return null;
+        }
+
+        public Object insert(Object seq, int idx, Object element) {
+          return null;
+        }
+
+        public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
+          return null;
+        }
+
+        public Object get(Object seq, int idx) {
+          return null;
+        }
+
+        public Object shallowClone(Object seq) {
+          return null;
+        }
+      };
 
   protected static SeqAdapter getSeqAdapter(Object seq) {
     if (null == seq) {
@@ -529,6 +591,17 @@ public class Seq {
     }
   }
 
+  /**
+  * Get sequence element by index.
+  */
+  public static Object removeElementByIndex(Object seq, int index) {
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
+    try {
+      return adapter.remove(seq, index);
+    } catch (IndexOutOfBoundsException ex) {
+      return null;
+    }
+  }
   
   /**
    * put sequence element by key. Return old value at this index.

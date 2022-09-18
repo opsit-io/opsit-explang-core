@@ -4116,8 +4116,8 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       if (eargs.size() != 3) {
-        throw new ExecutionException(backtrace, getName() +
-                                     " expects 3 arguments, but got " + eargs.size());
+        throw new ExecutionException(backtrace, getName() 
+                                     + " expects 3 arguments, but got " + eargs.size());
       }
       final Object listObject = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
@@ -4126,6 +4126,24 @@ public class Funcs {
     }
   }
 
+  @Docstring(text = "delete element from  sequence by qey or index."
+             + " Returns the removed element")
+  @Arguments(spec = {"seq", "key"})
+  @Package(name = Package.BASE_SEQ)
+  public static class NREMOVE extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      if (eargs.size() != 2) {
+        throw new ExecutionException(backtrace, getName() 
+                                     + " expects 2 arguments, but got " + eargs.size());
+      }
+      final Object listObject = Utils.asObject(eargs.get(0, backtrace));
+      final Object key = eargs.get(1, backtrace);
+      return Seq.removeElementByKeyOrIndex(listObject, key);
+    }
+  }
+
+  
   @Docstring(
       text = "Set indexed sequence (array, list, character sequence) element value."
               + " Set value of element at index to object. "
