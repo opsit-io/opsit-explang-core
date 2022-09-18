@@ -4108,6 +4108,24 @@ public class Funcs {
     }
   }
 
+  @Docstring(text = "Insert element into given position in the indexed sequence."
+             + " Returns the sequence")
+  @Arguments(spec = {"seq", "index","object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class NINSERT extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      if (eargs.size() != 3) {
+        throw new ExecutionException(backtrace, getName() +
+                                     " expects 3 arguments, but got " + eargs.size());
+      }
+      final Object listObject = Utils.asObject(eargs.get(0, backtrace));
+      final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
+      final Object object = Utils.asObject(eargs.get(2, backtrace));
+      return Seq.insertElementByIndex(listObject, index, object);
+    }
+  }
+
   @Docstring(
       text = "Set indexed sequence (array, list, character sequence) element value."
               + " Set value of element at index to object. "

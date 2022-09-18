@@ -189,6 +189,8 @@ public class Seq {
 
     Object get(Object seq, int idx) throws IndexOutOfBoundsException;
 
+    Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
+
     Object shallowClone(Object seq);
   }
 
@@ -206,6 +208,12 @@ public class Seq {
           throw ex;
         }
       }
+    }
+
+    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final List<Object> lst = (List<Object>)seq;
+      lst.add(idx, element);
+      return lst;
     }
 
     public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
@@ -241,6 +249,9 @@ public class Seq {
         throw new RuntimeException("Set by index not supported for Set objects");
       }
 
+      public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+         throw new RuntimeException("Insert by index not supported for Set objects");
+      }
 
       public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
         throw new RuntimeException("Get by index not supported for Set objects");
@@ -268,7 +279,7 @@ public class Seq {
       }
     };
   
-  protected static final SeqAdapter stringBufferAdapter = new SeqAdapter() {
+    protected static final SeqAdapter stringBufferAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final StringBuffer buf = (StringBuffer)seq;
       try {
@@ -285,6 +296,26 @@ public class Seq {
       }
     }
 
+    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final StringBuffer buf = (StringBuffer)seq;
+      if (element instanceof CharSequence) {
+        buf.insert(idx, (CharSequence) element);
+      } else if (element instanceof Character) {
+        buf.insert(idx, (Character) element);
+      } else if (null == element) {
+        buf.insert(idx, (Character) element);
+      } else if (element.getClass().isArray()
+                 && element.getClass().getComponentType() == Character.TYPE) {
+        buf.insert(idx, (char[]) element);
+      } else if (element.getClass().isArray()
+                 && element.getClass().getComponentType() == Byte.TYPE) {
+        buf.insert(idx, (byte[]) element);
+      } else {
+        buf.insert(idx, element);
+      }
+      return seq;
+    }
+
     public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
       return ((StringBuffer) seq).charAt(idx);
     }
@@ -292,10 +323,10 @@ public class Seq {
     public Object shallowClone(Object seq) {
       return new StringBuffer((StringBuffer) seq);
     }
-  };  
-  
+  };
 
-  protected static final SeqAdapter stringBuilderAdapter = new SeqAdapter() {
+
+    protected static final SeqAdapter stringBuilderAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final StringBuilder buf = (StringBuilder)seq;
       try {
@@ -312,6 +343,26 @@ public class Seq {
       }
     }
 
+    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final StringBuilder buf = (StringBuilder)seq;
+      if (element instanceof CharSequence) {
+        buf.insert(idx, (CharSequence) element);
+      } else if (element instanceof Character) {
+        buf.insert(idx, (Character) element);
+      } else if (null == element) {
+        buf.insert(idx, (Character) element);
+      } else if (element.getClass().isArray()
+                 && element.getClass().getComponentType() == Character.TYPE) {
+        buf.insert(idx, (char[]) element);
+      } else if (element.getClass().isArray()
+                 && element.getClass().getComponentType() == Byte.TYPE) {
+        buf.insert(idx, (byte[]) element);
+      } else {
+        buf.insert(idx, element);
+      }
+      return seq;
+    }
+
     public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
       return ((StringBuilder) seq).charAt(idx);
     }
@@ -324,6 +375,10 @@ public class Seq {
   protected static final SeqAdapter charSequenceAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element)  {
       throw new RuntimeException("Cannot modify object of type " + seq.getClass());
+    }
+
+    public Object insert(Object seq, int idx, Object element)  {
+      throw new RuntimeException("Cannot insert into  object of type " + seq.getClass());
     }
 
     public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
@@ -343,6 +398,10 @@ public class Seq {
       return result;
     }
 
+    public Object insert(Object seq, int idx, Object element)  {
+      throw new RuntimeException("Cannot insert into object of type " + seq.getClass());
+    }
+      
     public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
       return Array.get(seq, idx);
     }
@@ -360,6 +419,10 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter mapAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element)  {
+      return ((Map<Object,Object>)seq).put(idx,element);
+    }
+
+    public Object insert(Object seq, int idx, Object element)  {
       return ((Map<Object,Object>)seq).put(idx,element);
     }
 
@@ -390,6 +453,10 @@ public class Seq {
 
   protected static final SeqAdapter nullAdapter = new SeqAdapter() {
     public Object set(Object seq, int idx, Object element)  {
+      return null;
+    }
+
+    public Object insert(Object seq, int idx, Object element)  {
       return null;
     }
 
@@ -489,6 +556,14 @@ public class Seq {
     return adapter.set(seq, index, element);
   }
 
+  /**
+   * put sequence element by index. Return old value at this index.
+   */
+  public static Object insertElementByIndex(Object seq, int index, Object element)
+      throws IndexOutOfBoundsException {
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
+    return adapter.insert(seq, index, element);
+  }
 
   /**
    * put sequence element by key. Return old value at this index.
