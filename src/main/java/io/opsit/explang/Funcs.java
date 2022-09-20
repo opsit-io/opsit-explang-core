@@ -4393,7 +4393,12 @@ public class Funcs {
     }
   }
 
-  public static class VarExp extends AbstractExpr {
+
+  public interface LValue {
+    Object doSet(Backtrace backtrace, ICtx ctx, Object value);
+  }
+  
+  public static class VarExp extends AbstractExpr implements LValue {
     private final String varname;
 
     public String getName() {
@@ -4402,6 +4407,12 @@ public class Funcs {
 
     public VarExp(String str) {
       this.varname = str;
+    }
+
+    @Override
+    public Object doSet(Backtrace backtrace, ICtx ctx, Object value) {
+      ctx.greplace(varname, value);
+      return value;
     }
 
     @Override

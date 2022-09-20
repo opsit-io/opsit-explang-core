@@ -429,6 +429,7 @@ public class Compiler {
             "==", SEQUAL.class,
             // variables
             "SETQ", SETQ.class,
+            "SETF", SETF.class,
             "SETV", SETV.class,
             "SET", SET.class,
             "LET", LET.class,
@@ -1419,6 +1420,40 @@ public class Compiler {
     }
   }
 
+  @Docstring(text = "FIXME: TBD.")
+  @Package(name = Package.BASE_BINDINGS)
+  public class SETF extends AbstractForm {
+    protected ICompiled rvalue = null;
+    protected ICompiled lvalue = null;
+
+
+    @Override
+    public void setRawParams(ASTNList params) throws InvalidParametersException {
+      if (params.size() != 2) {
+        throw new InvalidParametersException(debugInfo,
+            getName() + " expects two parameters");
+      }
+      ASTN lvalueASTN = params.get(0);
+      ICompiled lvalueExp = compile(lvalueASTN);
+      if (!(lvalueExp instanceof LValue)) {
+        throw new InvalidParametersException(debugInfo,
+            getName() + ": Invalid first parameter, must be an LValue compatible expression");
+      }
+      this.lvalue = lvalueExp;
+      this.rvalue = compile(params.get(1));
+    }
+
+    @Override
+    public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
+      ICtx localCtx = new Ctx(ctx);
+      Object val = rvalue.evaluate(backtrace, localCtx);
+      ((LValue) lvalue).doSet(backtrace, localCtx, val);
+      return val;
+    }
+  }
+
+
+  
   @Docstring(text = "Destructuring LET construct.")
   @Package(name = Package.BASE_BINDINGS)
   public class DLET extends AbstractForm {
