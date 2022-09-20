@@ -4251,10 +4251,10 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_KEY, "size", "element-type", ArgSpec.ARG_REST, "elements"})
+  @Arguments(spec = {ArgSpec.ARG_KEY, "size", "elementType", ArgSpec.ARG_REST, "elements"})
   @Docstring(
       text =
-          "Ceate an Array. Creates array of objects of specified size. Optional :element-type"
+          "Create an Array. Creates array of objects of specified size. Optional :elementType"
               + " argument specifies type of array elements. The default is java.lang.Object")
   @Package(name = Package.BASE_SEQ)
   public static class MAKE_ARRAY extends FuncExp {
@@ -4268,7 +4268,7 @@ public class Funcs {
       } else if (null != eltsObj) {
         size = Seq.getLength(eltsObj, false);
       }
-      final Object et = eargs.get("element-type", backtrace);
+      final Object et = eargs.get("elementType", backtrace);
       Object result = null;
       if (null != et) {
         final Class<?> tclass = Utils.tspecToClass(et);
