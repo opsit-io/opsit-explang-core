@@ -4176,7 +4176,22 @@ public class Funcs {
           "Get Array element value. Return array element at specified index. Throws"
               + " ArrayOutOfBoundsException if index is invalid")
   @Package(name = Package.BASE_SEQ)
-  public static class AREF extends FuncExp {
+  public static class AREF extends FuncExp implements LValue {
+
+    @Override
+    public Object doSet(Backtrace backtrace, ICtx ctx, Object value) {
+      Eargs eargs = this.evaluateParameters(backtrace, ctx);
+      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
+      final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
+      try {
+        Array.set(arrayObj, index, value);
+      } catch (IndexOutOfBoundsException ex) {
+        throw new ExecutionException(ex);
+      }
+      return value;
+    }
+
+    
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
