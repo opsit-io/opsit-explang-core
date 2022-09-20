@@ -2690,7 +2690,7 @@ public class Funcs {
               + "where ks is a sequence of keys. Returns NIL if the key\n "
               + "is not present, or the not-found value if supplied.")
   @Package(name = Package.BASE_SEQ)
-  public static class GET_IN extends FuncExp {
+  public static class GET_IN extends FuncExp implements LValue {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final int argsnum = eargs.size();
@@ -2703,6 +2703,22 @@ public class Funcs {
       final Object notDefined = argsnum == 2 ? null : eargs.get(2, backtrace);
       final Object result = doGetIn(obj, ksObj, 0, notDefined, backtrace);
       return result;
+    }
+
+    @Override
+    public Object doSet(Backtrace backtrace, ICtx ctx, Object value) {
+      Eargs eargs = this.evaluateParameters(backtrace, ctx);
+      final int argsnum = eargs.size();
+      if (argsnum != 2 && argsnum != 3) {
+        throw new ExecutionException(
+            backtrace, "Unexpected number of arguments: expected 2 or 3, but got " + eargs.size());
+      }
+      final Object obj = eargs.get(0, backtrace);
+      final Object ksObj = eargs.get(1, backtrace);
+      // FIXME: should be any sequence probably
+      // FIXME: check type and give normal error
+      setIn(obj, (List<?>)ksObj, value, null);
+      return value;
     }
   }
 
