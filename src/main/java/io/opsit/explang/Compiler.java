@@ -1420,7 +1420,7 @@ public class Compiler {
     }
   }
 
-  @Docstring(text = "FIXME: TBD.")
+  @Docstring(text = "Set value of a variable o location (place in a list , array, etc.) to value.")
   @Package(name = Package.BASE_BINDINGS)
   public class SETF extends AbstractForm {
     protected ICompiled rvalue = null;
@@ -1445,9 +1445,9 @@ public class Compiler {
 
     @Override
     public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
-      ICtx localCtx = new Ctx(ctx);
-      Object val = rvalue.evaluate(backtrace, localCtx);
-      ((LValue) lvalue).doSet(backtrace, localCtx, val);
+      final ICtx localCtx = new Ctx(ctx);
+      final Object val = rvalue.evaluate(backtrace, localCtx);
+      ((LValue) lvalue).doSet(backtrace, ctx, val);
       return val;
     }
   }

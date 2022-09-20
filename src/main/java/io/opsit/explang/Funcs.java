@@ -4442,23 +4442,16 @@ public class Funcs {
 
     @Override
     public Object doSet(Backtrace backtrace, ICtx ctx, Object value) {
-      ctx.greplace(varname, value);
+      ctx.replace(varname, value);
       return value;
     }
 
     @Override
     protected Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       final Object obj = ctx.get(varname, backtrace);
-      if (null == obj) {
-        if (ctx.contains(varname)) {
-          return null;
-        }
+      if (null == obj && !ctx.contains(varname)) {
         ctx.onMissingVar(varname);
-        // throw new RuntimeException("variable '"+varname+"' does not exist in this context");
       }
-      // if (obj instanceof LazyEval) {
-      //  return ((LazyEval)obj).getValue(backtrace);
-      // }
       return obj;
     }
 
