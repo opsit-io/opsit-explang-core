@@ -46,6 +46,7 @@ public class ArgTest extends AbstractTest {
     this.restIdx = restIdx;
     this.readParams = readParams;
     this.exception = exception;
+    this.isVerbose = "true".equalsIgnoreCase(System.getenv("EXPLANG_VERBOSE_TEST"));
   }
 
     
@@ -180,20 +181,22 @@ public class ArgTest extends AbstractTest {
             4,  Integer.MAX_VALUE, new  InvalidParametersException("expected keyword parameter name, but got 10")},
           { list("x", "&REST", "&KEY", "a","b","c"),
             list(10, ":c",3,":b",2,":a",1),
-            list(10,1,2,3),
-            4,  Integer.MAX_VALUE, null},
+            list( 10,1,2,3),
+            4,  Integer.MAX_VALUE, new  InvalidParametersException("Unexpected keyword parameter :a")}
+          ,
+          
           { list("x", "&REST","r", "&KEY", "a","b","c"),
             list(10, ":c",3,":b",2,":a",1),
-            list(10,list(":c",3,":b",2,":a",1),1,2,3),
-            10,  1, null},
+            list(10,list(),1,2,3),
+            4,  1, null},
           { list("x", "&REST","r", "&KEY", "a","b","c"),
             list(10, ":c",3,":b",2),
-            list(10,list(":c",3,":b",2),null,2,3),
-            8,  1, null},
+            list(10,list(),null,2,3),
+            4,  1, null},
           { list("x", "&REST","r", "&KEY", "a","b","c"),
             list(10, ":c",3,":b",2),
-            list(10,list(":c",3,":b",2),null,2,3),
-            8,  1, null},
+            list(10,list(),null,2,3),
+            4,  1, null},
           { list("x", "&REST","r", "&KEY", "a","b","c"),
             list(10, ":c",3,":b",2,":d",4),
             list(10,list(":c",3,":b",2),null,2,3),
@@ -208,12 +211,12 @@ public class ArgTest extends AbstractTest {
             1,  1, null},
           { list("x","&OPTIONAL","y", "&REST","r", "&KEY","k"),
             list(10,9,":k",8),
-            list(10,9,list(":k",8),8),
-            5,  2, null},           
+            list(10,9,list(),8),
+            3,  2, null},           
           { list("x","&OPTIONAL","y", "&REST","r", "&KEY","k","&ALLOW-OTHER-KEYS"),
             list(10,9,":o",2,":k",8),
-            list(10,9,list(":o",2,":k",8),8),
-            7,  2, null},
+            list(10,9,list(":o",2),8),
+            5,  2, null},
           { list("x","&KEY","k","l","&REST","r"),
             list(10,":l",2,":k",8,1,2,3),
             list(10,8,2,list(1,2,3)),
@@ -238,20 +241,24 @@ public class ArgTest extends AbstractTest {
             list(":k",2),
             list(2),
             1,  Integer.MAX_VALUE, null},
-        }));
+            }
+          ));
     return list;
   }
 
     
   @Test
   public void testArgs() throws Throwable {
+    clearLog();
     try {
+      log("\n\n TEST #: " + testNum);
       Compiler comp = new Compiler();
       IParser parser = comp.getParser();
       ParseCtx pctx = new ParseCtx(this.getClass().getSimpleName(),
                                    testNum,0,testNum,0);
       ArgSpec spec = new ArgSpec((ASTNList)ArgSpecTest.astnize(argSpec,parser,pctx),
                                  comp);
+      log("ArgSpec:  " + argSpec);
       List<ICompiled> testParams = new ArrayList<ICompiled>();
       for (Object param : params) {
         if (param instanceof Integer) {
@@ -269,6 +276,8 @@ public class ArgTest extends AbstractTest {
         }
       }
       ArgList argList = new ArgList(spec, testParams);
+      log("ArgList:  " + argList);
+      log("readParams:  " + readParams);
       Assert.assertEquals(this.size, argList.totalSize());
       Assert.assertEquals(this.restIdx, argList.restIdx());
       List <Object> parsedParams = new ArrayList<Object>();
@@ -276,10 +285,11 @@ public class ArgTest extends AbstractTest {
         Object obj = recursiveEval(expr, comp.newBacktrace(), comp.newCtx());
         parsedParams.add(obj);
       }
+      log("parsedParams:  " + parsedParams);
       Assert.assertEquals(this.readParams, parsedParams);
 
     } catch (Exception e) {
-            
+      log("Exception:  " + e);
       try {
         Assert.assertNotNull(exception);
         Assert.assertEquals(exception.getClass(), e.getClass());
@@ -290,8 +300,9 @@ public class ArgTest extends AbstractTest {
         throw ae;
       }
     } catch (Throwable t) {
-      flushLog();
       throw t;
+    } finally {
+      flushLog();
     }
   }
 

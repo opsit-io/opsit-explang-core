@@ -825,6 +825,14 @@ public class CompilerTest extends AbstractTest {
             "((LAMBDA (&KEY (a NIL sa)) (LIST a sa)) :a NIL)", list(null, true), true, null, null, p
           },
           {
+            "((LAMBDA (x &REST &KEY a b c &ALLOW-OTHER-KEYS) (LIST x a b c)) 10 :c 3 :b 2 :z 8 :a 9)",
+            list(10,list(new Keyword(":z"), 8, new Keyword(":a"), 9), 2, 3),
+            true,
+            null,
+            null,
+            p
+          },
+          {
             "((LAMBDA (&OPTIONAL (a (+ 5 2) sa)) (LIST a sa)) 3 )",
             list(3, true),
             true,

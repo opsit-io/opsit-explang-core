@@ -132,10 +132,14 @@ public class ArgList {
       throws InvalidParametersException {
     int idx = st.ldst;
     boolean outOfKeyArgs = false;
+
     while (idx < paramsArray.length - st.rdst) {
       final ArgSpec.AF flagsVal = spec.getArg(idx).getFlag();
       if (flagsVal != AF.KEY && flagsVal != AF.REST_KEY) {
         break;
+      }
+      if (flagsVal == AF.REST_KEY && null == this.rest) {
+        mkRestList(paramsArray, st);
       }
       if (st.lsrc >= params.size() - st.rdst || outOfKeyArgs) {
         // fill non-resolved key word params with default values
@@ -171,25 +175,25 @@ public class ArgList {
       ICompiled parValue = params.get(st.lsrc + 1);
       // System.out.println(pName+"="+pValue);
       int parIdx = spec.nameToIdx(((Keyword) parName).getName().substring(1));
-      if (parIdx >= 0) {
+      if (parIdx >= 0 && parIdx != this.restIdx) {
         paramsArray[parIdx] = copyParam(spec.getArg(idx), parValue);
         setFlags[parIdx] = true;
         idx++;
-      } else if (!spec.getArg(idx).isAllowOtherKeys()) {
-        throw new InvalidParametersException("Unexpected keyword parameter " + parName);
-      }
-      if (null != this.rest) {
-        this.rest.add(new Funcs.ValueExpr(parName));
-        this.rest.add(params.get(st.lsrc + 1));
+      } else {
+        if (!spec.getArg(idx).isAllowOtherKeys()) {
+          throw new InvalidParametersException("Unexpected keyword parameter " + parName);
+        }
+        if (null != this.rest) {
+          this.rest.add(new Funcs.ValueExpr(parName));
+          this.rest.add(copyParam(spec.getArg(idx), parValue));
+        }
       }
       st.lsrc += 2;
     }
     st.ldst = idx;
   }
 
-  /* copy rest of arguments onto &rest argument*/
-  private void copyRestParams(List<ICompiled> params, ICompiled[] paramsArray, ParseStat st)
-      throws InvalidParametersException {
+  private void mkRestList(ICompiled[] paramsArray, ParseStat st) {
     if (null == this.rest) {
       this.rest = new ArrayList<ICompiled>();
       Funcs.ValueExpr compiledList = new Funcs.ValueExpr(rest);
@@ -198,6 +202,12 @@ public class ArgList {
     } else {
       throw new RuntimeException("Internal error: rest parameter encountered twice");
     }
+  }
+  
+  /* copy rest of arguments onto &rest argument*/
+  private void copyRestParams(List<ICompiled> params, ICompiled[] paramsArray, ParseStat st)
+      throws InvalidParametersException {
+    mkRestList(paramsArray, st);
     if (st.ldst + 1 >= spec.size() - st.rdst) {
       // loop on specified parameters
       // only when there are no
@@ -253,7 +263,9 @@ public class ArgList {
   private Object evaluateArgument(int argIdx, Backtrace backtrace, ICtx ctx, Eargs eargs) {
     final ICompiled varExpr = params[argIdx];
     final ArgSpec.Arg arg = spec.getArg(argIdx);
-    if (arg.getFlag() == ArgSpec.AF.REST) {
+    // may be with REST_KEY as well
+    //if (arg.getFlag() == ArgSpec.AF.REST) {
+    if (argIdx == this.restIdx) {
       @SuppressWarnings("unchecked")
       final List<ICompiled> lst = (List<ICompiled>) varExpr.evaluate(backtrace, ctx);
       final int size = lst.size();

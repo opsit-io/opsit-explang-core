@@ -285,7 +285,7 @@ public class ArgSpec {
     // }
     // final List astnList = argSpecs.getList();
 
-    Object []specs = new Object[astnList.size()];
+    Object[] specs = new Object[astnList.size()];
     for (int i = 0; i < astnList.size(); i++) {
       ASTN astn = astnList.get(i);
       if (!astn.isList()) {
@@ -294,6 +294,7 @@ public class ArgSpec {
         ASTNList lst = (ASTNList) astn;
         List<Object> listSpec = new ArrayList<Object>(lst.size());
         for (int j = 0; j < lst.size(); j++) {
+
           ASTN el = lst.get(j);
           if (!el.isList() && (el.getObject() instanceof Symbol)) {
             listSpec.add(el.getObject());
