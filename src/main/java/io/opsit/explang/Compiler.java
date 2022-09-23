@@ -514,6 +514,8 @@ public class Compiler {
             "ASSOC", ASSOC.class,
             "ASSOC!", NASSOC.class,
             "REPLACE", REPLACE.class,
+            "INTERPOSE", INTERPOSE.class,
+            "JOIN", JOIN.class,
             // java FFI
             ".", DOT.class,
             ".S", DOTS.class,
@@ -1752,25 +1754,18 @@ public class Compiler {
         throw new InvalidParametersException(
             debugInfo, "SEARCH expects 2 parameters: sequence, test");
       }
-      input = compile(params.get(0));
+      this.input = compile(params.get(0));
       ASTN test = params.get(1);
-      testASTN = test;
+      //testASTN = test;
       if (test instanceof ASTNLeaf) {
         Object testObj = test.getObject();
-        if ((testObj instanceof CharSequence)
-            || (testObj instanceof Pattern)
-            || (testObj instanceof Number)) {
-          ParseCtx pctx = test.getPctx();
-          test =
-              new ASTNList(
-                  Utils.list(
-                      new ASTNLeaf(new Symbol("DWIM-MATCHES"), pctx),
-                      new ASTNLeaf(new Symbol("_"), pctx),
-                      test),
-                  pctx);
-        }
+        ParseCtx pctx = test.getPctx();
+        test =
+          new ASTNList(Utils.list(new ASTNLeaf(new Symbol("DWIM-MATCHES"), pctx),
+                                  new ASTNLeaf(new Symbol("_"), pctx),
+                                  test), pctx);
       }
-      predicate = compile(test);
+      this.predicate = compile(test);
     }
 
     @Override
