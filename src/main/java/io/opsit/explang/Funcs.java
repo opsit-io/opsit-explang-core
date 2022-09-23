@@ -4217,21 +4217,22 @@ public class Funcs {
   }
 
 
-  @Arguments(spec = {ArgSpec.ARG_PIPE, "seq" , ArgSpec.ARG_REST, "sep"})
-  @Docstring(text = "Return sequence elements of seq separated by elements in sep. Currently only lists are supported.")
+  @Arguments(spec = {ArgSpec.ARG_PIPE, "seq", ArgSpec.ARG_REST, "sep"})
+  @Docstring(text = "Return sequence elements of seq separated by elements in sep. "
+             + "Currently only lists are supported.")
   @Package(name = Package.BASE_SEQ)
   public static class INTERPOSE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object seqObj = Utils.asObject(eargs.get(0, backtrace));
-      final List<?>  seps= (List<?>)eargs.get(1, backtrace);
+      final List<?>  seps = (List<?>)eargs.get(1, backtrace);
       //FIXME: support more seq. types, list kinds
       if (seqObj instanceof List) {
         final List<?> seqLst = (List<?>)seqObj;
         final List<Object> result = new ArrayList<Object>(seqLst.size() * (1 + seps.size()));
         for (int i = 0; i < seqLst.size(); i++) {
           if (i > 0) {
-            for (int j=0; j < seps.size(); j++) {
+            for (int j = 0; j < seps.size(); j++) {
               result.add(seps.get(j));
             }
           }
@@ -4249,8 +4250,9 @@ public class Funcs {
   }
 
 
-  @Arguments(spec={ArgSpec.ARG_OPTIONAL, "sep", ArgSpec.ARG_MANDATORY, ArgSpec.ARG_PIPE, "seqs"})
-  @Docstring(text = "Return sequence elements of seq joined by elements in sep. Currently only strings are supported.")
+  @Arguments(spec = {ArgSpec.ARG_OPTIONAL, "sep", ArgSpec.ARG_MANDATORY, ArgSpec.ARG_PIPE, "seqs"})
+  @Docstring(text = "Return sequence elements of seq joined by elements in sep. "
+             + " Currently only strings are supported.")
   @Package(name = Package.BASE_SEQ)
   public static class JOIN extends FuncExp {
     @Override
