@@ -604,7 +604,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH"
+            "(LET ((r ()) (ar (MAKE-ARRAY :size 3))) (ASET! ar 0 2) (ASET! ar 1 3) (ASET! ar 2 4) (FOREACH"
                 + " (a ar r)  (SETV r (APPEND r (LIST 1 a)))))",
             list(1, 2, 1, 3, 1, 4),
             true,
@@ -613,7 +613,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LET ((r ()) (ar (LIST NIL NIL NIL))) (ASET ar 0 2) (ASET ar 1 3) (ASET ar 2 4) (FOREACH"
+            "(LET ((r ()) (ar (LIST NIL NIL NIL))) (ASET! ar 0 2) (ASET! ar 1 3) (ASET! ar 2 4) (FOREACH"
                 + " (a ar r)  (SETV r (APPEND r (LIST 1 a)))))",
             list(1, 2, 1, 3, 1, 4),
             true,
