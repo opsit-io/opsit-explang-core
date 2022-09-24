@@ -2534,8 +2534,8 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"elt", ArgSpec.ARG_PIPE, "sequence"})
-  @Docstring(text = "Check if an element is contained in a sequence. ")
+  @Arguments(spec = {"elt", ArgSpec.ARG_PIPE, "col"})
+  @Docstring(text = "Check if an element is contained in a collection. ")
   @Package(name = Package.BASE_SEQ)
   public static class IN extends FuncExp {
     @Override
@@ -2546,7 +2546,11 @@ public class Funcs {
       }
       Object elt = eargs.get(0, backtrace);
       Object seq = eargs.get(1, backtrace);
+      if (seq instanceof Map) {
+        return ((Map<?,?>) seq).containsValue(elt);
+      }
       final boolean[] holder = new boolean[1];
+      // FIXME: optimize for specigic types
       Seq.forEach(
           seq,
           new Operation() {
