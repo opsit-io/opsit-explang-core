@@ -580,17 +580,26 @@ public class Seq {
 
   
   /**
-   * Get sequence element by index.
+   * Get sequence element by index. Ignore index errors.
    */
   public static Object getElementByIndex(Object seq, int index) {
-    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
     try {
-      return adapter.get(seq, index);
+      return refElementByIndex(seq, index);
     } catch (IndexOutOfBoundsException ex) {
       return null;
     }
   }
 
+    
+  /**
+   * Get sequence element by index. Throws IndexOutOfBounds exception
+   * if index is invalid.
+   */
+  public static Object refElementByIndex(Object seq, int index) {
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
+    return adapter.get(seq, index);
+  }
+  
   /**
   * Get sequence element by index.
   */

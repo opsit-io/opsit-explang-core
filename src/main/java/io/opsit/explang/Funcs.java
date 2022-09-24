@@ -4172,8 +4172,7 @@ public class Funcs {
               + " array this function will attempt to perform necessary coercion operations. "
               + " The coercions  work in the same way as INT, FLOAT, STRING and rest of the "
               + " built-in coercion functions. May fail with index out of bound exception."
-              + " The function returns normally without any change to the target structure"
-              + " The function returns previous value of the element or NIL if it did not exist")
+              + " The function returns previous value of the element.")
   @Arguments(spec = {"obj", "key", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class ASET extends FuncExp {
@@ -4198,26 +4197,23 @@ public class Funcs {
               + " ArrayOutOfBoundsException if index is invalid")
   @Package(name = Package.BASE_SEQ)
   public static class AREF extends FuncExp implements LValue {
-
     @Override
     public Object doSet(Backtrace backtrace, ICtx ctx, Object value) {
       Eargs eargs = this.evaluateParameters(backtrace, ctx);
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       try {
-        Array.set(arrayObj, index, value);
+        return Seq.setElementByIndex(arrayObj, index, value);
       } catch (IndexOutOfBoundsException ex) {
         throw new ExecutionException(ex);
       }
-      return value;
     }
-
     
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
-      return Array.get(arrayObj, index);
+      return Seq.refElementByIndex(arrayObj, index);
     }
   }
 
