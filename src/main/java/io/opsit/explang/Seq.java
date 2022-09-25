@@ -129,6 +129,25 @@ public class Seq {
     }
   }
 
+
+  /**
+   * Check if an associative collection contains key.
+   */
+  public static boolean containsKey(Object seq, Object key) {
+    if (isMap(seq)) {
+      return ((Map<?,?>) seq).containsKey(key);
+    } else if (null == seq) {
+      return false;
+    } else if (isIndexed(seq)) {
+      final int idx = Utils.asNumber(key).intValue();
+      return idx >= 0 && idx < getLength(seq, false);
+    } else if (isSet(seq)) {
+      return ((Set<?>) seq).contains(key);
+    } else {
+      return false;
+    }
+  }
+
   /**
    * Check if sequence contains object.
    */

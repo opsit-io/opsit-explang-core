@@ -2824,6 +2824,16 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {"seq", "keyidx"})
+  @Docstring(text ="Check whether Map or indexed sequence has given key or index.")
+  @Package(name = Package.BASE_SEQ)
+  public static class HASKEY extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      return Seq.containsKey(eargs.get(0, backtrace), eargs.get(1, backtrace));
+    }
+  }
+
   @Arguments(
       text = "map {key val}+",
       spec = {"map", "key", "val", ArgSpec.ARG_REST, "kvpairs"})
