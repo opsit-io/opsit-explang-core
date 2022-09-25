@@ -548,7 +548,6 @@ public class Compiler {
             "FORMAT", FORMAT.class,
             "STRING-BUFFER", STRINGBUFFER.class,
             "STRING-BUILDER", STRINGBUILDER.class,
-            "SEQ", SEQ.class,
             "SYMBOL", SYMBOL.class,
             // hashtables
             "WITH-BINDINGS", WITH_BINDINGS.class,

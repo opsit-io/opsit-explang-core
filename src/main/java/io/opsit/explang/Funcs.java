@@ -3673,28 +3673,6 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"object"})
-  @Docstring(text = "Coerce object into a sequence.")
-  @Package(name = Package.BASE_SEQ)
-  public static class SEQ extends FuncExp {
-    @Override
-    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Object val = eargs.get(0, backtrace);
-      List<?> result = null;
-      if ((null == val) || (val instanceof List)) {
-        result = (List<?>) val;
-      } else if (val instanceof String) {
-        // FIXME: split to chars
-        result = Arrays.asList(((String) val).split(""));
-      } else if (val.getClass().isArray()) {
-        result = Arrays.asList((Object[]) val);
-      } else {
-        throw new ExecutionException(backtrace, "Do not know how to sequence " + val);
-      }
-      return result;
-    }
-  }
-
   @Arguments(
       spec = {ArgSpec.ARG_OPTIONAL, "f", ArgSpec.ARG_PIPE, ArgSpec.ARG_MANDATORY, "sequence"})
   @Docstring(text = "Sort a sequence (non destructively).")

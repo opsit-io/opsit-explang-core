@@ -2053,14 +2053,6 @@ public class CompilerTest extends AbstractTest {
           {"(STRING-BUFFER \"foo\" \"bar\")", new StringBuffer("foobar"), true, null, null, p},
           {"(LET ((M (HASHMAP 333 222)) (l (APPEND (LIST) M)) (E (GET l 0))) (GET E \"key\"))", 333, true, null, null, p},
           {"(LET ((M (HASHMAP 333 222)) (l (APPEND (LIST) M)) (E (GET l 0))) (GET E \"value\"))", 222, true, null, null, p},
-          {
-            "(SEQ (. \"H-E-L-P\" \"split\" (LIST \"-\")))",
-            list("H", "E", "L", "P"),
-            true,
-            null,
-            null,
-            p
-          },
           {"(SYMBOL \"fooo\")", new Symbol("fooo"), true, null, null, p},
           {
             "(WITH-BINDINGS (HASHMAP \"a\"   1   \"B\"    2  \"c\" 3 \"D\" 4) (+ a B c D))",
