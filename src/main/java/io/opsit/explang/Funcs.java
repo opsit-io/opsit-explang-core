@@ -2602,6 +2602,7 @@ public class Funcs {
   @SuppressWarnings("unchecked")
   protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj) {
     result[0] = null;
+    int idx = -1;
     if (obj instanceof Map) {
       final Map<Object, Object> map = (Map<Object, Object>) obj;
       result[0] = map.get(keyObj);
@@ -2609,13 +2610,6 @@ public class Funcs {
         if (!map.containsKey(keyObj)) {
           return false;
         }
-      }
-    } else if (obj instanceof List) {
-      final List<Object> lst = (List<Object>) obj;
-      try {
-        result[0] = lst.get(getIntIdx(keyObj));
-      } catch (IndexOutOfBoundsException ex) {
-        return false;
       }
     } else if (obj instanceof Set) {
       final Set<Object> s = (Set<Object>) obj;
@@ -2625,16 +2619,24 @@ public class Funcs {
       result[0] = keyObj;
     } else if (obj == null) {
       return false;
-    } else if (obj instanceof CharSequence) {
-      final CharSequence s = (CharSequence) obj;
+      
+    } else if ((obj instanceof List) && (idx=getIntIdx(keyObj)) >= 0) {
+      final List<Object> lst = (List<Object>) obj;
       try {
-        result[0] = s.charAt(getIntIdx(keyObj));
+        result[0] = lst.get(idx);
       } catch (IndexOutOfBoundsException ex) {
         return false;
       }
-    } else if (obj.getClass().isArray()) {
+    } else if ((obj instanceof CharSequence) && (idx=getIntIdx(keyObj)) >= 0) {
+      final CharSequence s = (CharSequence) obj;
       try {
-        result[0] = Array.get(obj, getIntIdx(keyObj));
+        result[0] = s.charAt(idx);
+      } catch (IndexOutOfBoundsException ex) {
+        return false;
+      }
+    } else if (obj.getClass().isArray() && (idx=getIntIdx(keyObj)) >= 0) {
+      try {
+        result[0] = Array.get(obj, idx);
       } catch (ArrayIndexOutOfBoundsException ex) {
         return false;
       }
