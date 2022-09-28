@@ -35,7 +35,7 @@ public class ArgSpec {
     REST_KEY;
   }
 
-  protected static class Arg {
+  public static class Arg {
     private AF flag;
     private String name;
     /**
@@ -49,6 +49,10 @@ public class ArgSpec {
     private boolean allowOtherKeys = false;
     private boolean lazy = false;
     private boolean pipe = false;
+
+    public String getName() {
+      return this.name;
+    }
 
     public AF getFlag() {
       return flag;
@@ -64,6 +68,10 @@ public class ArgSpec {
 
     public boolean isAllowOtherKeys() {
       return allowOtherKeys;
+    }
+
+    public ICompiled getInit() {
+      return initForm;
     }
 
     protected Arg() {

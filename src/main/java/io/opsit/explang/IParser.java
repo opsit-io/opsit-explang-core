@@ -1,7 +1,6 @@
 package io.opsit.explang;
 
 import java.io.Reader;
-import java.util.List;
 
 public interface IParser {
   public ASTNList parse(ParseCtx pxt, Reader reader, int maxExprs);
@@ -12,5 +11,5 @@ public interface IParser {
 
   public boolean supportREPLStream();
 
-  public String formatArgSpec(List<String> spec);
+  public String formatArgSpec(ArgSpec spec);
 }

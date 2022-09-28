@@ -4370,14 +4370,16 @@ public class Funcs {
   public static class FDesc extends BeanMap {
     protected String name;
     protected IParser parser;
+    protected Compiler compiler;
 
     /**
      * Construct FSesc from ICompiled object.
      */
-    public FDesc(Object obj, String name, IParser parser) {
+    public FDesc(Object obj, String name, IParser parser, Compiler compiler) {
       super(obj);
       this.name = name;
       this.parser = parser;
+      this.compiler = compiler;
     }
 
     @Override
@@ -4401,7 +4403,7 @@ public class Funcs {
     protected String formatArgs() {
       ICode codeObj = (ICode) this.obj;
       if (null != parser && null != codeObj.getArgSpec()) {
-        return parser.formatArgSpec(codeObj.getArgSpec().asSpecList());
+        return parser.formatArgSpec(codeObj.getArgSpec());
       } else {
         return codeObj.getArgDescr();
       }
@@ -4448,7 +4450,8 @@ public class Funcs {
       final Object funcObj = findFuncObject(target, eargs);
       FDesc fdesc = new FDesc((ICode) funcObj,
                               Utils.asString(target),
-                              eargs.getCompiler().getParser());
+                              eargs.getCompiler().getParser(),
+                              eargs.getCompiler());
       return fdesc;
     }
   }

@@ -196,10 +196,10 @@ public class SexpParser implements IParser {
   }
 
   @Override
-  public String formatArgSpec(List<String> spec) {
+  public String formatArgSpec(ArgSpec spec) {
     StringBuilder buf = new StringBuilder(64);
     if (null != spec) {
-      for (String str : spec) {
+      for (String str : spec.asSpecList()) {
         buf.append(" ").append(str);
       }
     } else {
