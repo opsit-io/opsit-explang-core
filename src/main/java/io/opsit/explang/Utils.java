@@ -437,7 +437,7 @@ public class Utils {
       return false;
     }
     if (val instanceof CharSequence) {
-      return !((CharSequence) val).isEmpty();
+      return ((CharSequence) val).length() > 0;
     }
     if (val instanceof Boolean) {
       return (Boolean) val;
