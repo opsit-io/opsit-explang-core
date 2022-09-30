@@ -211,14 +211,21 @@ public class Main {
       if (verbose) {
         System.err.println("AST(" + file.getName() + "):\n" + asts + "\n------\n");
       }
-      final List<ICompiled> exprs = compiler.compileExpList(asts);
-      for (ICompiled expr : exprs) {
-        if (verbose) {
-          System.err.println("EXPR(" + file.getName() + "):\n" + expr + "\n------\n");
-        }
-        result = expr.evaluate(compiler.newBacktrace(), ctx);
-        if (verbose) {
-          System.err.println("RESULT(" + file.getName() + "):\n" + result + "\n------\n");
+      if (asts.hasProblems()) {
+        // won't hapen
+        System.out.println("Encountered parser errors:");
+        System.out.print(Utils.listParseErrors(asts));
+        rc = 2;
+      } else {
+        final List<ICompiled> exprs = compiler.compileExpList(asts);
+        for (ICompiled expr : exprs) {
+          if (verbose) {
+            System.err.println("EXPR(" + file.getName() + "):\n" + expr + "\n------\n");
+          }
+          result = expr.evaluate(compiler.newBacktrace(), ctx);
+          if (verbose) {
+            System.err.println("RESULT(" + file.getName() + "):\n" + result + "\n------\n");
+          }
         }
       }
     } catch (ParserException ex) {
