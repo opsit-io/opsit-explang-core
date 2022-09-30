@@ -3,8 +3,7 @@ package io.opsit.explang;
 import io.opsit.explang.Compiler.ICtx;
 import java.io.BufferedReader;
 import java.io.Reader;
-
-
+import java.util.List;
 
 public class REPL implements IREPL {
   protected boolean verbose = false;
@@ -122,20 +121,7 @@ public class REPL implements IREPL {
             if (verbose) {
               System.out.println("\nPARSER RETURN: " + exprs);
             }
-            if (null != exprs
-                && exprs.size() > 0
-                &&
-                // we can parse the last expression =>
-                // we accept list of all expressions.
-                // FIXME: there should be a way to distinguish
-                //        expressions that are incomplete
-                //        and those that had errors but are
-                //        known to be complete
-                !exprs.get(exprs.size() - 1).hasProblems()) {
-              if (verbose) {
-                System.out.println(
-                    "\nLINE READER: read complete " + exprs.size() + "expressions\n");
-              }
+            if (exprs.size() > 0 && !exprs.hasProblems()) {
               break;
             }
           }
@@ -154,26 +140,36 @@ public class REPL implements IREPL {
         if (null == exprs) {
           continue;
         }
-        for (ASTN exprASTN : exprs) {
+        if (exprs.hasProblems()) {
+          System.out.println("Parser errors:");
+          System.out.print(Utils.listParseErrors(exprs));
           if (verbose) {
-            System.out.println("\nAST:\n" + exprASTN + "\n------\n");
+            System.out.println("\nAST:\n" + exprs + "\n------\n");
           }
-          if (exprASTN.hasProblems()) {
-            System.out.println("Failed to parse expression:");
-            System.out.print(listParseErrors(exprASTN));
-            break;
+          result = null;
+        } else {
+          for (ASTN exprASTN : exprs) {
+            if (verbose) {
+              System.out.println("\nAST:\n" + exprASTN + "\n------\n");
+            }
+            if (exprASTN.hasProblems()) {
+              // won't hapen
+              System.out.println("Failed to parse expression:");
+              System.out.print(Utils.listParseErrors(exprASTN));
+              break;
+            }
+            ICompiled expr = compiler.compile(exprASTN);
+            if (verbose) {
+              System.out.println("compiled:\n" + expr + "\n------\n");
+            }
+            result = expr.evaluate(bt, ctx);
+            if (verbose) {
+              System.out.println("evaluation result:\n");
+            }
+            System.out.print("\n=> ");
+            System.out.print(Utils.asString(result));
+            System.out.println();
           }
-          ICompiled expr = compiler.compile(exprASTN);
-          if (verbose) {
-            System.out.println("compiled:\n" + expr + "\n------\n");
-          }
-          result = expr.evaluate(bt, ctx);
-          if (verbose) {
-            System.out.println("evaluation result:\n");
-          }
-          System.out.print("\n=> ");
-          System.out.print(Utils.asString(result));
-          System.out.println();
         }
       } catch (CompilationException ex) {
         System.err.println("COMPILATION ERROR: " + ex.getMessage());
@@ -200,20 +196,5 @@ public class REPL implements IREPL {
     return null == err ? 0 : 1;
   }
 
-  private String listParseErrors(ASTN exprASTN) {
-    final StringBuilder buf = new StringBuilder();
-    ASTN.Walker errCollector =
-        new ASTN.Walker() {
-          public void walk(ASTN node) {
-            final Exception ex = node.getProblem();
-            if (null != ex) {
-              buf.append(node.getPctx());
-              buf.append(": ");
-              buf.append(ex.getMessage()).append("\n");
-            }
-          }
-        };
-    exprASTN.dispatchWalker(errCollector);
-    return buf.toString();
-  }
+  
 }

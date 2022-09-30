@@ -302,6 +302,38 @@ public class Utils {
     }
   }
 
+
+  public static String listParseErrors(ASTN exprASTN) {
+    final StringBuilder buf = new StringBuilder();
+    ASTN.Walker errCollector =
+        new ASTN.Walker() {
+          private void addMsg(ParseCtx pctx, String msg) {
+            buf.append(pctx);
+            buf.append(": ");
+            buf.append(msg).append("\n");
+          }
+          
+          public void walk(ASTN node) {
+            final Exception ex = node.getProblem();
+            if (null != ex) {
+              if (ex instanceof ParserExceptions) {
+                List<ParserException> lst = ((ParserExceptions) ex).getExceptions();
+                for (ParserException pex : lst) {
+                  addMsg(pex.getPctx(), pex.getOrgMessage());
+                }
+              } else if (ex instanceof ParserException) {
+                addMsg(((ParserException)ex).getPctx(),
+                       ((ParserException)ex).getOrgMessage());
+              } else {
+                addMsg(node.getPctx(), ex.getMessage());
+              }  
+            }
+          }
+        };
+    exprASTN.dispatchWalker(errCollector);
+    return buf.toString();
+  }
+  
   /** Return argument as object. FIXME: do we need this? why it was added? */
   public static Object asObject(Object val) {
     return val;

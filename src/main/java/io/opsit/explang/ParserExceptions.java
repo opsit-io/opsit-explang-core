@@ -7,6 +7,10 @@ public class ParserExceptions extends ParserException {
   public static final long serialVersionUID = 1L;
   protected final List<ParserException> errList;
 
+  public List<ParserException> getExceptions() {
+    return errList;
+  }
+  
   @Override
   public List<String> getMessages() {
     final List<String> result = new ArrayList<String>(errList.size());

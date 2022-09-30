@@ -7,6 +7,16 @@ import java.util.List;
 public class ParserException extends Exception {
   public static final long serialVersionUID = 1L;
   protected ParseCtx pctx;
+  protected String orgMsg;
+
+  public ParseCtx getPctx() {
+    return pctx;
+  }
+
+  public String getOrgMessage() {
+    return orgMsg;
+  }
+  
 
   public List<String> getMessages() {
     return list(this.getMessage());
@@ -14,6 +24,8 @@ public class ParserException extends Exception {
 
   public ParserException(String msg) {
     super(String.format("Parser: %s", msg));
+    this.orgMsg = msg;
+    this.pctx = new ParseCtx("UNKNOWN");
   }
 
   /**
@@ -21,6 +33,7 @@ public class ParserException extends Exception {
    */  
   public ParserException(ParseCtx pctx, String msg) {
     super(String.format("%s:%d:%d: Parser: %s", pctx.input, pctx.getLine(), pctx.getPos(), msg));
+    this.orgMsg = msg;
     this.pctx = pctx;
   }
 
@@ -30,6 +43,7 @@ public class ParserException extends Exception {
   public ParserException(ParseCtx pctx, String msg, Throwable thr) {
     super(String.format("%s:%d:%d: Parser: %s",
                         pctx.input, pctx.getLine(), pctx.getPos(), msg),  thr);
+    this.orgMsg = msg;
     this.pctx = pctx;
   }
 }
