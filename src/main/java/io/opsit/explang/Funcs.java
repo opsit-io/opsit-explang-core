@@ -2620,21 +2620,21 @@ public class Funcs {
     } else if (obj == null) {
       return false;
       
-    } else if ((obj instanceof List) && (idx=getIntIdx(keyObj)) >= 0) {
+    } else if ((obj instanceof List) && (idx = getIntIdx(keyObj)) >= 0) {
       final List<Object> lst = (List<Object>) obj;
       try {
         result[0] = lst.get(idx);
       } catch (IndexOutOfBoundsException ex) {
         return false;
       }
-    } else if ((obj instanceof CharSequence) && (idx=getIntIdx(keyObj)) >= 0) {
+    } else if ((obj instanceof CharSequence) && (idx = getIntIdx(keyObj)) >= 0) {
       final CharSequence s = (CharSequence) obj;
       try {
         result[0] = s.charAt(idx);
       } catch (IndexOutOfBoundsException ex) {
         return false;
       }
-    } else if (obj.getClass().isArray() && (idx=getIntIdx(keyObj)) >= 0) {
+    } else if (obj.getClass().isArray() && (idx = getIntIdx(keyObj)) >= 0) {
       try {
         result[0] = Array.get(obj, idx);
       } catch (ArrayIndexOutOfBoundsException ex) {
@@ -2827,7 +2827,7 @@ public class Funcs {
   }
 
   @Arguments(spec = {"seq", "keyidx"})
-  @Docstring(text ="Check whether Map or indexed sequence has given key or index.")
+  @Docstring(text = "Check whether Map or indexed sequence has given key or index.")
   @Package(name = Package.BASE_SEQ)
   public static class HASKEY extends FuncExp {
     @Override

@@ -22,6 +22,9 @@ public class ParserException extends Exception {
     return list(this.getMessage());
   }
 
+  /**
+   * Make parser exception for general parser error w/o specific context.
+   */
   public ParserException(String msg) {
     super(String.format("Parser: %s", msg));
     this.orgMsg = msg;

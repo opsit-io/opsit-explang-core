@@ -302,7 +302,7 @@ public class Utils {
     }
   }
 
-
+  /** Print list of all parse errors for an AST subtree. */
   public static String listParseErrors(ASTN exprASTN) {
     final StringBuilder buf = new StringBuilder();
     ASTN.Walker errCollector =
