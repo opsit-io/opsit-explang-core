@@ -2295,17 +2295,19 @@ public class Funcs {
 
   // ***** EXCEPTION HANDLING AND DEBUGGING
   @Package(name = Package.BASE_FUNCS)
-  @Arguments(spec = {})
+  @Arguments(spec = {ArgSpec.ARG_OPTIONAL, "vars"})
   @Docstring(
-      text =
-          "Return callstack backtrace. " + "Returns string representation of current stack frame.")
+      text = "Return callstack backtrace. "
+             + "Returns string representation of current stack frame."
+             + "If vars is a sequence print  bindings that are contained in a sequence."
+             + "If vars is not a sequence print all bindings only if vars boolean value is true.")
   public static class BACKTRACE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       return (null == backtrace)
           ? "* BACKTRACE: Call backtrace is not available, please call evaluate() with the"
               + " backtrace parameter *\n"
-          : backtrace.toString();
+          : backtrace.toString(eargs.get(0, backtrace));
     }
   }
 

@@ -302,6 +302,56 @@ public class Utils {
     }
   }
 
+  /** Print contents details with selected context bindings
+   *  if vars is a collection of variable names. If it is not a sequence
+   *  print all vars if vars has implicit boolean value of true,
+   *  no variables if false;
+   */
+  public static String listCtxVars(Compiler.ICtx ctx, Object vars, IObjectWriter w) {
+    if (null == vars || !asBoolean(vars)) {
+      return ctx.toStringSelf();
+    }
+    if (Seq.isSeq(vars)) {
+      final IObjectWriter writer = null != w
+          ? w
+          : new IObjectWriter() {
+              @Override
+              public String writeObject(Object obj) {
+                return Utils.asString(obj);
+              }
+            };
+
+      final StringBuffer buf = new StringBuffer();
+      buf.append(ctx.toStringSelf()).append("{");
+      final int sz = buf.length();
+      Seq.forEach(vars,
+          new Seq.Operation() {
+            @Override
+            public boolean perform(Object o) {
+              final String var = Utils.asStringOrNull(o);
+              if (ctx.getMappings().containsKey(var)) {
+                if (buf.length() > sz) {
+                  buf.append(", ");
+                }
+                final String val = Utils.asString(ctx.getMappings().get(var));
+                buf.append(var)
+                  .append(":=")
+                  .append(writer.writeObject(val));
+              }
+              return false;
+            }
+          },
+                  false);
+      buf.append("}");
+      if (null != ctx.getPrev()) {
+        buf.append("->").append(ctx.getPrev().toStringSelf());
+      }
+      return buf.toString();
+    }
+    return ctx.toStringShort();
+  }
+  
+  
   /** Print list of all parse errors for an AST subtree. */
   public static String listParseErrors(ASTN exprASTN) {
     final StringBuilder buf = new StringBuilder();

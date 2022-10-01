@@ -2102,7 +2102,10 @@ public class Compiler {
     /** Prunt out string identification of context. */
     public String toStringSelf() {
       StringBuffer buf = new StringBuffer();
-      buf.append("Ctx<").append(this.hashCode()).append(">");
+      buf.append(this.getClass().getSimpleName())
+          .append("<")
+          .append(this.hashCode())
+          .append(">");
       return buf.toString();
     }
 

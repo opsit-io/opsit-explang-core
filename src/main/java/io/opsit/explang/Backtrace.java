@@ -41,6 +41,15 @@ public class Backtrace {
 
   @Override
   public String toString() {
+    return toString(null);
+  }
+  
+
+  /** Convert to string printing variables listed in vars
+   *  or all if vars is not a sequence and has true implicit
+   *  boolean value.
+   */
+  public String toString(Object vars) {
     final List<Frame> frames = this.getFrames();
     final int length = frames.size();
     int maxFun = 0;
@@ -58,7 +67,7 @@ public class Backtrace {
     final StringBuilder fb = new StringBuilder();
     fb.append("%-").append(nWidth).append("d: ");
     fb.append("%-").append(maxFun + 2).append("s ");
-    fb.append("%-").append(maxPos).append("s%s");
+    fb.append("%-").append(maxPos).append("s ");
     fb.append("%s\n");
     final String frameFmt = fb.toString();
     final StringBuilder b = new StringBuilder();
@@ -70,9 +79,9 @@ public class Backtrace {
               (length - i),
               f.frameName,
               f.pctx,
-              needCtx[i] ? " " : "",
-              needCtx[i] ? f.ctx.toStringShort() : ""));
+              needCtx[i] ? Utils.listCtxVars(f.ctx, vars, null) : "-"));
     }
+    super.toString();
     return b.toString();
   }
 
