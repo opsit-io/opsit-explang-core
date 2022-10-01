@@ -4,7 +4,8 @@ Explang Core
 Introduction
 ------------
 
-*Explang is a simple and customizable dynamic language for the Java platform.*
+*[Explang](https://opsit-io.github.io/opsit-explang-docs/)
+is a simple and customizable dynamic language for the Java platform.*
 
 The main use case for Explang currently is providing simple
 customizable user-facing extension language for JVM based
@@ -16,7 +17,7 @@ features:
 - Dynamic typing, implicit conversions to boolean and numeric values when required.
 - Dynamic variables: allows for passing values as variables in the
   context and defining user functions without arguments.
-- Lisp2 language: different namespaces for variables and functions, so
+- A Lisp2 language: different namespaces for variables and functions, so
   there is no potential conflict between user-defined variables and
   built-in functions.
 - Batteries included: contains rich set of utility functions for
@@ -28,13 +29,13 @@ features:
 
 ### Pluggable parsers for language syntax
 
-Explang comes with two parsers for LISP like languages:
-- lisp - recursive parser that a sub-set of Common Lisp parser
+Explang Core comes with two parsers for LISP like languages:
+- lisp - recursive parser that implements a sub-set of Common Lisp parser
   features.
 - sexp - simple S-exp parser that is written imperatively (no depth
   limit because of JVM stack).
 
-There is a parser with a Julia-like Algebraic syntax:
+There is a parser with a Julia-like Algebraic syntax in a separate project:
 - [opsit-explang-alg-parser](https://github.com/opsit-io/opsit-explang-alg-parser)
 
 ### Modularity and adaptability
@@ -71,11 +72,12 @@ undefined variables, etc.
 Language Documentation
 ----------------------
 
-See [Explang Language Documentation](https://github.com/opsit/opsit-explang-docs):
+See [Explang Language Documentation](https://opsit-io.github.io/opsit-explang-docs/):
 
-- [Language Overview](TBD)
-- [Language Functions Reference](TBD)
-- [javadoc](TBD) for the *explang-core* module
+- [Explang Core Quick Start](https://opsit-io.github.io/opsit-explang-docs/explang-core-quick-start/)
+- [Explang Language Guide with lisp syntax](https://opsit-io.github.io/opsit-explang-docs/explang-lisp/)
+- [Explang Language Guide with algebraic syntax](https://opsit-io.github.io/opsit-explang-docs/explang-alg/)
+- [javadoc](https://javadocs.dev/io.opsit/opsit-explang-core/0.0.4/index.html) for the *explang-core* module
 
 Code Examples
 -------------
@@ -274,17 +276,6 @@ compiler.usePackages("user");
 compiler.addBuiltIn("rect", Rect.class);
 
 ```
-
-Language Documentation
-----------------------
-
-See [Explang Language Documentation](https://github.com/opsit/opsit-explang-docs):
-
-- [Language Overview](TBD)
-- [Language Functions Reference](TBD)
-- [javadoc](TBD) for the *explang-core* module
-- [Sample code](examples/)
-
 
 Acknowledgements
 ----------------
