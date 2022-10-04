@@ -5,6 +5,10 @@ import java.io.Reader;
 public interface IREPL {
   public Object execute(Reader reader, String inputName) throws Exception;
 
+  public void requestExit();
+
+  public boolean isExitRequested();
+
   public void setParser(IParser parser);
 
   public IParser getParser();

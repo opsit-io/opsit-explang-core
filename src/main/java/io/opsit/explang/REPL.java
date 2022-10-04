@@ -3,13 +3,14 @@ package io.opsit.explang;
 import io.opsit.explang.Compiler.ICtx;
 import java.io.BufferedReader;
 import java.io.Reader;
-import java.util.List;
+import java.lang.InterruptedException;
 
 public class REPL implements IREPL {
   protected boolean verbose = false;
   protected boolean lineMode = false;
   protected Compiler compiler;
   protected IParser parser;
+  protected volatile boolean shutdown = false;
 
   protected IObjectWriter writer =
       new IObjectWriter() {
@@ -18,6 +19,17 @@ public class REPL implements IREPL {
           return Utils.asString(obj);
         }
       };
+
+  @Override
+  public void requestExit() {
+    shutdown = true;
+  }
+
+  @Override
+  public boolean isExitRequested() {
+    return this.shutdown;
+  }
+
   
   @Override
   public void setVerbose(boolean val) {
@@ -76,6 +88,7 @@ public class REPL implements IREPL {
    */
   public Integer execute(Reader reader, String inputName)
       throws java.io.IOException {
+    shutdown = false;
     getCompiler().setParser(getParser());
     ICtx ctx = getCompiler().newCtx();
     System.out.print(
