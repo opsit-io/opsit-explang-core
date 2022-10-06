@@ -94,6 +94,8 @@ public class ReadTable {
                 LispParser.SHARP_B,
                 'C',
                 LispParser.SHARP_C,
+                'G',
+                LispParser.SHARP_G,
                 'O',
                 LispParser.SHARP_O,
                 'P',
@@ -130,7 +132,7 @@ public class ReadTable {
                 LispParser.SHARP_ILLEGAL)); // return
     dispatchTables = Utils.map();
     dispatchTables.put('#', dt);
-    // readtableCase = Keyword.UPCASE;
+    //readtableCase = Keyword.UPCASE;
     readtableCase = Keyword.PRESERVE;
   }
 

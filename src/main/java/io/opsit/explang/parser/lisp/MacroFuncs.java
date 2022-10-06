@@ -7,6 +7,7 @@ import static io.opsit.explang.parser.lisp.LispParser.processChar;
 import io.opsit.explang.ASTN;
 import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTNList;
+import io.opsit.explang.GlobPattern;
 import io.opsit.explang.ParseCtx;
 import io.opsit.explang.ParserEOFException;
 import io.opsit.explang.ParserException;
@@ -350,6 +351,70 @@ public class MacroFuncs {
     }
   }
 
+
+  public static class ReadSharpG implements IDispatchMacroFunc {
+    @Override
+    public ASTN execute(PushbackReader is, ParseCtx pctx, ReadTable rt, char quot, int numArg) {
+      try {
+        int n;
+        StringBuilder sb = new StringBuilder();
+        boolean inq = false;
+        boolean esc = false;
+        while (true) {
+          n = doReadChar(is, pctx);
+          if (n < 0) {
+            return new ASTNLeaf(null, pctx, new ParserEOFException(UNEXPECTED_EOF_EXCEPTION));
+          }
+          char c = (char) n;
+          if (!inq) {
+            if (c == '"') {
+              inq = true;
+              continue;
+            } else {
+              return new ASTNLeaf(null,
+                                  pctx,
+                                  new ParserException(pctx, "Unexpected character at start definition"));
+            }
+          }
+          if (c == '\\' && !esc) {
+            esc = true;
+            continue;
+          }
+          if (esc) {
+            sb.append('\\');
+            esc = false;
+          } else if (c == '"') {
+            break;
+          }
+          sb.append(c);
+        }
+
+        int flags = 0;
+        while (true) {
+          n = doReadChar(is, pctx);
+          char c = (char) n;
+          int f = Utils.parseRegexpFlag(c);
+          if (0 == f) {
+            doUnreadChar(is, pctx, n);
+            break;
+          }
+          flags |= f;
+        }
+
+        final Pattern p = (0 == flags)
+            ? GlobPattern.compile(sb.toString())
+            : GlobPattern.compile(sb.toString(), flags);
+        return new ASTNLeaf(p, pctx.clone());
+        // if (Symbol.READ_SUPPRESS.symbolValue(thread) != NIL)
+        //    return NIL;
+      } catch (IOException ioex) {
+        return new ASTNLeaf(null, pctx, new ParserException(pctx, UNEXPECTED_EOF_EXCEPTION, ioex));
+      }
+      // ASTN strASTN = ((IReaderMacroFunc)LispReader.READ_STRING).execute('"',is,rt,pctx);
+      // final Pattern p = Pattern.compile((String)strASTN.getObject());
+      // return  new ASTN(p, pctx.clone());
+    }
+  }
   // //This will read regexp with java like syntax, i.e. \ escapes any character
   // //and, therefore, double escapes needed to get a regexp escape
   // public static class ReadSharpQMark implements IDispatchMacroFunc {

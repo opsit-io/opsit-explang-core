@@ -50,6 +50,7 @@ public class LispParser implements IParser {
   public static final Object SHARP_A = null;
   public static final Object SHARP_B = null;
   public static final Object SHARP_C = null;
+  public static final Object SHARP_G = new MacroFuncs.ReadSharpG();
   public static final Object SHARP_O = null;
   public static final Object SHARP_P = null;
   public static final Object SHARP_R = null;
