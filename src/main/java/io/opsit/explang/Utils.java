@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -805,6 +806,47 @@ public class Utils {
     } else {
       return null;
     }
+  }
+
+  public static int parseRegexpFlags(String flagsStr) {
+    int flags = 0;
+    if (null != flagsStr) {
+      for (int i = 0; i < flagsStr.length(); i++) {
+        char c = flagsStr.charAt(i);
+        switch (c) {
+        case 'd':
+          flags |= Pattern.UNIX_LINES;
+          break;
+        case 'i':
+          flags |= Pattern.CASE_INSENSITIVE;
+          break;
+        case 'x':
+          flags |= Pattern.COMMENTS;
+          break;
+        case 'm':
+          flags |= Pattern.MULTILINE;
+          break;
+        case 'l':
+          flags |= Pattern.LITERAL;
+          break;
+        case 's':
+          flags |= Pattern.DOTALL;
+          break;
+        case 'u':
+          flags |= Pattern.UNICODE_CASE;
+          break;
+        case 'c':
+          flags |= Pattern.CANON_EQ;
+          break;
+        case 'U':
+          flags |= Pattern.UNICODE_CHARACTER_CLASS;
+          break;
+        default:
+          throw new RuntimeException("Unknown regex flag character "+c);
+        }
+      }
+    }
+    return flags;
   }
 
   // FIXME: make configurable

@@ -2350,7 +2350,7 @@ public class Funcs {
   }
   
   // **** STRING HANDLING
-  @Arguments(spec = {"pattern"})
+  @Arguments(spec = {"pattern", ArgSpec.ARG_OPTIONAL, "flags"})
   @Docstring(
       text =
           "Compile A Regexp Pattern. On success returns a java.util.regex.Pattern objec. On error"
@@ -2360,12 +2360,16 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final String patternStr = Utils.asString(eargs.get(0, backtrace));
-      final Pattern pattern = Pattern.compile(patternStr);
-      return pattern;
+      final String flagsStr = Utils.asStringOrNull(eargs.get(1, backtrace));
+      if (null != flagsStr) {
+        return Pattern.compile(patternStr, Utils.parseRegexpFlags(flagsStr));
+      } else {
+        return Pattern.compile(patternStr);
+      }
     }
   }
 
-  @Arguments(spec = {"pattern"})
+  @Arguments(spec = {"pattern", ArgSpec.ARG_OPTIONAL, "flags"})
   @Docstring(
       text =
           "Compile a Globbing Pattern. "
@@ -2376,8 +2380,12 @@ public class Funcs {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final String patternStr = Utils.asString(eargs.get(0, backtrace));
-      final Pattern pattern = GlobPattern.compile(patternStr);
-      return pattern;
+      final String flagsStr = Utils.asStringOrNull(eargs.get(1, backtrace));
+      if (null != flagsStr) {
+        return GlobPattern.compile(patternStr, Utils.parseRegexpFlags(flagsStr));
+      } else {
+        return GlobPattern.compile(patternStr);
+      }
     }
   }
 

@@ -1803,6 +1803,8 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {"(RE-MATCHES (RE-PATTERN \"^(F)([0-9])$\") \"BLA\")", null, false, null, null, p},
+          {"(RE-MATCHES (RE-PATTERN \"^bla$\") \"BLA\")", null, false, null, null, p},
+          {"(RE-MATCHES (RE-PATTERN \"^bla$\" \"i\") \"BLA\")", "BLA", true, null, null, p},
           {"(RE-FIND (RE-PATTERN \"(F)([0-9])\") \"BLA\")", null, false, null, null, p},
           {
             "(RE-FIND (RE-PATTERN \"(F)([0-9])\") \"F1\")",
