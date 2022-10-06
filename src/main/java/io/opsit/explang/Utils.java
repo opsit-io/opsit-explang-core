@@ -11,7 +11,6 @@ import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
-import java.util.regex.Pattern;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -22,6 +21,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class Utils {
   public static int safeLen(String str) {
@@ -808,42 +808,50 @@ public class Utils {
     }
   }
 
+  /**
+   * Convert character regexp flag to its integer constant.
+   * Returns code or 0 if character flag is invalid.
+   */
+  public static int parseRegexpFlag(char c) {
+    switch (c) {
+      case 'd':
+        return Pattern.UNIX_LINES;
+      case 'i':
+        return Pattern.CASE_INSENSITIVE;
+      case 'x':
+        return Pattern.COMMENTS;
+      case 'm':
+        return Pattern.MULTILINE;
+      case 'l':
+        return Pattern.LITERAL;
+      case 's':
+        return Pattern.DOTALL;
+      case 'u':
+        return Pattern.UNICODE_CASE;
+      case 'c':
+        return Pattern.CANON_EQ;
+      case 'U':
+        return Pattern.UNICODE_CHARACTER_CLASS;
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * Parse string of regexp flag characters.
+   * Returns flag value or throws a runtime exception if
+   * flag is invalid.
+   */
   public static int parseRegexpFlags(String flagsStr) {
     int flags = 0;
     if (null != flagsStr) {
       for (int i = 0; i < flagsStr.length(); i++) {
         char c = flagsStr.charAt(i);
-        switch (c) {
-        case 'd':
-          flags |= Pattern.UNIX_LINES;
-          break;
-        case 'i':
-          flags |= Pattern.CASE_INSENSITIVE;
-          break;
-        case 'x':
-          flags |= Pattern.COMMENTS;
-          break;
-        case 'm':
-          flags |= Pattern.MULTILINE;
-          break;
-        case 'l':
-          flags |= Pattern.LITERAL;
-          break;
-        case 's':
-          flags |= Pattern.DOTALL;
-          break;
-        case 'u':
-          flags |= Pattern.UNICODE_CASE;
-          break;
-        case 'c':
-          flags |= Pattern.CANON_EQ;
-          break;
-        case 'U':
-          flags |= Pattern.UNICODE_CHARACTER_CLASS;
-          break;
-        default:
-          throw new RuntimeException("Unknown regex flag character "+c);
+        int f = parseRegexpFlag(c);
+        if (f == 0) {
+          throw new RuntimeException("Unknown regex flag character '" + c +  "'");
         }
+        flags |= f;
       }
     }
     return flags;

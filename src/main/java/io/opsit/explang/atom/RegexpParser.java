@@ -2,7 +2,9 @@ package io.opsit.explang.atom;
 
 import io.opsit.explang.GlobPattern;
 import io.opsit.explang.ParseCtx;
+import io.opsit.explang.Utils;
 import java.util.regex.Pattern;
+
 
 public class RegexpParser implements AtomParser {
   @Override
@@ -29,37 +31,11 @@ public class RegexpParser implements AtomParser {
         continue;
       }
       if (!inQuote) {
-        switch (c) {
-          case 'd':
-            flags |= Pattern.UNIX_LINES;
-            break;
-          case 'i':
-            flags |= Pattern.CASE_INSENSITIVE;
-            break;
-          case 'x':
-            flags |= Pattern.COMMENTS;
-            break;
-          case 'm':
-            flags |= Pattern.MULTILINE;
-            break;
-          case 'l':
-            flags |= Pattern.LITERAL;
-            break;
-          case 's':
-            flags |= Pattern.DOTALL;
-            break;
-          case 'u':
-            flags |= Pattern.UNICODE_CASE;
-            break;
-          case 'c':
-            flags |= Pattern.CANON_EQ;
-            break;
-          case 'U':
-            flags |= Pattern.UNICODE_CHARACTER_CLASS;
-            break;
-          default:
-            return false;
+        final int f = Utils.parseRegexpFlag(c);
+        if (0 == c) {
+          return false;
         }
+        flags |= f;
         continue;
       }
       if (c == '\\') {

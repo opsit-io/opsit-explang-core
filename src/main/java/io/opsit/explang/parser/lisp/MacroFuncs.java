@@ -322,7 +322,22 @@ public class MacroFuncs {
           }
           sb.append(c);
         }
-        final Pattern p = Pattern.compile(sb.toString());
+
+        int flags = 0;
+        while (true) {
+          n = doReadChar(is, pctx);
+          char c = (char) n;
+          int f = Utils.parseRegexpFlag(c);
+          if (0 == f) {
+            doUnreadChar(is, pctx, n);
+            break;
+          }
+          flags |= f;
+        }
+
+        final Pattern p = (0 == flags)
+            ? Pattern.compile(sb.toString())
+            : Pattern.compile(sb.toString(), flags);
         return new ASTNLeaf(p, pctx.clone());
         // if (Symbol.READ_SUPPRESS.symbolValue(thread) != NIL)
         //    return NIL;
