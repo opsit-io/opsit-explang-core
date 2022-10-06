@@ -3589,6 +3589,28 @@ public class Funcs {
   }
 
   @Arguments(spec = {"object"})
+  @Docstring(text = "Check if a value is a NIL.")
+  @Package(name = Package.BASE_LOGIC)
+  public static class NILP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return val == null;
+    }
+  }
+
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if a value is not a NIL.")
+  @Package(name = Package.BASE_LOGIC)
+  public static class NOTNILP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return val != null;
+    }
+  }
+
+  @Arguments(spec = {"object"})
   @Docstring(text = "Check if an object is a Map.")
   @Package(name = Package.BASE_SEQ)
   public static class MAPP extends FuncExp {

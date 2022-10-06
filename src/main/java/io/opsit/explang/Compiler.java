@@ -424,6 +424,8 @@ public class Compiler {
             "EXP", EXP.class,
             // object comparisons
             // java .equals()
+            "NILP", NILP.class,
+            "NOTNILP", NOTNILP.class,
             "EQUAL", EQUAL.class,
             "===", EQ.class,
             "==", SEQUAL.class,
