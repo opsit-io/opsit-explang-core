@@ -200,12 +200,10 @@ public class Funcs {
     }
   }
 
-  @Docstring(
-      text =
-          "Compute Product. "
-              + "Returns the product of it's arguments , "
-              + "performing any necessary type conversions in the process. "
-              + "If no numbers are supplied, 1 is returned.")
+  @Docstring(lines = {"Compute Product.",
+                      "",
+                      "Returns the product of all its arguments performing any necessary type",
+                      "conversions in the process. If no numbers are supplied, 1 is returned."})
   @Package(name = Package.BASE_ARITHMENTICS)
   public static class MULOP extends ABSTRACTADDOP {
     @Override

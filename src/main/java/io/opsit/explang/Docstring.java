@@ -15,5 +15,7 @@ public @interface Docstring {
   /**
    * Represent docstring for Builtin functions and forms.
    */  
-  String text() default "Not documented";
+  String text() default "Not documented.";
+
+  String[] lines() default {};
 }

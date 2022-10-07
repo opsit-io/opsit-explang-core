@@ -256,8 +256,11 @@ public class Compiler {
 
     @Override
     public String getDocstring() {
-      Docstring ann = cls.getAnnotation(Docstring.class);
-      return null == ann ? "Not provided." : ann.text();
+      final Docstring ann = cls.getAnnotation(Docstring.class);
+      final String result = (null == ann)
+        ? "Not provided." 
+        : ( (null == ann.lines() || ann.lines().length==0)  ? ann.text() : String.join("\n",ann.lines()));
+      return result;
     }
 
     @Override
