@@ -2390,6 +2390,27 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          {"(PROGN (SETF a 11) a)", 11, true, null, null, p},
+          {"(PROGN (SETF a (+ 10 1)) a)", 11, true, null, null, p},
+          {"(PROGN (SETF a (LIST 1 2)) (SETF (AREF a 1) 11) a)", list(1,11), true, null, null, p},
+          {"(PROGN (SETF a (LIST 1 2)) (SETF (AREF a 1) (+ 1 10)) a)", list(1,11), true, null, null, p},
+          {"(PROGN (SETF (LIST a b c) (LIST 1 2 3)) (LIST a b c))", list(1,2,3), true, null, null, p},
+          {"(PROGN (SETF (LIST a b c d) (LIST 1 2 3)) (LIST a b c d))", list(1,2,3,null), true, null, null, p},
+          {"(PROGN (SETF (LIST a b c d) ()) (LIST a b c d))", list(null,null,null,null), true, null, null, p},
+          {"(PROGN (SETF (LIST a b c d) NIL) (LIST a b c d))", list(null,null,null,null), true, null, null, p},
+          {"(PROGN (SETF (LIST a b c) (LIST 1 2 3 4)) (LIST a b c))", list(1,2,3), true, null, null, p},
+          {
+            "(PROGN (SETF (LIST a b (LIST c d) e) (LIST 1 2 (LIST 3 4) 5)) (LIST a b c d e))",
+            list(1,2,3,4,5), true, null, null, p
+          },
+          {
+            "(PROGN (SETF (LIST a b (LIST c d) e) (LIST 1 2 NIL 5)) (LIST a b c d e))",
+            list(1,2,null,null,5), true, null, null, p
+          },
+          {
+            "(PROGN (SETF (LIST a b (LIST c d) e) (LIST 1 2 (LIST 3) 5)) (LIST a b c d e))",
+            list(1,2,3,null,5), true, null, null, p
+          },
           {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p
           },

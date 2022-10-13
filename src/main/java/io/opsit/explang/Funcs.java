@@ -3503,7 +3503,7 @@ public class Funcs {
   @Arguments(spec = {ArgSpec.ARG_REST, "args"})
   @Docstring(text = "Create a list. Returns a list containing the supplied objects. ")
   @Package(name = Package.BASE_SEQ)
-  public static class LIST extends FuncExp {
+  public static class LIST extends FuncExp implements LValue {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       List<?> rest = (List<?>) eargs.get(0, backtrace);
@@ -3512,6 +3512,58 @@ public class Funcs {
         lst.add(val);
       }
       return lst;
+    }
+
+    @Override
+    public Object doSet(Backtrace backtrace, ICtx ctx, Object value) {
+      // rest parameter
+      ICompiled args = this.argList.get(0);
+      if (args instanceof ValueExpr) {
+        // list of target objects
+        final List<?> lst = (List<?>) ((ValueExpr) args).value;
+        final int siz = lst.size();
+        int cnt = 0;
+        if (null != value) { // treat NIL as empty list
+          // for each member of  source seq
+          cnt += Seq.forEach(value, new Seq.Operation() {
+              protected int idx = 0;
+
+              @Override
+              public boolean perform(Object obj) {
+                if (idx < siz) {
+                  Object arg = lst.get(idx);
+                  if (arg instanceof LValue) {
+                    ((LValue) arg).doSet(backtrace, ctx, obj);
+                  }
+                  idx++;
+                  return false;
+                } else {
+                  return true;
+                }
+              }
+            }, false);
+        }
+        // assign NIL to the rest of unassigned objects;
+        for (; cnt < siz; cnt++) {
+          Object arg = lst.get(cnt);
+          if (arg instanceof LValue) {
+            ((LValue) arg).doSet(backtrace, ctx, null);
+          }
+        }
+      } else {
+        throw new RuntimeException("Internal error: list value is not instance of ValueExpr!");
+      }
+      return null;
+
+      /*Eargs eargs = this.evaluateParameters(backtrace, ctx);
+      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
+      final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
+      try {
+        return Seq.setElementByIndex(arrayObj, index, value);
+      } catch (IndexOutOfBoundsException ex) {
+        throw new ExecutionException(ex);
+        }*/
+      //return true;
     }
   }
 
