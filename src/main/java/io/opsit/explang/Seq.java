@@ -70,13 +70,15 @@ public class Seq {
    *
    * <p>If allowNonSeq is true then run operation on object that is not a sequence.
    */
-  public static void forEach(Object seq, Operation op, boolean allowNonSeq) {
+  public static int forEach(Object seq, Operation op, boolean allowNonSeq) {
     if (seq instanceof Map) {
       seq = ((Map<?, ?>) seq).entrySet();
     }
+    int cnt = 0;
     if (null == seq) {
       if (allowNonSeq) {
         op.perform(seq);
+        cnt++;
       } else {
         throw new RuntimeException("NIL is not a supported sequence.");
       }
@@ -87,6 +89,7 @@ public class Seq {
         if (op.perform(iter.next())) {
           break;
         }
+        cnt++;
       }
     } else if (seq instanceof CharSequence) {
       final CharSequence cs = ((CharSequence) seq);
@@ -95,6 +98,7 @@ public class Seq {
         if (op.perform(cs.charAt(j))) {
           break;
         }
+        cnt++;
       }
     } else if (seq.getClass().isArray()) {
       final int len = Array.getLength(seq);
@@ -102,6 +106,7 @@ public class Seq {
         if (op.perform(Array.get(seq, j))) {
           break;
         }
+        cnt++;
       }
     } else if (seq instanceof Enumeration) {
       final Enumeration<?> en = (Enumeration<?>) seq;
@@ -109,6 +114,7 @@ public class Seq {
         if (op.perform(en.nextElement())) {
           break;
         }
+        cnt++;
       }
     } else if (seq instanceof Map) {
       // FIXME: dead code? Why?
@@ -119,14 +125,17 @@ public class Seq {
         if (op.perform(iter.next())) {
           break;
         }
+        cnt++;
       }
     } else {
       if (allowNonSeq) {
         op.perform(seq);
+        cnt++;
       } else {
         throw new RuntimeException("Do not know how to iterate sequence of type " + seq.getClass());
       }
     }
+    return cnt;
   }
 
 
