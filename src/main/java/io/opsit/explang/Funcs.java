@@ -1082,65 +1082,29 @@ public class Funcs {
       ICompiled args = this.argList.get(0);
       if (args instanceof ValueExpr) {
         // list of target objects
-        final List targetList = (List) ((ValueExpr) args).value;
+        final List<?> targetList = (List<?>) ((ValueExpr) args).value;
         if (null == value) { // treat NIL as empty map
-          value = new HashMap();
+          value = new HashMap<Object,Object>();
+        } else if (!(value instanceof Map)) {
+          throw new ExecutionException(backtrace,
+                                       "Source for map destructuring must be a Map or NIL,"
+                                       + " but got "
+                                       + value.getClass());
         }
-        if (!(value instanceof Map)) {
-          throw new ExecutionException(backtrace, "Source Object for map destructuring must be a map or NIL");
-        }
-        Map valueMap = (Map)value;
+        Map<?,?> valueMap = (Map<?,?>)value;
         for (int idx = 0; idx < targetList.size(); idx += 2) {
-          Object eKey = targetList.get(idx);
-          Object eValue = targetList.get(idx + 1);
-          if (eKey instanceof LValue) {
-            if (eValue instanceof ValueExpr) {
-              Object val = valueMap.get(((ValueExpr)eValue).getValue());
-              ((LValue) eKey).doSet(backtrace, ctx, val);
-            }
+          Object lvalObj = targetList.get(idx);
+          Object srcKeyExpr = targetList.get(idx + 1);
+          if (lvalObj instanceof LValue) {
+            Object valueKey = ((ICompiled) srcKeyExpr).evaluate(backtrace, ctx);
+            Object val = valueMap.get(valueKey);
+            ((LValue) lvalObj).doSet(backtrace, ctx, val);
           }
         }
-        //  // for each member of  source seq
-        //   if (value == 
-        //   cnt += Seq.forEach(value, new Seq.Operation() {
-        //       protected int idx = 0;
-
-        //       @Override
-        //       public boolean perform(Object obj) {
-        //         if (idx < siz) {
-        //           Object arg = lst.get(idx);
-        //           if (arg instanceof LValue) {
-        //             ((LValue) arg).doSet(backtrace, ctx, obj);
-        //           }
-        //           idx++;
-        //           return false;
-        //         } else {
-        //           return true;
-        //         }
-        //       }
-        //     }, false);
-        // }
-        // // assign NIL to the rest of unassigned objects;
-        // for (; cnt < siz; cnt++) {
-        //   Object arg = lst.get(cnt);
-        //   if (arg instanceof LValue) {
-        //     ((LValue) arg).doSet(backtrace, ctx, null);
-        //   }
-        // }
       } else {
         throw new RuntimeException("Internal error: list value is not instance of ValueExpr!");
       }
       return null;
-
-      /*Eargs eargs = this.evaluateParameters(backtrace, ctx);
-      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
-      final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
-      try {
-        return Seq.setElementByIndex(arrayObj, index, value);
-      } catch (IndexOutOfBoundsException ex) {
-        throw new ExecutionException(ex);
-        }*/
-      //return true;
     }
   }
 

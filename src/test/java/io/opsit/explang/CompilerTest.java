@@ -2412,6 +2412,40 @@ public class CompilerTest extends AbstractTest {
             list(1,2,3,null,5), true, null, null, p
           },
           {
+            "(PROGN (SETF (HASHMAP _foo \"foo\" _qaz \"qaz\") (HASHMAP \"foo\" 1 \"qaz\" 2)) (LIST _foo _qaz))",
+            list(1,2), true, null, null, p
+          },
+          {
+            "(PROGN (SETF (HASHMAP _foo \"foo\" _qaz \"qaz\") (HASHMAP \"foo\" 1)) (LIST _foo _qaz))",
+            list(1,null), true, null, null, p
+          },
+          {
+            "(PROGN (SETF (HASHMAP _foo \"foo\" _qaz \"qaz\") NIL) (LIST _foo _qaz))",
+            list(null,null), true, null, null, p
+          },
+
+          {
+            "(PROGN (SETF (HASHMAP name \"name\" (HASHMAP mother \"mom\" father \"dad\") \"parents\") "
+            + "           (HASHMAP \"name\" \"John\" "
+            + "              \"parents\" (HASHMAP \"mom\" \"Ann\" \"dad\" \"Jack\"))) "
+            + "     (LIST name mother father))",
+            list("John","Ann","Jack"), true, null, null, p
+          },
+          {
+            "(PROGN (SETF (LIST (HASHMAP a \"k1\") (HASHMAP b \"k2\")) "
+            + "           (LIST (HASHMAP \"k1\" \"v1\") (HASHMAP  \"k2\" \"v2\"))) "
+            + "     (LIST a b))",
+            list("v1","v2"), true, null, null, p
+          },
+          {
+            "(PROGN (SETF (HASHMAP name :name (LIST book1 book2) :books) "
+            + "           (HASHMAP :name \"Jane Austin\" "
+            + "                    :books (LIST \"Sense and Sensibility\" \"Pride and Prejustice\" ))) "
+            + "     (LIST name book1 book2))",
+            list("Jane Austin", "Sense and Sensibility", "Pride and Prejustice"), true, null, null, p
+          },
+
+          {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p
           },
           {
