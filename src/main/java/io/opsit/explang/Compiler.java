@@ -258,8 +258,10 @@ public class Compiler {
     public String getDocstring() {
       final Docstring ann = cls.getAnnotation(Docstring.class);
       final String result = (null == ann)
-        ? "Not provided." 
-        : ( (null == ann.lines() || ann.lines().length==0)  ? ann.text() : String.join("\n",ann.lines()));
+          ? "Not provided." 
+          : ((null == ann.lines() || ann.lines().length == 0)
+              ? ann.text()
+              : String.join("\n",ann.lines()));
       return result;
     }
 

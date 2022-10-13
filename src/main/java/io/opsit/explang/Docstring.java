@@ -17,5 +17,10 @@ public @interface Docstring {
    */  
   String text() default "Not documented.";
 
+  /**
+   * Represent docstring for Builtin functions and forms.  This is
+   * preferred representation for docstring.  Each array entry will be
+   * joined using newline as separator".
+   */
   String[] lines() default {};
 }

@@ -373,7 +373,8 @@ public class MacroFuncs {
             } else {
               return new ASTNLeaf(null,
                                   pctx,
-                                  new ParserException(pctx, "Unexpected character at start definition"));
+                                  new ParserException(pctx,
+                                                      "Unexpected character at start definition"));
             }
           }
           if (c == '\\' && !esc) {
