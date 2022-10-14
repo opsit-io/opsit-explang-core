@@ -438,6 +438,7 @@ public class Compiler {
             "SETQ", SETQ.class,
             "SETF", SETF.class,
             "SETV", SETV.class,
+            "SETL", SETL.class,
             "SET", SET.class,
             "LET", LET.class,
             "DLET", DLET.class,
@@ -1616,7 +1617,8 @@ public class Compiler {
         final ICompiled varExp = compile(varDef);
         if (!(varExp instanceof VarExp)) {
           throw new InvalidParametersException(
-              debugInfo, "SETV: Invalid parameter[" + i + "], must be a variable name");
+              debugInfo,
+              this.getName() + ": Invalid parameter[" + i + "], must be a variable name");
         }
         final int pairPos = i >> 1;
         this.variables[pairPos] = (VarExp) varExp;
@@ -1639,16 +1641,42 @@ public class Compiler {
     protected abstract void setvar(String name, Object val, ICtx ctx);
   }
 
+
   @Arguments(text = "{var form}*")
   @Package(name = Package.BASE_BINDINGS)
   @Docstring(
-      text =
-          "Varianle assignmentm, global if not exists. If variable is already assigned it's value"
-              + " will be replaced by result of form evaluation. If not new global binding will be"
-              + " created in the global scope\n"
-              + "var - a symbol naming a variable.\n"
-              + "form - an expression, which evaluation result will be assigned to var\n"
-              + "Returns: value of the last form, or nil if no pairs were supplied.")
+             lines = {
+               "Assign values to local variables. For each pair of arguments it will evaluate",
+               "the 'form' and assign the result to local variable 'var'. If the variable already",
+               "exists in the local contexts its value will be replaced. If not, new binding will",
+               "be created in the local scope, possibly shadowing the variable in upper scopes",
+               "",
+               "Arguments:",
+               "  'var' - a symbol naming a variable.",
+               "  'form' - an expression to be evaluated, the result will be assigned to 'var'.",
+               "Returns:",
+               "  value of the last form, or nil if no pairs were supplied."})
+  public class SETL extends ABSTRACT_SET_OP {
+    @Override
+    protected void setvar(String name, Object val, ICtx ctx) {
+      ctx.getMappings().put(name, val);
+    }
+  }
+
+  @Arguments(text = "{var form}*")
+  @Package(name = Package.BASE_BINDINGS)
+  @Docstring(
+             lines = {
+               "Assign values to variables, create new local one if the binding does not exist.",
+               "For each pair of arguments it will evaluate the 'form' and assign the result to",
+               "variable 'var' if it already exists, possibly replacing values that exist in the",
+               "local or an upper scope. If not, new binding will be created in the local scope",
+               "",
+               "Arguments:",
+               "  'var' - a symbol naming a variable.",
+               "  'form' - an expression to be evaluated, the result will be assigned to 'var'.",
+               "Returns:",
+               "  value of the last form, or nil if no pairs were supplied."})
   public class SETV extends ABSTRACT_SET_OP {
     @Override
     protected void setvar(String name, Object val, ICtx ctx) {
@@ -1659,13 +1687,17 @@ public class Compiler {
   @Arguments(text = "{var form}*")
   @Package(name = Package.BASE_BINDINGS)
   @Docstring(
-      text =
-          "Variable assignment, glocal if not exists. If variable is already assigned it's value"
-              + " will be replaced by result of form evaluation. If not new global binding will be"
-              + " created in the global scope\n"
-              + "var - a symbol naming a variable.\n"
-              + "form - an expression, which evaluation result will be assigned to var\n"
-              + "Returns: value of the last form, or nil if no pairs were supplied.")
+             lines = {
+               "Assign values to variables, create new global one if the binding does not exist.",
+               "For each pair of arguments it will evaluate the 'form' and assign the result to",
+               "variable 'var' if it already exists, possibly replacing the existing binding.",
+               "If not, new binding will be created in the global scope",
+               "",
+               "Arguments:",
+               "  'var' - a symbol naming a variable.",
+               "  'form' - an expression to be evaluated, the result will be assigned to 'var'.",
+               "Returns:",
+               "  value of the last form, or nil if no pairs were supplied."})
   public class SETQ extends ABSTRACT_SET_OP {
     @Override
     protected void setvar(String name, Object val, ICtx ctx) {
