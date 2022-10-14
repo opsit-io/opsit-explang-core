@@ -157,11 +157,10 @@ public class Funcs {
   }
 
   @Docstring(
-      text =
-          "Compute Sum. "
-              + "Returns the sum of numeric values of it's arguments, "
-              + "performing any necessary type conversions in the process. "
-              + "If no numbers are supplied, 0 is returned.")
+             lines = {
+               "Compute Sum. ",
+               "Computes sum of function arguments performing any necessary type conversions",
+               "in the process. If no numbers are supplied, 0 is returned."})
   @Package(name = Package.BASE_ARITHMENTICS)
   public static class ADDOP extends ABSTRACTADDOP {
     @Override
@@ -254,14 +253,13 @@ public class Funcs {
     }
   }
 
-  @Docstring(
-      text =
-          "Performs subtraction or negation. "
-              + "If only one number is supplied, the negation of that "
-              + "number is returned. If more than one argument is given, "
-              + "it subtracts rest of the arguments from the first one "
-              + "and returns the result. The function performs necessary "
-              + "type conversions.")
+  @Docstring(lines = {
+      "Performs subtraction or negation. ",
+      "If only one number is supplied, the negation of that ",
+      "number is returned. If more than one argument is given, ",
+      "it subtracts rest of the arguments from the first one ",
+      "and returns the result. The function performs necessary ",
+      "type conversions."})
   @Package(name = Package.BASE_ARITHMENTICS)
   public static class SUBOP extends ABSTRACT_SUB {
     @Override
@@ -301,15 +299,13 @@ public class Funcs {
   }
 
   @Docstring(
-      text =
-          "Performs Division or Reciprocation. "
-              + "If no denominators are supplied, the function / returns "
-              + "the reciprocal of number. "
-              + "If at least one denominator is supplied, the function / "
-              + "divides the numerator by all of the denominators and returns"
-              + " the resulting quotient. If each argument is either an integer"
-              + " or a ratio, and the result is not an integer, then it is a ratio."
-              + " The function / performs necessary type conversions. ")
+             lines = {
+               "Performs Division or Reciprocation. ",
+               "- If no denominators are supplied, the function '/' returns the reciprocal",
+               "  of the argument.",
+               "- If at least one denominator is supplied, the function '/' divides the",
+               "  numerator by all of the denominators and returns the resulting quotient.",
+               "The function / performs necessary type conversions. "})
   @Package(name = Package.BASE_ARITHMENTICS)
   public static class DIVOP extends ABSTRACT_SUB {
     @Override
@@ -339,11 +335,10 @@ public class Funcs {
   }
 
   @Arguments(spec = {"x", ArgSpec.ARG_REST, "args"})
-  @Docstring(
-      text =
-          "Find maximum. "
-              + "Returns the maximum of numeric values of it's arguments, "
-              + "performing any necessary type conversions in the process. ")
+  @Docstring(lines = {
+      "Find maximum. ",
+      "Returns the maximum of numeric values of it's arguments,",
+      "performing any necessary type conversions in the process."})
   @Package(name = Package.BASE_ARITHMENTICS)
   public static class MAXOP extends NUMGE {
     @Override
@@ -363,11 +358,9 @@ public class Funcs {
   }
 
   @Arguments(spec = {"x", ArgSpec.ARG_REST, "args"})
-  @Docstring(
-      text =
-          "Find minimum. "
-              + "Returns the maximum of numeric values of it's arguments, "
-              + "performing any necessary type conversions in the process. ")
+  @Docstring(lines = {"Find minimum. ",
+                      "Returns the maximum of numeric values of it's arguments,",
+                      "performing any necessary type conversions in the process."})
   @Package(name = Package.BASE_ARITHMENTICS)
   public static class MINOP extends NUMLE {
     @Override
