@@ -523,6 +523,17 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          { //check nested scope
+            "(LET ((i 0)) "
+            + " (FOREACH (i (RANGE 1 10)) i)  "
+            + " i)", 0, false,null,null,p
+          },
+          { //check nested scope
+            "(LET ((i 0) (j 0)) "
+            + " (WHILE (< i 10) (SETV i (+ i 1)) (SETL j i))  "
+            + " (LIST i j))", list(10,0), true,null,null,p
+          },
+
           {
             "(PROGN "
                 + " (DEFUN TESTRET1 (x) (RETURN x) 1) "

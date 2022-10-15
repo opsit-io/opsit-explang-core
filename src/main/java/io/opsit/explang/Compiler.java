@@ -949,8 +949,9 @@ public class Compiler {
     @Override
     public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       Object rc = null;
-      while (Utils.asBoolean(condition.evaluate(backtrace, ctx))) {
-        rc = evalBlocks(backtrace, blocks, ctx);
+      final ICtx loopCtx = ctx.getCompiler().newCtx(ctx);
+      while (Utils.asBoolean(condition.evaluate(backtrace, loopCtx))) {
+        rc = evalBlocks(backtrace, blocks, loopCtx);
       }
       return rc;
     }
@@ -959,19 +960,18 @@ public class Compiler {
   @Arguments(
       spec = {
         "(",
-        "VAR",
-        "SEQUENCE",
+        "var",
+        "sequence",
         ArgSpec.ARG_OPTIONAL,
-        "RESULT",
+        "result",
         ")",
         ArgSpec.ARG_REST,
         "body"
       })
-  @Docstring(
-      text =
-          "Foreach Loop over a sequence. \n"
-              + "Evaluate body with VAR bound to each element from SEQUENCE, in turn.\n"
-              + "Then evaluate RESULT to get return value, default NIL.")
+  @Docstring(lines = {
+      "Foreach Loop Over a Sequence. ",
+      "Evaluates 'body' in new context with VAR bound to each element from SEQUENCE, in turn.",
+      "Then evaluate RESULT in the same context to get return value, default is NIL."})
   @Package(name = Package.BASE_SEQ)
   public class FOREACH extends AbstractForm {
     private Symbol loopVar = null;
@@ -1008,7 +1008,7 @@ public class Compiler {
       final Object seq = seqexpr.evaluate(backtrace, ctx);
       final ICtx loopCtx = ctx.getCompiler().newCtx(ctx);
       final String loopVarName = loopVar.getName();
-      loopCtx.replace(loopVarName, null);
+      loopCtx.getMappings().put(loopVarName, null);
       Seq.forEach(
           seq,
           new Seq.Operation() {
