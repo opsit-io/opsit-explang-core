@@ -2475,12 +2475,18 @@ public class CompilerTest extends AbstractTest {
           },
           {
             "(FIELDS2 (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
-            + "             (LIST (LIST (LIST \"a\") \"aa\") "
-            + "                   (LIST (LIST \"b\") \"bb\")))",
+            + "       (LIST (LIST (LIST \"a\") \"aa\") "
+            + "             (LIST (LIST \"b\") \"bb\")))",
             list(map("aa","11", "bb", "22"), map("aa","22", "bb", null)),
             true, null,null, p
           },
-          
+          {
+            "(FIELDS2 (LIST (HASHMAP \"a\" (HASHMAP \"x\" \"XX\" \"y\" \"YY\") \"b\" \"22\") "
+            + "             (HASHMAP \"a\" (HASHMAP \"x\" \"2XX\" \"y\" \"2YY\"))) "
+            + "       (LIST (LIST \"a\" \"aa\" (LIST  \"x\" \"y\"))))",
+            list(map("aa",map("y","YY","x","XX")), map("aa",map("y","2YY","x","2XX"))),
+            true, null,null, p
+          },
           {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p
           },

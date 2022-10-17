@@ -2091,6 +2091,10 @@ public class Funcs {
   }
 
 
+  protected static FieldsMap.Op mkOp(Object srcSpec) {
+    return (srcSpec instanceof List)?  mkOpByGetIn((List) srcSpec) : mkOpByGet(srcSpec);
+  }
+  
   protected static FieldsMap.Op mkOpByGet(Object key) {
     return new FieldsMap.Op() {
       @Override
@@ -2110,56 +2114,52 @@ public class Funcs {
   }
   
   protected static void addKsOp(Map<Object, FieldsMap.Op> fmap, Object keyspec, Backtrace bt) {
-    FieldsMap.Op op = null;
-    // keyspec is a string or symbol
+    Object srcSpec = null;
+    Object dstSpec = null;
+    Object subKeySpec = null;
     if ((keyspec instanceof Symbol) || (keyspec instanceof CharSequence)) {
-      final Object key = Utils.asString(keyspec);
-      fmap.put(key, mkOpByGet(key));
+      dstSpec = keyspec;
+      srcSpec = Utils.asString(keyspec);
     } else if (Seq.isIndexed(keyspec)) {
       int len = Seq.getLength(keyspec, false);
       if (len < 2 || len > 3) {
-        throw new ExecutionException("Keyspec '"+keyspec+"' is invalid: must be of length 2 or 3");
+        throw new ExecutionException(
+            "Keyspec '" + keyspec + "' is invalid: must be of length 2 or 3");
       }
-      Object srcSpec = Seq.getElementByIndex(keyspec, 0); // 
-      Object dstSpec = Seq.getElementByIndex(keyspec, 1); // key in the target map
-      //Object subKeySpec = Seq.getElementByIndex(keyspec, 2);
-      
-
-      if (dstSpec instanceof List) {
-        final Map<Object, FieldsMap.Op> subfmap = mkFmap((List)dstSpec, bt);
-        
-        final FieldsMap.Op localOp = (srcSpec instanceof List)?  mkOpByGetIn((List) srcSpec) : mkOpByGet(srcSpec);
-        op = new FieldsMap.Op() {
-            @Override
-            public Object get(Map<?, ?> src) {
-              Object mapObj = localOp.get(src);
-              if (mapObj instanceof Map) {
-                return mkFields((Map)mapObj, subfmap);
-              } else {
-                return  new HashMap();
-              }
-            }
-          };
-        
-        //FIXME:
-        final Object key = Utils.asString((srcSpec instanceof List) ? ((List)srcSpec).get(0) : srcSpec);
-        fmap.put(key, op);
-        
-      } else {
-        final Object key = Utils.asString(dstSpec);
-        if (srcSpec instanceof List) {
-          op = mkOpByGetIn((List) srcSpec);
-        } else {
-          op = mkOpByGet(srcSpec);
-        }
-        fmap.put(key, op);
-      }
+      srcSpec = Seq.getElementByIndex(keyspec, 0); // 
+      dstSpec = Seq.getElementByIndex(keyspec, 1); // key in the target map
+      subKeySpec = Seq.getElementByIndex(keyspec, 2);
     } else {
-      throw new ExecutionException("Keyspec '"+keyspec+"' is invalid must be a symbol");
+      throw new ExecutionException(
+          "Keyspec '" + keyspec + "' is invalid," + " must be a symbol or a list");
     }
 
+    if (null == dstSpec) {
+      throw new ExecutionException(
+          "Keyspec '" + keyspec + "' is invalid: " + "destination spec cannot be null");
+    } else {
+      final Object key = Utils.asString(dstSpec);
+      FieldsMap.Op op;
+      if (subKeySpec instanceof List) {
+        final Map<Object, FieldsMap.Op> subfmap = mkFmap((List) subKeySpec, bt);
+        final FieldsMap.Op localOp = mkOp(srcSpec);
+        op = new FieldsMap.Op() {
+          @Override
+          public Object get(Map<?, ?> src) {
+            Object mapObj = localOp.get(src);
+            if (mapObj instanceof Map) {
+              return mkFields((Map) mapObj, subfmap);
+            } else {
+              return new HashMap();
+            }
+          }
+        };
+      } else {
+        op = mkOp(srcSpec);
+      }
+      fmap.put(key, op);
+    }
   }
-
   
   protected static Map<Object,FieldsMap.Op> mkFmap(Object ksObj, Backtrace backtrace) {
     if (null == ksObj) {
