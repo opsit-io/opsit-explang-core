@@ -2090,21 +2090,50 @@ public class Funcs {
     return new FieldsMap(obj, fmap);
   }
 
+
+  protected static FieldsMap.Op mkOpByGet(Object key) {
+    return new FieldsMap.Op() {
+      @Override
+      public Object get(Map<?, ?> m) {
+        return m.get(key);
+      }
+    };
+  }
+
+  protected static FieldsMap.Op mkOpByGetIn(List keyList) {
+    return new FieldsMap.Op() {
+      @Override
+      public Object get(Map<?, ?> src) {
+        return doGetIn(src, keyList, 0, null /* default */);
+      }
+    };
+  }
+  
   protected static void addKsOp(Map<Object, FieldsMap.Op> fmap, Object keyspec) {
-    Object key;
-    FieldsMap.Op op = null;;
-    if (keyspec instanceof Symbol) {
-      key = ((Symbol)keyspec).getName();
-      op = new FieldsMap.Op() {
-          @Override
-          public Object get(Map<?, ?> src) {
-            return src.get(key);
-          }
-        };
+    
+    FieldsMap.Op op = null;
+    // keyspec is a string or symbol
+    if ((keyspec instanceof Symbol) || (keyspec instanceof CharSequence)) {
+      final Object key = Utils.asString(keyspec);
+      fmap.put(key, mkOpByGet(key));
+    } else if (Seq.isIndexed(keyspec)) {
+      int len = Seq.getLength(keyspec, false);
+      if (len != 2) {
+        throw new ExecutionException("Keyspec '"+keyspec+"' is invalid: must be of length 2");
+      }
+      Object srcSpec = Seq.getElementByIndex(keyspec, 0); // 
+      Object dstSpec = Seq.getElementByIndex(keyspec, 1); // key in the target map
+      final Object key = Utils.asString(dstSpec);
+      if (srcSpec instanceof List) {
+        op = mkOpByGetIn((List)srcSpec); 
+      } else {
+        op = mkOpByGet(srcSpec); 
+      }
+      fmap.put(key, op);
     } else {
       throw new ExecutionException("Keyspec '"+keyspec+"' is invalid must be a symbol");
     }
-    fmap.put(key, op);
+
   }
 
   
@@ -2790,15 +2819,14 @@ public class Funcs {
       final Object obj,
       final Object ksObj,
       final int ksIdx,
-      final Object notDefined,
-      final Backtrace bt) {
+      final Object notDefined) {
     Object[] result = new Object[1];
     final Object key = getKeyByIndex(ksObj, ksIdx);
     if (null == key) {
       return obj;
     }
     if (doGet(obj, result, key)) {
-      return doGetIn(result[0], ksObj, ksIdx + 1, notDefined, bt);
+      return doGetIn(result[0], ksObj, ksIdx + 1, notDefined);
     }
     return notDefined;
   }
@@ -2822,7 +2850,7 @@ public class Funcs {
       final Object obj = eargs.get(0, backtrace);
       final Object ksObj = eargs.get(1, backtrace);
       final Object notDefined = argsnum == 2 ? null : eargs.get(2, backtrace);
-      final Object result = doGetIn(obj, ksObj, 0, notDefined, backtrace);
+      final Object result = doGetIn(obj, ksObj, 0, notDefined);
       return result;
     }
 

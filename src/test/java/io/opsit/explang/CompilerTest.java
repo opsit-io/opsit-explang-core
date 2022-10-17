@@ -2455,7 +2455,32 @@ public class CompilerTest extends AbstractTest {
             + "     (LIST name book1 book2))",
             list("Jane Austin", "Sense and Sensibility", "Pride and Prejustice"), true, null, null, p
           },
-
+          // FIELDS
+          {
+            "(FIELDS2 (LIST (HASHMAP \"a\" \"1\" \"b\" \"2\") (HASHMAP \"a\" \"22\")) (LIST (QUOTE a) (QUOTE b)))",
+            list(map("a","1", "b", "2"), map("a","22", "b", null)),
+            true, null,null, p
+          },
+          {
+            "(FIELDS2 (LIST (HASHMAP \"a\" \"1\" \"b\" \"2\") (HASHMAP \"a\" \"22\")) (LIST \"a\" \"b\"))",
+            list(map("a","1", "b", "2"), map("a","22", "b", null)),
+            true, null,null, p
+          },
+          {
+            "(FIELDS2 (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
+            + "             (LIST (LIST (LIST \"a\" 0) \"aa\") "
+            + "                   (LIST (LIST \"b\" 0) \"bb\")))",
+            list(map("aa",'1', "bb", '2'), map("aa",'2', "bb", null)),
+            true, null,null, p
+          },
+          {
+            "(FIELDS2 (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
+            + "             (LIST (LIST (LIST \"a\") \"aa\") "
+            + "                   (LIST (LIST \"b\") \"bb\")))",
+            list(map("aa","11", "bb", "22"), map("aa","22", "bb", null)),
+            true, null,null, p
+          },
+          
           {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p
           },
