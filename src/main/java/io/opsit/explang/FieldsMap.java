@@ -1,21 +1,16 @@
 package io.opsit.explang;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
-import java.util.Collection;
-import java.util.Iterator;
-import io.opsit.explang.Utils;
-
-
 
 public class FieldsMap implements Map<Object, Object> {
-
-  //public stat
   public static interface Op {
-    Object get(Map<?,?> src);
+    Object get(Map<?, ?> src);
   }
-  
+
   protected Map<Object, Object> src;
   protected Map<Object, Op> fmap;
 
@@ -60,7 +55,6 @@ public class FieldsMap implements Map<Object, Object> {
       }
     }
     return false;
-
   }
 
   @Override
@@ -116,22 +110,23 @@ public class FieldsMap implements Map<Object, Object> {
     Set<Map.Entry<Object, Object>> entries = new HashSet<Map.Entry<Object, Object>>();
     for (Object key : this.keySet()) {
       final Object entryKey = key;
-      entries.add(new Map.Entry<Object, Object>() {
-                    @Override
-                    public Object getKey() {
-                      return entryKey;
-                    }
+      entries.add(
+          new Map.Entry<Object, Object>() {
+            @Override
+            public Object getKey() {
+              return entryKey;
+            }
 
-                    @Override
-                    public Object getValue() {
-                      return get(entryKey);
-                    }
+            @Override
+            public Object getValue() {
+              return get(entryKey);
+            }
 
-                    @Override
-                    public Object setValue(Object value) {
-                      return put(entryKey, value);
-                    }
-                  });
+            @Override
+            public Object setValue(Object value) {
+              return put(entryKey, value);
+            }
+          });
     }
     return entries;
   }

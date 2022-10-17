@@ -2086,13 +2086,16 @@ public class Funcs {
     }
   }
 
-  protected static Map mkFields(Map obj, Map<Object,FieldsMap.Op> fmap) {
+  protected static Map<Object,Object> mkFields(Map<Object,Object> obj,
+                                               Map<Object,FieldsMap.Op> fmap) {
     return new FieldsMap(obj, fmap);
   }
 
-
+  @SuppressWarnings("unchecked")
   protected static FieldsMap.Op mkOp(Object srcSpec) {
-    return (srcSpec instanceof List)?  mkOpByGetIn((List) srcSpec) : mkOpByGet(srcSpec);
+    return (srcSpec instanceof List)
+      ? mkOpByGetIn((List<Object>) srcSpec)
+      : mkOpByGet(srcSpec);
   }
   
   protected static FieldsMap.Op mkOpByGet(Object key) {
@@ -2104,7 +2107,7 @@ public class Funcs {
     };
   }
 
-  protected static FieldsMap.Op mkOpByGetIn(List keyList) {
+  protected static FieldsMap.Op mkOpByGetIn(List<Object> keyList) {
     return new FieldsMap.Op() {
       @Override
       public Object get(Map<?, ?> src) {
@@ -2112,7 +2115,8 @@ public class Funcs {
       }
     };
   }
-  
+
+  @SuppressWarnings("unchecked")
   protected static void addKsOp(Map<Object, FieldsMap.Op> fmap, Object keyspec, Backtrace bt) {
     Object srcSpec = null;
     Object dstSpec = null;
@@ -2139,8 +2143,8 @@ public class Funcs {
           "Keyspec '" + keyspec + "' is invalid: subordinate spec must be a list or NIL");
     }
     final Map<Object, FieldsMap.Op> subfmap = (null == subKeySpec)
-      ? null
-      : mkFmap((List)subKeySpec, bt);
+        ? null
+        : mkFmap((List)subKeySpec, bt);
     
     if (null == dstSpec) {
       if (null == subfmap) {
@@ -2175,9 +2179,9 @@ public class Funcs {
           public Object get(Map<?, ?> src) {
             Object mapObj = localOp.get(src);
             if (mapObj instanceof Map) {
-              return mkFields((Map) mapObj, subfmap);
+              return mkFields((Map<Object,Object>) mapObj, subfmap);
             } else {
-              return new HashMap();
+              return new HashMap<Object,Object>();
             }
           }
         };
@@ -2187,31 +2191,33 @@ public class Funcs {
       fmap.put(key, op);
     }
   }
-  
-  protected static Map<Object,FieldsMap.Op> mkFmap(Object ksObj, Backtrace backtrace) {
+
+  protected static Map<Object, FieldsMap.Op> mkFmap(Object ksObj, Backtrace backtrace) {
     if (null == ksObj) {
       throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got NIL");
     }
-    if (! Seq.isIndexed(ksObj)) {
-      throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got " + ksObj.getClass());
+    if (!Seq.isIndexed(ksObj)) {
+      throw new ExecutionException(
+          backtrace, "Keyseq must be an indexed sequence, but got " + ksObj.getClass());
     }
     final Map<Object, FieldsMap.Op> fmap = new HashMap<Object, FieldsMap.Op>();
-    Seq.forEach(ksObj,
-                new Seq.Operation() {
-                  @Override
-                  public boolean perform(Object keySpec) {
-                    addKsOp(fmap, keySpec, backtrace); 
-                    return false;
-                  }
-                },
-                true);
+    Seq.forEach(
+        ksObj,
+        new Seq.Operation() {
+          @Override
+          public boolean perform(Object keySpec) {
+            addKsOp(fmap, keySpec, backtrace);
+            return false;
+          }
+        },
+        true);
     return fmap;
   }
-  
-  
+
   @Arguments(spec = {"object", "keyseq"})
   @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
   @Package(name = Package.DWIM)
+  @SuppressWarnings("unchecked")
   public static class FIELDS2 extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
@@ -2228,12 +2234,13 @@ public class Funcs {
               @Override
               public boolean perform(Object item) {
                 if (null == item) {
-                  item = new HashMap();
+                  item = new HashMap<Object,Object>();
                 }
                 if (item instanceof Map) {
-                  result.add(mkFields((Map)item, fmap));
+                  result.add(mkFields((Map<Object,Object>)item, fmap));
                 } else if (null == item) {
-                  throw new ExecutionException(backtrace, "entries of type " + item.getClass() + "not supported");
+                  throw new ExecutionException(backtrace, "entries of type "
+                                               + item.getClass() + "not supported");
                 }
                 return false;
               }
@@ -2241,9 +2248,10 @@ public class Funcs {
             true);
         return result;
       } else if (obj instanceof Map) {
-        return mkFields((Map)obj, fmap);
+        return mkFields((Map<Object,Object>)obj, fmap);
       } else {
-        throw new ExecutionException(backtrace, "objects of type " + obj.getClass() + "not supported");
+        throw new ExecutionException(backtrace, "objects of type "
+                                     + obj.getClass() + "not supported");
       }
     }
   }
