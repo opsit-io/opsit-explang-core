@@ -2134,14 +2134,41 @@ public class Funcs {
           "Keyspec '" + keyspec + "' is invalid," + " must be a symbol or a list");
     }
 
-    if (null == dstSpec) {
+    if ((null != subKeySpec) && !(subKeySpec instanceof List)) {
       throw new ExecutionException(
-          "Keyspec '" + keyspec + "' is invalid: " + "destination spec cannot be null");
+          "Keyspec '" + keyspec + "' is invalid: subordinate spec must be a list or NIL");
+    }
+    final Map<Object, FieldsMap.Op> subfmap = (null == subKeySpec)
+      ? null
+      : mkFmap((List)subKeySpec, bt);
+    
+    if (null == dstSpec) {
+      if (null == subfmap) {
+        throw new ExecutionException("Keyspec '" + keyspec + "' is invalid: "
+                                     + "destination spec cannot be null");
+      }
+      final FieldsMap.Op localOp = mkOp(srcSpec);
+      for (Map.Entry<Object, FieldsMap.Op> entry : subfmap.entrySet()) {
+        final Object eKey = entry.getKey();
+        final FieldsMap.Op eOp = entry.getValue();
+        final FieldsMap.Op op = new FieldsMap.Op() {
+          @Override
+          public Object get(Map<?, ?> src) {
+            Object mapObj = localOp.get(src);
+            if (mapObj instanceof Map) {
+              return eOp.get((Map)mapObj);
+            } else {
+              return null;
+            }
+          }
+        };
+        fmap.put(eKey, op);
+      }
+      //
     } else {
       final Object key = Utils.asString(dstSpec);
       FieldsMap.Op op;
-      if (subKeySpec instanceof List) {
-        final Map<Object, FieldsMap.Op> subfmap = mkFmap((List) subKeySpec, bt);
+      if (null != subfmap) {
         final FieldsMap.Op localOp = mkOp(srcSpec);
         op = new FieldsMap.Op() {
           @Override
