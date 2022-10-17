@@ -2109,8 +2109,7 @@ public class Funcs {
     };
   }
   
-  protected static void addKsOp(Map<Object, FieldsMap.Op> fmap, Object keyspec) {
-    
+  protected static void addKsOp(Map<Object, FieldsMap.Op> fmap, Object keyspec, Backtrace bt) {
     FieldsMap.Op op = null;
     // keyspec is a string or symbol
     if ((keyspec instanceof Symbol) || (keyspec instanceof CharSequence)) {
@@ -2118,18 +2117,43 @@ public class Funcs {
       fmap.put(key, mkOpByGet(key));
     } else if (Seq.isIndexed(keyspec)) {
       int len = Seq.getLength(keyspec, false);
-      if (len != 2) {
-        throw new ExecutionException("Keyspec '"+keyspec+"' is invalid: must be of length 2");
+      if (len < 2 || len > 3) {
+        throw new ExecutionException("Keyspec '"+keyspec+"' is invalid: must be of length 2 or 3");
       }
       Object srcSpec = Seq.getElementByIndex(keyspec, 0); // 
       Object dstSpec = Seq.getElementByIndex(keyspec, 1); // key in the target map
-      final Object key = Utils.asString(dstSpec);
-      if (srcSpec instanceof List) {
-        op = mkOpByGetIn((List)srcSpec); 
+      //Object subKeySpec = Seq.getElementByIndex(keyspec, 2);
+      
+
+      if (dstSpec instanceof List) {
+        final Map<Object, FieldsMap.Op> subfmap = mkFmap((List)dstSpec, bt);
+        
+        final FieldsMap.Op localOp = (srcSpec instanceof List)?  mkOpByGetIn((List) srcSpec) : mkOpByGet(srcSpec);
+        op = new FieldsMap.Op() {
+            @Override
+            public Object get(Map<?, ?> src) {
+              Object mapObj = localOp.get(src);
+              if (mapObj instanceof Map) {
+                return mkFields((Map)mapObj, subfmap);
+              } else {
+                return  new HashMap();
+              }
+            }
+          };
+        
+        //FIXME:
+        final Object key = Utils.asString((srcSpec instanceof List) ? ((List)srcSpec).get(0) : srcSpec);
+        fmap.put(key, op);
+        
       } else {
-        op = mkOpByGet(srcSpec); 
+        final Object key = Utils.asString(dstSpec);
+        if (srcSpec instanceof List) {
+          op = mkOpByGetIn((List) srcSpec);
+        } else {
+          op = mkOpByGet(srcSpec);
+        }
+        fmap.put(key, op);
       }
-      fmap.put(key, op);
     } else {
       throw new ExecutionException("Keyspec '"+keyspec+"' is invalid must be a symbol");
     }
@@ -2137,13 +2161,19 @@ public class Funcs {
   }
 
   
-  protected static Map<Object,FieldsMap.Op> mkFmap(Object ksObj) {
+  protected static Map<Object,FieldsMap.Op> mkFmap(Object ksObj, Backtrace backtrace) {
+    if (null == ksObj) {
+      throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got NIL");
+    }
+    if (! Seq.isIndexed(ksObj)) {
+      throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got " + ksObj.getClass());
+    }
     final Map<Object, FieldsMap.Op> fmap = new HashMap<Object, FieldsMap.Op>();
     Seq.forEach(ksObj,
                 new Seq.Operation() {
                   @Override
                   public boolean perform(Object keySpec) {
-                    addKsOp(fmap, keySpec); 
+                    addKsOp(fmap, keySpec, backtrace); 
                     return false;
                   }
                 },
@@ -2160,13 +2190,8 @@ public class Funcs {
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
       final Object ksObj = eargs.get(1, backtrace);
-      if (null == ksObj) {
-        throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got NIL");
-      }
-      if (! Seq.isIndexed(ksObj)) {
-        throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got " + ksObj.getClass());
-      }
-      Map<Object, FieldsMap.Op> fmap = mkFmap(ksObj);
+      
+      Map<Object, FieldsMap.Op> fmap = mkFmap(ksObj,  backtrace);
       
       if (Seq.isCollection(obj) && !(obj instanceof Map)) {
         final List<Object> result = Utils.list();
