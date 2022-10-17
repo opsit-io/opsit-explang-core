@@ -2086,6 +2086,89 @@ public class Funcs {
     }
   }
 
+  protected static Map mkFields(Map obj, Map<Object,FieldsMap.Op> fmap) {
+    return new FieldsMap(obj, fmap);
+  }
+
+  protected static void addKsOp(Map<Object, FieldsMap.Op> fmap, Object keyspec) {
+    Object key;
+    FieldsMap.Op op = null;;
+    if (keyspec instanceof Symbol) {
+      key = ((Symbol)keyspec).getName();
+      op = new FieldsMap.Op() {
+          @Override
+          public Object get(Map<?, ?> src) {
+            return src.get(key);
+          }
+        };
+    } else {
+      throw new ExecutionException("Keyspec '"+keyspec+"' is invalid must be a symbol");
+    }
+    fmap.put(key, op);
+  }
+
+  
+  protected static Map<Object,FieldsMap.Op> mkFmap(Object ksObj) {
+    final Map<Object, FieldsMap.Op> fmap = new HashMap<Object, FieldsMap.Op>();
+    Seq.forEach(ksObj,
+                new Seq.Operation() {
+                  @Override
+                  public boolean perform(Object keySpec) {
+                    addKsOp(fmap, keySpec); 
+                    return false;
+                  }
+                },
+                true);
+    return fmap;
+  }
+  
+  
+  @Arguments(spec = {"object", "keyseq"})
+  @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
+  @Package(name = Package.DWIM)
+  public static class FIELDS2 extends FuncExp {
+    @Override
+    public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+      final Object obj = eargs.get(0, backtrace);
+      final Object ksObj = eargs.get(1, backtrace);
+      if (null == ksObj) {
+        throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got NIL");
+      }
+      if (! Seq.isIndexed(ksObj)) {
+        throw new ExecutionException(backtrace, "Keyseq must be an indexed sequence, but got " + ksObj.getClass());
+      }
+      Map<Object, FieldsMap.Op> fmap = mkFmap(ksObj);
+      
+      if (Seq.isCollection(obj) && !(obj instanceof Map)) {
+        final List<Object> result = Utils.list();
+        Seq.forEach(
+            obj,
+            new Seq.Operation() {
+              @Override
+              public boolean perform(Object item) {
+                if (null == item) {
+                  item = new HashMap();
+                }
+                if (item instanceof Map) {
+                  result.add(mkFields((Map)item, fmap));
+                } else if (null == item) {
+                  throw new ExecutionException(backtrace, "entries of type " + item.getClass() + "not supported");
+                }
+                return false;
+              }
+            },
+            true);
+        return result;
+      } else if (obj instanceof Map) {
+        return mkFields((Map)obj, fmap);
+      } else {
+        throw new ExecutionException(backtrace, "objects of type " + obj.getClass() + "not supported");
+      }
+    }
+  }
+
+
+  
   @Arguments(spec = {"object", "keyseq"})
   @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
   @Package(name = Package.DWIM)
