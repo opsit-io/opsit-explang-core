@@ -8,13 +8,13 @@ import java.util.Set;
 
 public class FieldsMap implements Map<Object, Object> {
   public static interface Op {
-    Object get(Map<?, ?> src);
+    Object get(Map<? extends Object, ? extends Object> src);
   }
 
-  protected Map<Object, Object> src;
+  protected Map<? extends Object, ? extends Object> src;
   protected Map<Object, Op> fmap;
 
-  public FieldsMap(Map<Object, Object> src, Map<Object, Op> fmap) {
+  public FieldsMap(Map<? extends Object, ? extends Object> src, Map<Object, Op> fmap) {
     this.src = src;
     this.fmap = fmap;
   }
@@ -36,9 +36,6 @@ public class FieldsMap implements Map<Object, Object> {
 
   @Override
   public boolean containsValue(Object value) {
-    // if (!src.containsValue(value)) {
-    //   return false;
-    // } else {
     for (Object key : this.keySet()) {
       final Op op = fmap.get(key);
       if (null != op) {

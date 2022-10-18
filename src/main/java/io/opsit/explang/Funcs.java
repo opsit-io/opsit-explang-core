@@ -2086,7 +2086,7 @@ public class Funcs {
     }
   }
 
-  protected static Map<Object,Object> mkFields(Map<Object,Object> obj,
+  protected static Map<Object,Object> mkFields(Map<? extends Object,Object> obj,
                                                Map<Object,FieldsMap.Op> fmap) {
     return new FieldsMap(obj, fmap);
   }
@@ -2144,7 +2144,7 @@ public class Funcs {
     }
     final Map<Object, FieldsMap.Op> subfmap = (null == subKeySpec)
         ? null
-        : mkFmap((List)subKeySpec, bt);
+        : mkFmap(subKeySpec, bt);
     
     if (null == dstSpec) {
       if (null == subfmap) {
@@ -2160,7 +2160,7 @@ public class Funcs {
           public Object get(Map<?, ?> src) {
             Object mapObj = localOp.get(src);
             if (mapObj instanceof Map) {
-              return eOp.get((Map)mapObj);
+              return eOp.get((Map<?,?>)mapObj);
             } else {
               return null;
             }
@@ -2214,7 +2214,7 @@ public class Funcs {
     return fmap;
   }
 
-  @Arguments(spec = {"object", "keyseq"})
+  @Arguments(spec = {"object", "keyspecs"})
   @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
   @Package(name = Package.DWIM)
   @SuppressWarnings("unchecked")
@@ -2225,8 +2225,12 @@ public class Funcs {
       final Object ksObj = eargs.get(1, backtrace);
       
       Map<Object, FieldsMap.Op> fmap = mkFmap(ksObj,  backtrace);
-      
-      if (Seq.isCollection(obj) && !(obj instanceof Map)) {
+
+      if (null == obj) {
+        return null;
+      } else if (Seq.isCollection(obj)
+                 && !(obj instanceof Map)
+                 && !(obj instanceof CharSequence)) {
         final List<Object> result = Utils.list();
         Seq.forEach(
             obj,
@@ -2234,13 +2238,11 @@ public class Funcs {
               @Override
               public boolean perform(Object item) {
                 if (null == item) {
-                  item = new HashMap<Object,Object>();
-                }
-                if (item instanceof Map) {
+                  result.add(null);
+                } else if (item instanceof Map) {
                   result.add(mkFields((Map<Object,Object>)item, fmap));
-                } else if (null == item) {
-                  throw new ExecutionException(backtrace, "entries of type "
-                                               + item.getClass() + "not supported");
+                } else {
+                  result.add(mkFields(new BeanMap(item), fmap));
                 }
                 return false;
               }
@@ -2250,8 +2252,7 @@ public class Funcs {
       } else if (obj instanceof Map) {
         return mkFields((Map<Object,Object>)obj, fmap);
       } else {
-        throw new ExecutionException(backtrace, "objects of type "
-                                     + obj.getClass() + "not supported");
+        return mkFields(new BeanMap(obj), fmap);
       }
     }
   }
