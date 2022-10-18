@@ -2487,12 +2487,21 @@ public class CompilerTest extends AbstractTest {
             list(map("aa",map("y","YY","x","XX")), map("aa",map("y","2YY","x","2XX"))),
             true, null,null, p
           },
-           {
+          {
             "(FIELDS2 (LIST (HASHMAP \"a\" (HASHMAP \"x\" \"XX\" \"y\" \"YY\") \"b\" \"22\") "
             + "             (HASHMAP \"a\" (HASHMAP \"x\" \"2XX\" \"y\" \"2YY\"))) "
             + "       (LIST (LIST \"a\" NIL (LIST  \"x\" \"y\")) \"b\"))",
             list(map("y","YY","x","XX","b","22"), map("y","2YY","x","2XX","b", null)),
             true, null,null, p
+          },
+          {
+            "(FIELDS2 NIL (LIST \"A\" \"B\"))", null, false, null,null, p
+          },
+          {
+            "(FIELDS2 (LIST NULL) (LIST \"A\" \"B\"))", list((Object)null), true, null,null, p
+          },
+          {
+            "(FIELDS2 (LIST) (LIST \"A\" \"B\"))", list(), false, null,null, p
           },
           {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p
