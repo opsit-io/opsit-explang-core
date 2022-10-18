@@ -2457,51 +2457,51 @@ public class CompilerTest extends AbstractTest {
           },
           // FIELDS
           {
-            "(FIELDS2 (LIST (HASHMAP \"a\" \"1\" \"b\" \"2\") (HASHMAP \"a\" \"22\")) (LIST (QUOTE a) (QUOTE b)))",
+            "(DWIM_FIELDS (LIST (HASHMAP \"a\" \"1\" \"b\" \"2\") (HASHMAP \"a\" \"22\")) (LIST (QUOTE a) (QUOTE b)))",
             list(map("a","1", "b", "2"), map("a","22", "b", null)),
             true, null,null, p
           },
           {
-            "(FIELDS2 (LIST (HASHMAP \"a\" \"1\" \"b\" \"2\") (HASHMAP \"a\" \"22\")) (LIST \"a\" \"b\"))",
+            "(DWIM_FIELDS (LIST (HASHMAP \"a\" \"1\" \"b\" \"2\") (HASHMAP \"a\" \"22\")) (LIST \"a\" \"b\"))",
             list(map("a","1", "b", "2"), map("a","22", "b", null)),
             true, null,null, p
           },
           {
-            "(FIELDS2 (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
+            "(DWIM_FIELDS (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
             + "             (LIST (LIST (LIST \"a\" 0) \"aa\") "
             + "                   (LIST (LIST \"b\" 0) \"bb\")))",
             list(map("aa",'1', "bb", '2'), map("aa",'2', "bb", null)),
             true, null,null, p
           },
           {
-            "(FIELDS2 (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
+            "(DWIM_FIELDS (LIST (HASHMAP \"a\" \"11\" \"b\" \"22\") (HASHMAP \"a\" \"22\")) "
             + "       (LIST (LIST (LIST \"a\") \"aa\") "
             + "             (LIST (LIST \"b\") \"bb\")))",
             list(map("aa","11", "bb", "22"), map("aa","22", "bb", null)),
             true, null,null, p
           },
           {
-            "(FIELDS2 (LIST (HASHMAP \"a\" (HASHMAP \"x\" \"XX\" \"y\" \"YY\") \"b\" \"22\") "
+            "(DWIM_FIELDS (LIST (HASHMAP \"a\" (HASHMAP \"x\" \"XX\" \"y\" \"YY\") \"b\" \"22\") "
             + "             (HASHMAP \"a\" (HASHMAP \"x\" \"2XX\" \"y\" \"2YY\"))) "
             + "       (LIST (LIST \"a\" \"aa\" (LIST  \"x\" \"y\"))))",
             list(map("aa",map("y","YY","x","XX")), map("aa",map("y","2YY","x","2XX"))),
             true, null,null, p
           },
           {
-            "(FIELDS2 (LIST (HASHMAP \"a\" (HASHMAP \"x\" \"XX\" \"y\" \"YY\") \"b\" \"22\") "
+            "(DWIM_FIELDS (LIST (HASHMAP \"a\" (HASHMAP \"x\" \"XX\" \"y\" \"YY\") \"b\" \"22\") "
             + "             (HASHMAP \"a\" (HASHMAP \"x\" \"2XX\" \"y\" \"2YY\"))) "
             + "       (LIST (LIST \"a\" NIL (LIST  \"x\" \"y\")) \"b\"))",
             list(map("y","YY","x","XX","b","22"), map("y","2YY","x","2XX","b", null)),
             true, null,null, p
           },
           {
-            "(FIELDS2 NIL (LIST \"A\" \"B\"))", null, false, null,null, p
+            "(DWIM_FIELDS NIL (LIST \"A\" \"B\"))", null, false, null,null, p
           },
           {
-            "(FIELDS2 (LIST NULL) (LIST \"A\" \"B\"))", list((Object)null), true, null,null, p
+            "(DWIM_FIELDS (LIST NULL) (LIST \"A\" \"B\"))", list((Object)null), true, null,null, p
           },
           {
-            "(FIELDS2 (LIST) (LIST \"A\" \"B\"))", list(), false, null,null, p
+            "(DWIM_FIELDS (LIST) (LIST \"A\" \"B\"))", list(), false, null,null, p
           },
           {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p

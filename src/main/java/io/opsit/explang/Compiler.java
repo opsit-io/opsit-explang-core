@@ -534,7 +534,7 @@ public class Compiler {
             "BEAN", BEAN.class,
             "SELECT-KEYS", SELECT_KEYS.class,
             "DWIM_FIELDS", DWIM_FIELDS.class,
-            "FIELDS2", FIELDS2.class,
+            //"FIELDS2", FIELDS2.class,
             "TYPEP", TYPEP.class,
             "COPY", COPY.class,
             // mapping functions

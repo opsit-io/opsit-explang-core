@@ -2214,11 +2214,13 @@ public class Funcs {
     return fmap;
   }
 
-  @Arguments(spec = {"object", "keyspecs"})
-  @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
+  @Arguments(spec = {"src", "keyspecs"})
+  @Docstring(lines = {
+      "Returns a new object with only those fields in 'src', which were specified in 'keyspecs'. "}
+    )
   @Package(name = Package.DWIM)
   @SuppressWarnings("unchecked")
-  public static class FIELDS2 extends FuncExp {
+  public static class DWIM_FIELDS extends FuncExp {
     @Override
     public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
       final Object obj = eargs.get(0, backtrace);
@@ -2259,32 +2261,33 @@ public class Funcs {
 
 
   
-  @Arguments(spec = {"object", "keyseq"})
-  @Docstring(text = "Returns a map containing only those entries in map whose key is in keys. ")
-  @Package(name = Package.DWIM)
-  public static class DWIM_FIELDS extends FuncExp {
-    @Override
-    public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
-      final Object obj = eargs.get(0, backtrace);
-      final Object ksObj = eargs.get(1, backtrace);
-      if (Seq.isCollection(obj) && !(obj instanceof Map)) {
-        final List<Object> result = Utils.list();
-        Seq.forEach(
-            obj,
-            new Seq.Operation() {
-              @Override
-              public boolean perform(Object obj) {
-                result.add(doSelectKeys(obj, ksObj));
-                return false;
-              }
-            },
-            true);
-        return result;
-      } else {
-        return doSelectKeys(obj, ksObj);
-      }
-    }
-  }
+  // @Arguments(spec = {"src", "keys"})
+  // @Docstring(text =
+  //    "Returns a new object, with only those fields in 'src', which are specified in 'keys'. ")
+  // @Package(name = Package.DWIM)
+  // public static class DWIM_FIELDS extends FuncExp {
+  //   @Override
+  //   public Object evalWithArgs(final Backtrace backtrace, Eargs eargs) {
+  //     final Object obj = eargs.get(0, backtrace);
+  //     final Object ksObj = eargs.get(1, backtrace);
+  //     if (Seq.isCollection(obj) && !(obj instanceof Map)) {
+  //       final List<Object> result = Utils.list();
+  //       Seq.forEach(
+  //           obj,
+  //           new Seq.Operation() {
+  //             @Override
+  //             public boolean perform(Object obj) {
+  //               result.add(doSelectKeys(obj, ksObj));
+  //               return false;
+  //             }
+  //           },
+  //           true);
+  //       return result;
+  //     } else {
+  //       return doSelectKeys(obj, ksObj);
+  //     }
+  //   }
+  // }
 
   @Arguments(spec = {"object", ARG_OPTIONAL, "prefix", "suffix"})
   @Docstring(
