@@ -3,6 +3,7 @@ package io.opsit.explang;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -11,6 +12,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 /** Utility class for operations on sequences of various types. */
 public class Seq {
@@ -863,6 +865,126 @@ public class Seq {
       return true;
     } else {
       return false;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj) {
+    result[0] = null;
+    int idx = -1;
+    if (obj instanceof Map) {
+      final Map<Object, Object> map = (Map<Object, Object>) obj;
+      result[0] = map.get(keyObj);
+      if (null == result[0]) {
+        if (!map.containsKey(keyObj)) {
+          return false;
+        }
+      }
+    } else if (obj instanceof Set) {
+      final Set<Object> s = (Set<Object>) obj;
+      if (!s.contains(keyObj)) {
+        return false;
+      }
+      result[0] = keyObj;
+    } else if (obj == null) {
+      return false;
+      
+    } else if ((obj instanceof List) && (idx = getIntIdx(keyObj)) >= 0) {
+      final List<Object> lst = (List<Object>) obj;
+      try {
+        result[0] = lst.get(idx);
+      } catch (IndexOutOfBoundsException ex) {
+        return false;
+      }
+    } else if ((obj instanceof CharSequence) && (idx = getIntIdx(keyObj)) >= 0) {
+      final CharSequence s = (CharSequence) obj;
+      try {
+        result[0] = s.charAt(idx);
+      } catch (IndexOutOfBoundsException ex) {
+        return false;
+      }
+    } else if (obj.getClass().isArray() && (idx = getIntIdx(keyObj)) >= 0) {
+      try {
+        result[0] = Array.get(obj, idx);
+      } catch (ArrayIndexOutOfBoundsException ex) {
+        return false;
+      }
+
+    } else if (java.util.Map.Entry.class.isAssignableFrom(obj.getClass())) {
+      if ("key".equalsIgnoreCase(Utils.asStringOrNull(keyObj))) {
+        result[0] = ((Map.Entry<?,?>) obj).getKey();
+      } else if ("value".equalsIgnoreCase(Utils.asStringOrNull(keyObj))) {
+        result[0] = ((Map.Entry<?,?>) obj).getValue();
+      } else {
+        return false;
+      }
+    } else {
+      final String keyStr = Utils.asStringOrEmpty(keyObj).trim();
+      if (keyStr.length() == 0) {
+        return false;
+      }
+      // FIXME: better check for method name?
+      try {
+        final String getName =
+            Utils.concat("get", keyStr.substring(0, 1).toUpperCase(), keyStr.substring(1));
+        final Method m = obj.getClass().getMethod(getName);
+        if (null == m.getReturnType()) {
+          return false;
+        }
+        result[0] = m.invoke(obj);
+      } catch (Exception ex) {
+        return false;
+      }
+      // FIXME: if ICtx object
+    }
+    return true;
+  }
+
+  protected static Object doGetIn(
+      final Object obj,
+      final Object ksObj,
+      final int ksIdx,
+      final Object notDefined) {
+    Object[] result = new Object[1];
+    final Object key = getKeyByIndex(ksObj, ksIdx);
+    if (null == key) {
+      return obj;
+    }
+    if (doGet(obj, result, key)) {
+      return doGetIn(result[0], ksObj, ksIdx + 1, notDefined);
+    }
+    return notDefined;
+  }
+
+  
+  // FIXME: produce specific retriever before starting the iterations
+  // no need to check object type ons each level
+  // FIXME: allow use other sequences, including lazy ones
+  protected static Object getKeyByIndex(Object ksObj, int ksIdx) {
+    if (ksObj instanceof List) {
+      if (ksIdx < 0 || ksIdx >= ((List<?>) ksObj).size()) {
+        return null;
+      }
+      return ((List<?>) ksObj).get(ksIdx);
+    }
+    if (null == ksObj) {
+      return null;
+    }
+    if (ksObj.getClass().isArray()) {
+      if (ksIdx < 0 || ksIdx >= Array.getLength(ksObj)) {
+        return null;
+      }
+      return Array.get(ksObj, ksIdx);
+    }
+    throw new ExecutionException(
+        "Cannot use the provided " + ksObj.getClass() + " value as list of indexes");
+  }
+
+  protected static int getIntIdx(Object key) {
+    try {
+      return Utils.asNumber(key).intValue();
+    } catch (Exception ex) {
+      return -1;
     }
   }
 }
