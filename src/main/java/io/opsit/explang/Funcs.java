@@ -4209,25 +4209,12 @@ public class Funcs {
   public static class JOIN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object  sep = eargs.get(0, backtrace);
+      final String  sep = Utils.asStringOrEmpty(eargs.get(0, backtrace));
       final Object seqObj = Utils.asObject(eargs.get(1, backtrace));
-      //FIXME: support more seq. types, list kinds, etc
-      if (seqObj instanceof List) {
-        final StringBuilder result = new StringBuilder();
-        final List<?> seqLst = (List<?>)seqObj;
-        for (int i = 0; i < seqLst.size(); i++) {
-          if (i > 0) { 
-            result.append(Utils.asStringOrEmpty(sep));
-          }
-          result.append(Utils.asStringOrEmpty(seqLst.get(i)));
-        }
-        return result;
-      } else if (null == seqObj) {
-        return null;
-      }  else {
-        throw new ExecutionException(backtrace, getName()
-                                     + " not implemented for sequence of type "
-                                     + seqObj.getClass());
+      try {
+        return Seq.joinWithString(seqObj, sep);
+      } catch (RuntimeException ex) {
+        return new ExecutionException(backtrace, ex.getMessage());
       }
     }
   }
@@ -4349,6 +4336,7 @@ public class Funcs {
     protected Map<String, Method> getGettersMap() {
       Map<String, Method> methods = super.getGettersMap();
       methods.put("name", null);
+      methods.put("operatorDescs", null);
       return methods;
     }
 
@@ -4359,10 +4347,41 @@ public class Funcs {
         return this.name;
       } else if ("argDescr".equalsIgnoreCase(keyStr)) {
         return formatArgs();
+      } else if ("operatorDescr".equalsIgnoreCase(keyStr)) {
+        return getOperatorDescr();
       }
       return super.get(key);
     }
 
+    public String getOperatorDescr() {
+      final List<OperatorDesc> operators = getOperatorDescs();
+      if (null != operators) {
+        final StringBuilder buf = new StringBuilder();
+        for (OperatorDesc op : operators) {
+          buf.append("Operator: ").append(op.name).append("\n");
+          for (int idx = 0; idx <  op.getUsages().length; idx++) {
+            String usage = op.getUsages()[idx];
+            for (String line : usage.split("\n")) {
+              buf.append("   ").append(line).append("\n");
+            }
+          }
+        }
+        return buf.toString();
+      }
+      return null;
+    }
+    
+    public List<OperatorDesc> getOperatorDescs() {
+      final List<OperatorDesc> descs = new ArrayList<OperatorDesc>();
+      for (OperatorDesc desc : this.parser.getOperatorDescs()) {
+        if (null != desc.getFunction() && desc.getFunction().equalsIgnoreCase(this.name)) {
+          descs.add(desc);
+        }
+      }
+      return descs;
+    }
+    
+    
     protected String formatArgs() {
       ICode codeObj = (ICode) this.obj;
       if (null != parser && null != codeObj.getArgSpec()) {
@@ -4387,8 +4406,13 @@ public class Funcs {
         buf.append(" defined at ");
         buf.append(codeObj.getDefLocation());
         buf.append("\n\n");
-        buf.append("Arguments: ").append(formatArgs()).append("\n\n");
-        buf.append("Documentation: \n    ").append(codeObj.getDocstring()).append("\n");
+        buf.append("Arguments: ").append(formatArgs()).append("\n");
+
+        String operatorDescr = this.getOperatorDescr();
+        if (null != operatorDescr) {
+          buf.append(operatorDescr);
+        }
+        buf.append("Documentation: \n    ").append(codeObj.getDocstring()).append("\n\n");
         buf.append("Package: ").append(codeObj.getPackageName()).append("\n");
       } else if (null != this.obj) {
         buf.append(" Object of type ").append(this.obj.getClass()).append("\n");

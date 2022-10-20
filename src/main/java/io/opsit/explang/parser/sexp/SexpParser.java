@@ -7,6 +7,7 @@ import io.opsit.explang.ASTNLeaf;
 import io.opsit.explang.ASTNList;
 import io.opsit.explang.ArgSpec;
 import io.opsit.explang.IParser;
+import io.opsit.explang.OperatorDesc;
 import io.opsit.explang.ParseCtx;
 import io.opsit.explang.ParserException;
 import io.opsit.explang.atom.AtomParseException;
@@ -28,6 +29,7 @@ import java.util.List;
 
 // @SuppressWarnings({"serial"})
 public class SexpParser implements IParser {
+  protected OperatorDesc[] operatorDescs = new OperatorDesc[] {};
 
   @Override
   public ASTNList parse(ParseCtx pctx, String input) {
@@ -206,5 +208,10 @@ public class SexpParser implements IParser {
       buf.append(ArgSpec.ARG_REST).append(" args");
     }
     return buf.toString();
+  }
+
+  @Override
+  public OperatorDesc[] getOperatorDescs() {
+    return operatorDescs;
   }
 }

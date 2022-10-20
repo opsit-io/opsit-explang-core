@@ -6,6 +6,7 @@ import io.opsit.explang.ASTNList;
 import io.opsit.explang.ArgSpec;
 import io.opsit.explang.IParser;
 import io.opsit.explang.Keyword;
+import io.opsit.explang.OperatorDesc;
 import io.opsit.explang.ParseCtx;
 import io.opsit.explang.ParserEOFException;
 import io.opsit.explang.ParserException;
@@ -29,6 +30,7 @@ import java.util.BitSet;
 import java.util.List;
 
 public class LispParser implements IParser {
+  protected OperatorDesc[] operatorDescs = new OperatorDesc[] {};
 
   public interface ReaderMacro {
     public ASTN execute(PushbackInputStream is, Character chr);
@@ -369,5 +371,10 @@ public class LispParser implements IParser {
       buf.append(ArgSpec.ARG_REST).append(" args");
     }
     return buf.toString();
+  }
+
+  @Override
+  public OperatorDesc[] getOperatorDescs() {
+    return operatorDescs;
   }
 }

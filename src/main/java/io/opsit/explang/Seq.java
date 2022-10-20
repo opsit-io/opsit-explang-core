@@ -868,8 +868,11 @@ public class Seq {
     }
   }
 
+  /**
+   * Get data object from nested data structures.
+   */
   @SuppressWarnings("unchecked")
-  protected static boolean doGet(final Object obj, final Object[] result, final Object keyObj) {
+  public static boolean doGet(final Object obj, final Object[] result, final Object keyObj) {
     result[0] = null;
     int idx = -1;
     if (obj instanceof Map) {
@@ -940,7 +943,10 @@ public class Seq {
     return true;
   }
 
-  protected static Object doGetIn(
+  /**
+   * Get data object from nested data structures.
+   */
+  public static Object doGetIn(
       final Object obj,
       final Object ksObj,
       final int ksIdx,
@@ -960,6 +966,7 @@ public class Seq {
   // FIXME: produce specific retriever before starting the iterations
   // no need to check object type ons each level
   // FIXME: allow use other sequences, including lazy ones
+  
   protected static Object getKeyByIndex(Object ksObj, int ksIdx) {
     if (ksObj instanceof List) {
       if (ksIdx < 0 || ksIdx >= ((List<?>) ksObj).size()) {
@@ -985,6 +992,32 @@ public class Seq {
       return Utils.asNumber(key).intValue();
     } catch (Exception ex) {
       return -1;
+    }
+  }
+
+  /**
+   * Join sequence with string separator.
+   */
+  public static String joinWithString(Object seqObj, String sep) {
+    if (isCollection(seqObj)) {
+      final StringBuilder buf = new StringBuilder();
+      forEach(seqObj, new Operation() {
+          @Override
+          public boolean perform(Object obj) {
+              if (!buf.isEmpty()) {
+                buf.append(sep);
+              }
+              buf.append(Utils.asStringOrEmpty(obj));
+              return false;
+            }
+          },
+          false);
+      return buf.toString();
+    } else if (null == seqObj) {
+      return null;
+    } else {
+      throw new RuntimeException("join by string separator not implemented for sequence of type "
+                                 + seqObj.getClass());
     }
   }
 }

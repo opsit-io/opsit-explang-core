@@ -12,4 +12,6 @@ public interface IParser {
   public boolean supportREPLStream();
 
   public String formatArgSpec(ArgSpec spec);
+
+  public OperatorDesc[] getOperatorDescs();
 }
