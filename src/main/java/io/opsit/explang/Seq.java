@@ -1004,7 +1004,7 @@ public class Seq {
       forEach(seqObj, new Operation() {
           @Override
           public boolean perform(Object obj) {
-              if (!buf.isEmpty()) {
+              if (buf.length() != 0) {
                 buf.append(sep);
               }
               buf.append(Utils.asStringOrEmpty(obj));
