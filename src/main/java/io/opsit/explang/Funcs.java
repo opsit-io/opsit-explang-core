@@ -4353,6 +4353,11 @@ public class Funcs {
       return super.get(key);
     }
 
+
+    /**
+     * Get formatted description of operators that are implemented
+     * using this function.
+     */
     public String getOperatorDescr() {
       final List<OperatorDesc> operators = getOperatorDescs();
       if (null != operators) {
@@ -4370,7 +4375,11 @@ public class Funcs {
       }
       return null;
     }
-    
+
+    /**
+     * Get list of descriptios of operators that are implemented
+     * using this function.
+     */
     public List<OperatorDesc> getOperatorDescs() {
       final List<OperatorDesc> descs = new ArrayList<OperatorDesc>();
       for (OperatorDesc desc : this.parser.getOperatorDescs()) {
