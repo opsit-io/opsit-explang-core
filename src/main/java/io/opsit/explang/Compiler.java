@@ -763,6 +763,7 @@ public class Compiler {
 
   @Docstring(text = "Get Function Given it's symbol.")
   @Package(name = Package.BASE_BINDINGS)
+  @Arguments(spec = {"symbol"})
   public class FUNCTION extends AbstractForm {
     // FIXME: checks
     protected Symbol fsym;
@@ -809,6 +810,7 @@ public class Compiler {
 
   @Docstring(text = "Try-Catch-Final construction.")
   @Package(name = Package.BASE_BINDINGS)
+  @Arguments(spec = {"body, cach_blocks, final_blocks"})
   public class TRY extends AbstractForm {
     private List<ICompiled> blocks = null;
     private List<CatchEntry> catches = null;
@@ -933,6 +935,7 @@ public class Compiler {
       text =
           "While loop construction. "
               + "Execute sequnce of expressions while the consition is true")
+  @Arguments(spec = {"condition", ArgSpec.ARG_REST, "body"})
   @Package(name = Package.LOOPS)
   public class WHILE extends AbstractForm {
     private List<ICompiled> blocks = null;
@@ -1229,6 +1232,7 @@ public class Compiler {
 
   @Package(name = Package.BASE_CONTROL)
   @Docstring(text = "If-else conditional construct.")
+  @Arguments(spec = {"condition", "then-expr", ArgSpec.ARG_REST, "else-exprs"})
   public class IF extends AbstractForm {
     private List<ICompiled> elseBlocks = null;
     private ICompiled condition = null;
@@ -1304,6 +1308,7 @@ public class Compiler {
   
   /** (DEFUN FOO (arg1 arg2...) block block...) */
   @Package(name = Package.BASE_FUNCS)
+  @Arguments(spec = {"name","(", "arglist", ")", "body"})
   @Docstring(text = "Define named function")
   public class DEFUN extends LAMBDA {
     // FIXME: this field is needed/ WHY?
@@ -1338,7 +1343,8 @@ public class Compiler {
     }
   }
 
-  @Docstring(text = "Define anonymous function")
+  @Docstring(text = "Define anonymous function. ")
+  @Arguments(spec = {"(", "arglist", ")", "body"})
   @Package(name = Package.BASE_CONTROL)
   public class LAMBDA extends AbstractForm {
     protected ArgSpec argSpec;
@@ -1643,20 +1649,21 @@ public class Compiler {
   }
 
 
-  @Arguments(text = "{var form}*")
+  @Arguments(text = "{var expr}*")
   @Package(name = Package.BASE_BINDINGS)
   @Docstring(
              lines = {
-               "Assign values to local variables. For each pair of arguments it will evaluate",
-               "the 'form' and assign the result to local variable 'var'. If the variable already",
-               "exists in the local contexts its value will be replaced. If not, new binding will",
-               "be created in the local scope, possibly shadowing the variable in upper scopes",
+               "Assign values to local variables. For each pair of arguments 'var', 'expr' in",
+               "the list of arguments {'var' 'expr'}* it will evaluate the 'expr' and assign the",
+               "result to local variable 'var'. If the variable already exists in the local scope",
+               "its value will be replaced. And if not, a new binding will be created in the local",
+               "scope, possibly shadowing the variable in upper scopes.",
                "",
                "Arguments:",
-               "  'var' - a symbol naming a variable.",
-               "  'form' - an expression to be evaluated, the result will be assigned to 'var'.",
+               "  'var'  - a symbol naming a variable.",
+               "  'expr' - an expression to be evaluated, the result will be assigned to 'var'.",
                "Returns:",
-               "  value of the last form, or nil if no pairs were supplied."})
+               "  value of the last 'expr', or NIL if no pairs were supplied."})
   public class SETL extends ABSTRACT_SET_OP {
     @Override
     protected void setvar(String name, Object val, ICtx ctx) {
