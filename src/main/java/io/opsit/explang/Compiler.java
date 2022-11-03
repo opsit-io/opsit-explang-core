@@ -20,12 +20,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 public class Compiler {
   protected static Threads threads = new Threads();
   protected IParser parser = new SexpParser();
-  // protected IParser parser = new LispReader();
   protected boolean failOnMissingVariables = true;
   protected IStringConverter funcNameConverter;
   protected Set<String> packages =
