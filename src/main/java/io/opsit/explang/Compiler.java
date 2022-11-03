@@ -563,6 +563,7 @@ public class Compiler {
             // exception handling
             "BACKTRACE", BACKTRACE.class,
             "THROW", THROW.class,
+            "EXCEPTION", EXCEPTION.class,
             // arrays
             "MAKE-ARRAY", MAKE_ARRAY.class,
             "AREF", AREF.class,

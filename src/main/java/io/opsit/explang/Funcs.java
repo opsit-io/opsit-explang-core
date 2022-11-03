@@ -2362,6 +2362,20 @@ public class Funcs {
   }
 
 
+  @Arguments(spec = {ArgSpec.ARG_KEY, "message"})
+  @Docstring(lines = {
+      "Creates an Exception Object. ",
+      "Returns new ExecutionException with given message."})
+  @Package(name = Package.BASE_CONTROL)
+  public static class EXCEPTION extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      Object val = eargs.get(0, backtrace);
+      return new ExecutionException(Utils.asStringOrNull(val));
+    }
+  }
+
+  
   @Arguments(spec = {"value"})
   @Docstring(text = "Return value from function")
   @Package(name = Package.BASE_CONTROL)
