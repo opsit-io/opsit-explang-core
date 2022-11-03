@@ -1001,8 +1001,13 @@ public class Funcs {
       if (null == tspec) {
         return null == val;
       }
-      final Class<?> tclass = Utils.tspecToClass(tspec);
-      return tclass.isInstance(val);
+      try {
+        final Class<?> tclass = Utils.tspecToClass(tspec);
+        return tclass.isInstance(val);
+      } catch (ClassNotFoundException ex) {
+        throw new ExecutionException(ex);
+      }
+
     }
   }
 
@@ -2118,7 +2123,11 @@ public class Funcs {
   public static class CLASS extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      return Utils.strToClass(Utils.asString(eargs.get(0, backtrace)));
+      try {
+        return Utils.strToClass(Utils.asString(eargs.get(0, backtrace)));
+      } catch (ClassNotFoundException ex) {
+        throw new ExecutionException(backtrace, ex);
+      }
     }
   }
 
@@ -2135,10 +2144,20 @@ public class Funcs {
   public static class DOTN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Class<?> cls = Utils.tspecToClass(eargs.get(0, backtrace));
+      Class<?> cls;
+      try {
+        cls = Utils.tspecToClass(eargs.get(0, backtrace));
+      } catch (ClassNotFoundException ex) {
+        throw new ExecutionException(backtrace, ex);
+      }
       final List<?> constrArgs = (eargs.size() > 1) ? (List<?>) eargs.get(1, backtrace) : null;
       final List<?> tspecs = (eargs.size() > 2) ? (List<?>) eargs.get(2, backtrace) : null;
-      final Class<?>[] paramsClasses = Utils.getMethodParamsClasses(constrArgs, tspecs);
+      Class<?>[] paramsClasses;
+      try {
+        paramsClasses = Utils.getMethodParamsClasses(constrArgs, tspecs);
+      } catch (ClassNotFoundException clnf) {
+        throw new RuntimeException(clnf);
+      }
       Constructor<?> constr;
       try {
         if (null != tspecs) {
@@ -2227,7 +2246,10 @@ public class Funcs {
         throw new RuntimeException(nfex.getTargetException());
       } catch (NoSuchFieldException nfex) {
         throw new RuntimeException(nfex);
+      } catch (ClassNotFoundException clnf) {
+        throw new RuntimeException(clnf);
       }
+
     }
 
     protected List<Object> getCallParts(List<Object> specArgs) {
@@ -2282,7 +2304,12 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final List<Object> rest = (List<Object>) eargs.get(1, backtrace);
       final Object tspec = eargs.get(0, backtrace);
-      final Class<?> cls = Utils.tspecToClass(tspec);
+      final Class<?> cls;
+      try {
+        cls = Utils.tspecToClass(tspec);
+      } catch (ClassNotFoundException ex) {
+        throw new ExecutionException(backtrace, ex);
+      }
       // final StringBuilder trail = new StringBuilder();
       final List<Object> parts = super.getCallParts(rest);
       final Object result = javaCall(cls, parts);
@@ -4274,7 +4301,12 @@ public class Funcs {
       final Object et = eargs.get("elementType", backtrace);
       Object result = null;
       if (null != et) {
-        final Class<?> tclass = Utils.tspecToClass(et);
+        Class<?> tclass = null;;
+        try {
+          tclass = Utils.tspecToClass(et);
+        } catch (ClassNotFoundException ex) {
+          throw new ExecutionException(backtrace, ex);
+        }
         result = Array.newInstance(tclass, size);
       } else {
         result = new Object[size];

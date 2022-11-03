@@ -457,6 +457,16 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
+            "(TRY (THROW \"Exception\") "
+                + "     (CATCH Exception ex 3) "
+                + "     (FINALLY 4))",
+            3,
+            true,
+            null,
+            null,
+            p
+          },
+          {
             "(TRY (THROW (.N \"Exception\" (LIST \"fooo\"))) "
                 + "     (CATCH java.lang.Exception ex (. ex \"getMessage()\"))"
                 + "     (FINALLY 4))",

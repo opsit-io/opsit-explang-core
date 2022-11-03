@@ -841,7 +841,7 @@ public class Compiler {
       try {
         result.exception =
             (Class<? extends Throwable>)
-                this.getClass().getClassLoader().loadClass(excSym.getName());
+          Utils.strToClass(excSym.getName());
       } catch (ClassNotFoundException clnf) {
         throw new InvalidParametersException(
             debugInfo, "catch: invalid exception class specified: '" + excSym.getName() + "'");

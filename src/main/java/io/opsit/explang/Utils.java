@@ -168,7 +168,7 @@ public class Utils {
    * Convert type specification to Class a object it is representing. Argument may be a Class
    * instance, in this case it will be returned as it is.
    */
-  public static Class<?> tspecToClass(Object tspec) {
+  public static Class<?> tspecToClass(Object tspec) throws ClassNotFoundException {
     if (tspec instanceof Class) {
       return (Class<?>) tspec;
     } else {
@@ -232,32 +232,27 @@ public class Utils {
    *
    * <p>java.lang classes do not require full path.
    */
-  public static Class<?> strToClass(String str) {
-    Class<?> result;
-    try {
-      result = Utils.class.getClassLoader().loadClass(str);
-    } catch (ClassNotFoundException ex) {
-      if (!str.contains(".")) {
-        result = primTypesClasses.get(str);
-        if (null == result) {
-          str = "java.lang." + str;
-          try {
-            result = Utils.class.getClassLoader().loadClass(str);
-          } catch (ClassNotFoundException ex2) {
-            throw new RuntimeException(ex);
-          }
-        }
-      } else {
-        throw new RuntimeException(ex);
+  public static Class<?> strToClass(String str) throws ClassNotFoundException {
+    if (!str.contains(".")) {
+      Class<?> result = primTypesClasses.get(str);
+      if (null != result) {
+        return result;
       }
+      try {
+        return Utils.class.getClassLoader().loadClass("java.lang." + str);
+      } catch (ClassNotFoundException ex) {
+        return Utils.class.getClassLoader().loadClass(str);
+      }
+    } else {
+      return Utils.class.getClassLoader().loadClass(str);
     }
-    return result;
   }
 
   /**
    * Get array of classes of method parameters given optional array of argument type specifications.
    */
-  public static Class<?>[] getMethodParamsClasses(List<?> methodParams, List<?> typeSpecs) {
+  public static Class<?>[] getMethodParamsClasses(List<?> methodParams, List<?> typeSpecs)
+    throws ClassNotFoundException {
     int listSize = (null == methodParams) ? 0 : methodParams.size();
     final Class<?>[] methodParamClasses = new Class<?>[listSize];
     for (int j = 0; j < listSize; j++) {
