@@ -861,13 +861,13 @@ public class Compiler {
           first = paramsList.get(0);
           if (first.getObject() instanceof Symbol) {
             Symbol sym = (Symbol) first.getObject();
-            if ("CATCH".equals(sym.getName())) {
+            if ("CATCH".equals(funcNameConverter.convert(sym.getName()))) {
               if (null == catches) {
                 catches = new ArrayList<CatchEntry>();
               }
               catches.add(compileCatchBlock(paramsList.subList(1, paramsList.size())));
               continue;
-            } else if ("FINALLY".equals(sym.getName())) {
+            } else if ("FINALLY".equals(funcNameConverter.convert(sym.getName()))) {
               if (null == finalBlocks) {
                 finalBlocks = new ArrayList<ICompiled>();
               }
