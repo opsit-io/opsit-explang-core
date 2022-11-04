@@ -480,8 +480,8 @@ public class Utils {
       return 0;
     } else if (val instanceof Boolean) {
       return ((Boolean) val) ? 1 : 0;
-    } else if (val instanceof String) {
-      final String str = ((String) val).trim();
+    } else if (val instanceof CharSequence) {
+      final String str = (val.toString()).trim();
       try {
         Number num = parseNumber(str);
         return num;
