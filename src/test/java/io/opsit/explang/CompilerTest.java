@@ -1310,15 +1310,14 @@ public class CompilerTest extends AbstractTest {
           {"(DOUBLE \"22\")", 22.0, true, null, null, p},
           {"(DOUBLE \" 22 \")", 22.0, true, null, null, p},
           {"(DOUBLE \" 22.1 \")", 22.1, true, null, null, p},
+          {"(DOUBLE \"NaN\")", Double.NaN, true, null, null, p},
           {"(DOUBLE (STRING-BUFFER \"1.1\"))", 1.1, true, null, null, p},
           {"(DOUBLE (STRING-BUILDER \"1.1\"))", 1.1, true, null, null, p},
-
-          
-          //          ONLY,
           {"(DOUBLE \"1.1e4\")", 1.1e+4, true, null, null, p},          
           {"(DOUBLE \"1.1E4\")", 1.1E+4, true, null, null, p},
           {"(FLOAT \"1.1e4\")", 1.1e+4f, true, null, null, p},          
           {"(FLOAT \"1.1E4\")", 1.1E+4f, true, null, null, p},
+          {"(FLOAT \"NaN\")", Float.NaN, true, null, null, p},          
           {"(FLOAT (STRING-BUFFER \"1.1\"))", 1.1f, true, null, null, p},
           {"(FLOAT (STRING-BUILDER \"1.1\"))", 1.1f, true, null, null, p},
 

@@ -486,6 +486,9 @@ public class Utils {
         Number num = parseNumber(str);
         return num;
       } catch (NumberFormatException ex) {
+        if ("NaN".equals(str)) {
+          return Double.NaN;
+        }
         throw new RuntimeException("String '" + val + "' cannot be coerced to Number", ex);
       }
     }  else if (val instanceof Character) {
