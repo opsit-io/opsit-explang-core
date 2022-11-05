@@ -889,18 +889,16 @@ public class Compiler {
       }
       if (null == catches || catches.size() == 0) {
         try {
-          return evalBlocks(backtrace, blocks, ctx);
+          return evalBlocksWithReturn(backtrace, blocks, ctx);
         } finally {
           if (null != finalBlocks) {
-            evalBlocks(backtrace, finalBlocks, ctx);
+            evalBlocksWithReturn(backtrace, finalBlocks, ctx);
           }
         }
       }
 
       try {
-        return evalBlocks(backtrace, blocks, ctx);
-      } catch (ReturnException r) {
-        throw r;
+        return evalBlocksWithReturn(backtrace, blocks, ctx);
       } catch (Throwable t) {
         Throwable realT = t;
         if ((t instanceof ExecutionException) && t.getCause() != null) {
@@ -910,9 +908,8 @@ public class Compiler {
         for (int i = 0; i < catches.size(); i++) {
           CatchEntry ce = catches.get(i);
           if (ce.exception.isAssignableFrom(realT.getClass())) {
-            ICtx catchCtx = newCtx(ctx);
-            catchCtx.put(ce.varName, realT);
-            return evalBlocks(backtrace, ce.blocks, catchCtx);
+            ctx.getMappings().put(ce.varName, realT);
+            return evalBlocksWithReturn(backtrace, ce.blocks, ctx);
           }
         }
 
@@ -920,11 +917,11 @@ public class Compiler {
           throw t;
         } else {
           // should not happen
-          throw new ExecutionException(backtrace, realT);
+          throw new ExecutionException(backtrace, t);
         }
       } finally {
         if (null != finalBlocks) {
-          evalBlocks(backtrace, finalBlocks, ctx);
+          evalBlocksWithReturn(backtrace, finalBlocks, ctx);
         }
       }
     }
@@ -2271,6 +2268,16 @@ public class Compiler {
     return result;
   }
 
+
+  /** Evaluate block of compiled expressions, handling return statement if present.  */
+  public Object evalBlocksWithReturn(Backtrace backtrace, List<ICompiled> blocks, ICtx ctx) {
+    try {
+      return evalBlocks(backtrace, blocks, ctx);
+    } catch (ReturnException ex) {
+      return ex.getPayload();
+    }
+  }
+  
   /*public List<ICompiled> compileExpList(ASTNList nodes) {
   List<ICompiled> exprs = new ArrayList<ICompiled>(nodes.size());
   for (ASTN node : nodes) {

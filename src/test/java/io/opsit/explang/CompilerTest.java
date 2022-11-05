@@ -562,7 +562,20 @@ public class CompilerTest extends AbstractTest {
                  + "(CATCH java.lang.Exception ex (RETURN (+ x 1))) "
                  + "(FINALLY (RETURN (+ x 2)))))"
                  + "(TESTRET 3))",
-            5,
+            3,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                 + "(DEFUN TESTRET (x) "
+                 + "(TRY \"aa\" (/ 1 0) (RETURN x) \"cc\" "
+                 + "(CATCH java.lang.Exception ex (RETURN (+ x 1))) "
+                 + "(FINALLY (RETURN (+ x 2)))))"
+                 + "(TESTRET 3))",
+            4,
             true,
             null,
             null,
@@ -579,7 +592,66 @@ public class CompilerTest extends AbstractTest {
             null,
             null,
             p
-          },          
+          },
+          {
+            "(PROGN "
+                 + "(DEFUN TESTRET (x) "
+                 + "(TRY \"aa\" (/ 1 0) (RETURN x) \"cc\" "
+                 + "(CATCH java.lang.Exception ex (RETURN (+ x 1))))) "
+                 + "(TESTRET 3))",
+            4,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                 + "(DEFUN TESTRET (x) "
+                 + "(TRY \"aa\" (RETURN x) \"cc\")) "
+                 + "(TESTRET 3))",
+            3,
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+                 + "(DEFUN TESTRET (x) "
+                 + "(TRY (/ 1 0) (RETURN x) \"cc\" "
+                 + "(CATCH java.lang.Exception ex (RETURN (+ x 1)) 8))) "
+                 + "(TESTRET 3))",
+            4,
+            true,
+            null,
+            null,
+            p
+          },
+
+          {
+            "(PROGN "
+            + "(TRY (/ 1 0) (RETURN 5) \"cc\" "
+            + "  (CATCH java.lang.Exception ex (SETV y 1))) "
+            + "(LIST y (BOOL ex)))",
+            list(1, true),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(PROGN "
+            + "(TRY (SETV q 4) (/ 1 0) (RETURN 5) \"cc\" "
+            + "  (CATCH java.lang.Exception ex (SETV y 1)) "
+            + "  (FINALLY (SETV z 2))) "
+            + "(LIST q y (BOOL ex) z))",
+            list(4,1, true, 2),
+            true,
+            null,
+            null,
+            p
+          },
           // LOOPS
           {
             "(LET ((r ())) (LIST (FOREACH (a \"ABC\")  (SETV r (APPEND r (LIST 1 a)))) r))",
