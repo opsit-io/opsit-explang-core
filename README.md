@@ -45,10 +45,10 @@ just the features that are needed for their use cases. For example, to
 implement a calculator one may include only arithmetical operations
 and variables.  For integrating webhooks one may allow conditionals,
 declaration of functions but not loops or FFI for calling arbitrary
-Java methods. 
+Java methods.
 
 The language strives to provide feature flags and configuration
-parameters to allow configuration of language behavious, such as case
+parameters to allow configuration of language behavior, such as case
 sensitivity, use of default values vs. exceptions on access to
 undefined variables, etc.
 
@@ -77,7 +77,7 @@ See [Explang Language Documentation](https://opsit-io.github.io/opsit-explang-do
 - [Explang Core Quick Start](https://opsit-io.github.io/opsit-explang-docs/explang-core-quick-start/)
 - [Explang Language Guide with lisp syntax](https://opsit-io.github.io/opsit-explang-docs/explang-lisp/)
 - [Explang Language Guide with algebraic syntax](https://opsit-io.github.io/opsit-explang-docs/explang-alg/)
-- [javadoc](https://javadocs.dev/io.opsit/opsit-explang-core/0.0.6/index.html) for the *explang-core* module
+- [javadoc](https://javadocs.dev/io.opsit/opsit-explang-core/0.0.7/index.html) for the *explang-core* module
 
 Code Examples
 -------------
@@ -95,7 +95,7 @@ Download an Explang Core executable JAR jars from Github
 Or use maven CLI to fetch the artifacts from maven central:
 
 ```
-mvn org.apache.maven.plugins:maven-dependency-plugin:2.8:get -Dartifact=io.opsit:opsit-explang-core:0.0.6:jar:runnable   -Dtransitive=false -Ddest=opsit-explang-core-0.0.6-runnable.jar
+mvn org.apache.maven.plugins:maven-dependency-plugin:2.8:get -Dartifact=io.opsit:opsit-explang-core:0.0.7:jar:runnable   -Dtransitive=false -Ddest=opsit-explang-core-0.0.7-runnable.jar
 ```
 
 Using REPL
@@ -104,7 +104,7 @@ Using REPL
 Explang-core contains built-in REPL. 
 
 ```
-$ java -jar opsit-explang-core-0.0.6-runnable.jar 
+$ java -jar opsit-explang-core-0.0.7-runnable.jar 
 Welcome to the EXPLANG REPL!
 Active parser is LispParser
 Loaded packages are: [base.math, base.text, io, base.bindings, ffi, base.funcs, loops, threads, base.version, base.coercion, base.logic, base.lang, base.arithmetics, base.seq, base.control, base.regex, dwim, base.docs, base.beans, base.types]
@@ -130,7 +130,7 @@ Executing Explang Scripts
 -------------------------
 
 ```shell
-$ java -jar opsit-explang-core-0.0.6-runnable.jar ./examples/hello.l
+$ java -jar opsit-explang-core-0.0.7-runnable.jar ./examples/hello.l
 Hello world
 ```
 
@@ -138,7 +138,7 @@ Hello world
 Quick Start Guide to Using Explang from Java Code
 --------------------------------------------------
 
-### Add to the dependencies listin *pom.xml*
+### Add to the dependencies list in *pom.xml*
 
 
 ```xml
@@ -146,7 +146,7 @@ Quick Start Guide to Using Explang from Java Code
   <dependency>
     <groupId>io.opsit</groupId>
     <artifactId>opsit-explang-core</artifactId>
-    <version>0.0.6</version>
+    <version>0.0.7</version>
   </dependency>
 ...
 </dependencies>
