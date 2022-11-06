@@ -808,18 +808,21 @@ public class Compiler {
   }
  
   @Docstring(lines = { "Try-Catch-Final construction. ",
-      "The expressions in the try block  are evaluated and, if no exceptions",
-      "occur, the value of the last is returned. If an exception occurs and",
-      "catch clauses are provided, each is examined in turn and the first for",
-      "which the thrown exception is an instance of the named class is considered",
-      "a matching catch clause. If there is a matching catch clause, name is ",
-      "bound to the thrown exception and its exprs are evaluated and the value",
-      "of the last is the return value of the function. If there is no matching",
-      "catch clause, the exception propagates out of the function. Before",
-      "returning, normally or abnormally any finally exprs will be evaluated ",
-      "for their side effects."})
-  @Package(name = Package.BASE_BINDINGS)
-  @Arguments(spec = {"body, cach_blocks, final_blocks"})
+      "The expressions in the `try` body are evaluated and, if no exceptions",
+      "occur, the value of the last is returned.",
+      "If an exception occurs and `catch` clauses are provided, each one is examined",
+      "in turn and the first for which the thrown exception is an instance of the",
+      "named class is considered a matching `catch` clause. If there is a matching",
+      "`catch` clause, the thrown exception is put into variable with the name `var`",
+      "and the expressions in the `catch_body` are evaluated and the value of the",
+      "last one is the return value of the function.",
+      "If there is no matching `catch` clause, the exception propagates out of the",
+      "function.",
+      "Before returning, normally or abnormally, any expressions in the `finally_body`",
+      "will be evaluated for their side effects."})
+  @Package(name = Package.BASE_CONTROL)
+  @Arguments(spec = {"body", "(", "catch", "exception","var","catch_body",")",
+      "(", "finally", "finally_body", ")"})
   public class TRY extends AbstractForm {
     private List<ICompiled> blocks = null;
     private List<CatchEntry> catches = null;
