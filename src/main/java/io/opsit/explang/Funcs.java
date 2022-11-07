@@ -465,17 +465,14 @@ public class Funcs {
 
   // **** BOOLEAN FUNCTIONS
   @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
-  @Docstring(
-      text =
-          "Logical AND. "
-              + "Function AND lazily evaluates each argument form, "
-              + "one at a time from left to right. "
-              + "As soon as any form evaluates to NIL, "
-              + "AND returns NIL without evaluating the remaining forms. "
-              + "If all forms but the last evaluate to true values, "
-              + "AND returns the results "
-              + "produced by evaluating the last form. "
-              + "If no forms are supplied, (AND) returns true.")
+  @Docstring(lines = {
+      "Logical `AND` operation.  ",
+      "",
+      "Function `AND` lazily evaluates each argument expression, one at a time from",
+      "left to right. As soon as any of them evaluates to implicit logical `false`,",
+      "`AND` returns this value without evaluating the remaining expressions (if any).",
+      "If all evaluate to true values, `AND` returns the result produced by",
+      "evaluating the last expression. If no arguments supplied, `AND` returns `true`."})
   @Package(name = Package.BASE_LOGIC)
   public static class AND extends FuncExp {
     @Override
@@ -492,15 +489,15 @@ public class Funcs {
   }
 
   @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
-  @Docstring(
-      text =
-          "Logical OR. "
-              + "Function OR lazily evaluates each form, "
-              + "one at a time, from left to right. "
-              + "The evaluation of all forms terminates when a form evaluates to true "
-              + "(i.e., something other than nil) "
-              + "and OR immediately returns that value "
-              + "without evaluating the remaining forms.")
+  @Docstring(lines = {
+               "Logical `OR` operation.",
+               "",
+               "Function `OR` lazily evaluates each argument expression, one at a time, from",
+               "left to right. The evaluation of the argument expressions terminates when one",
+               "of them evaluates to an implicit logical `true` and `OR` immediately returns",
+               "that value without evaluating the remaining expressions (if any). If all",
+               "evaluate to logical false `OR` returns the result of the last expression.",
+               "If no arguments were supplied, it returns logical false."})
   @Package(name = Package.BASE_LOGIC)
   public static class OR extends FuncExp {
     @Override
@@ -3022,7 +3019,7 @@ public class Funcs {
   @Docstring(
       text =
           "Concatenate sequences (destructive). "
-              + "Adds to the first given sequence (target sequence) all the elements of"
+              + "Adds to the first given sequence (target sequence) all the elements of "
               + "all of the following sequences and return the target sequence.  If no "
               + "sequences were given an empty list will be returned. Target sequence "
               + "must be extendable, that means that objects like Arrays or String "
@@ -3144,7 +3141,7 @@ public class Funcs {
   @Arguments(spec = {"sequence", "start", ArgSpec.ARG_OPTIONAL, "end"})
   @Docstring(
       text =
-          "Return subsequnce of a sequence. "
+          "Return subsequence of a sequence. "
               + "subseq creates a sequence that is a copy of the subsequence of "
               + "sequence bounded by start and end. Start specifies an offset into the "
               + "original sequence and marks the beginning position of the "
@@ -3216,14 +3213,14 @@ public class Funcs {
   }
 
   @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
-  @Docstring(
-      text =
-          "Concatenate sequences (non-destructive). "
-              + "append returns a new sequence that is the concatenation of the "
-              + "elements of the arguments. All the argument remain unchanged. The "
-              + "resulting sequence is of the same type as the first argument. In no "
-              + "arguments were given an empty list is returned. If target sequence is "
-              + "an array necessary coercions will be performed automatically.")
+  @Docstring(lines = {
+      "Concatenate sequences (non-destructive). ",
+      "`append` returns a new sequence that is the concatenation of the ",
+      "elements of the arguments. All the arguments remain unchanged. The ",
+      "resulting sequence is of the same type as the first argument. In no ",
+      "arguments were given, an empty list is returned. If target sequence is",
+      "an array, necessary coercions according to the type of array elements",
+      "will be performed automatically."})
   @Package(name = Package.BASE_SEQ)
   public static class APPEND extends FuncExp {
     protected boolean isDestructive;
