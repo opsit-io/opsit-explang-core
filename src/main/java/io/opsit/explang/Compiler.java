@@ -1344,6 +1344,9 @@ public class Compiler {
     @Override
     public Object evaluate(Backtrace backtrace, ICtx ctx) {
       if (null == realInstance) {
+        if (null == codeProxy.code) {
+          throw new ExecutionException(backtrace, "Call to undefined function " + name);
+        }
         realInstance = (IExpr)codeProxy.code.getInstance();
         try {
           realInstance.setParams(params);
