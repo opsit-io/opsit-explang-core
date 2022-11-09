@@ -375,7 +375,7 @@ public class Compiler {
   }
 
   public ICode getFunOrStub(String name) {
-    String key = funcNameConverter.convert(name);
+    final String key = funcNameConverter.convert(name);
     ICode f = functab.get(key);
     if (null == f) {
       f = new CodeProxy(key);
@@ -386,7 +386,11 @@ public class Compiler {
 
   
   public ICode getFun(String name) {
-    return functab.get(funcNameConverter.convert(name));
+    ICode code =  functab.get(funcNameConverter.convert(name));
+    if (code instanceof CodeProxy) {
+      return ((CodeProxy)code).code;
+    }
+    return code;
   }
 
   public Set<String> getFunKeys() {
@@ -794,9 +798,12 @@ public class Compiler {
 
     @Override
     public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
-      ICode code = getFun(fsym.toString());
+      ICode code = functab.get(funcNameConverter.convert(fsym.toString()));
       if (null == code) {
         throw new RuntimeException("Symbol " + fsym + " function value is NULL");
+      }
+      if (code instanceof CodeProxy) {
+        code = ((CodeProxy)code).code;
       }
       // final ICompiled result = code.getInstance();
       return code;
@@ -1331,11 +1338,6 @@ public class Compiler {
       this.codeProxy = codeProxy;
       this.name = codeProxy.name;
     }
-
-    //protected void setCode(ICode code) {
-    //  this.code = code;
-    //}
-    
     protected CodeProxy codeProxy;
     protected ParseCtx pctx;
     protected String name;
