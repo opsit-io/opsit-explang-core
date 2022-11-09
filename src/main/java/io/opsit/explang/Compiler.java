@@ -1326,8 +1326,10 @@ public class Compiler {
   }
 
   public static class InstanceProxy implements ICompiled, IExpr {
+    IExpr realInstance;
     public InstanceProxy(CodeProxy codeProxy) {
       this.codeProxy = codeProxy;
+      this.name = codeProxy.name;
     }
 
     //protected void setCode(ICode code) {
@@ -1341,13 +1343,19 @@ public class Compiler {
     
     @Override
     public Object evaluate(Backtrace backtrace, ICtx ctx) {
-      IExpr expr = (IExpr)codeProxy.code.getInstance();
-      try {
-        expr.setParams(params);
-      } catch (InvalidParametersException ex) {
-        throw new RuntimeException(ex);
+      if (null == realInstance) {
+        realInstance = (IExpr)codeProxy.code.getInstance();
+        try {
+          realInstance.setParams(params);
+        } catch (InvalidParametersException ex) {
+          throw new RuntimeException(ex);
+        }
+        //if (null != name) {
+        //this.name = codeProxy.name;
+        //} 
+        ((ICompiled)realInstance).setDebugInfo(pctx);
       }
-      return expr.evaluate(backtrace, ctx);
+      return realInstance.evaluate(backtrace, ctx);
     }
 
     @Override
