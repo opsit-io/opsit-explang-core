@@ -374,6 +374,17 @@ public class Compiler {
     }
   }
 
+  public ICode getFunOrStub(String name) {
+    String key = funcNameConverter.convert(name);
+    ICode f = functab.get(key);
+    if (null == f) {
+      f = new CodeProxy(key);
+      functab.put(key, f);
+    }
+    return f;
+  }
+
+  
   public ICode getFun(String name) {
     return functab.get(funcNameConverter.convert(name));
   }
@@ -633,8 +644,8 @@ public class Compiler {
       } else if (firstASTN.getObject() instanceof Symbol) {
         Object first = firstASTN.getObject();
         final String fName = ((Symbol) first).toString();
-        ICode codeObj = getFun(fName);
-        if (null != codeObj && codeObj.isBuiltIn()) {
+        ICode codeObj = getFunOrStub(fName);
+        if (null != codeObj /**&& codeObj.isBuiltIn()*/) {
           try {
             ICompiled compiled = codeObj.getInstance();
             if (compiled instanceof IForm) {
@@ -1314,16 +1325,65 @@ public class Compiler {
     }
   }
 
+  public static class InstanceProxy implements ICompiled, IExpr {
+    public InstanceProxy(CodeProxy codeProxy) {
+      this.codeProxy = codeProxy;
+    }
+
+    //protected void setCode(ICode code) {
+    //  this.code = code;
+    //}
+    
+    protected CodeProxy codeProxy;
+    protected ParseCtx pctx;
+    protected String name;
+    protected List<ICompiled> params;
+    
+    @Override
+    public Object evaluate(Backtrace backtrace, ICtx ctx) {
+      IExpr expr = (IExpr)codeProxy.code.getInstance();
+      try {
+        expr.setParams(params);
+      } catch (InvalidParametersException ex) {
+        throw new RuntimeException(ex);
+      }
+      return expr.evaluate(backtrace, ctx);
+    }
+
+    @Override
+    public ParseCtx getDebugInfo() {
+      return pctx;
+    }
+
+    @Override
+    public void setDebugInfo(ParseCtx pctx) {
+      this.pctx = pctx;
+    }
+
+    @Override
+    public void setName(String str) {
+      this.name = name;
+    }
+
+    public void setParams(List<ICompiled> params) throws InvalidParametersException {
+      this.params = params;
+    }
+  }
+
+  
   public static class CodeProxy implements ICode {
     protected ICode code;
     protected String name;
+    //protected InstanceProxy instanceProxy;
 
     protected CodeProxy(String name) {
       this.name = name;
+      //this.instanceProxy = 
     }
     
     protected void setCode(ICode code) {
       this.code = code;
+      //instanceProxy.setCode(code); 
     }
 
     @Override
@@ -1358,7 +1418,7 @@ public class Compiler {
 
     @Override
     public ICompiled getInstance() {
-      return code.getInstance();
+      return new InstanceProxy (this);
     }
 
     @Override
@@ -1384,15 +1444,17 @@ public class Compiler {
 
     @Override
     public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
-      final String functabKey = Compiler.this.funcNameConverter.convert(name);
-      CodeProxy proxy = new CodeProxy(functabKey);
-      final ICode obj = super.doEvaluate(backtrace, ctx);
-      proxy.setCode(obj);
-      // FIXME!
-      // obj.setName(name);
-      // obj.setDebugInfo(this.debugInfo);
-      functab.put(functabKey, proxy);
-      return proxy;
+      ICode code = Compiler.this.getFunOrStub(name);
+      if (code instanceof CodeProxy) {
+        //final String functabKey = Compiler.this.funcNameConverter.convert(name);
+        CodeProxy proxy = (CodeProxy) code;
+        final ICode obj = super.doEvaluate(backtrace, ctx);
+        proxy.setCode(obj);
+        return proxy;
+      } else {
+        // FIXME
+        throw new ExecutionException(backtrace, "Cannot override builtin function " + name);
+      }
     }
 
     @Override
