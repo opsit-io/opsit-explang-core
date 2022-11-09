@@ -1314,6 +1314,65 @@ public class Compiler {
     }
   }
 
+  public static class CodeProxy implements ICode {
+    protected ICode code;
+    protected String name;
+
+    protected CodeProxy(String name) {
+      this.name = name;
+    }
+    
+    protected void setCode(ICode code) {
+      this.code = code;
+    }
+
+    @Override
+    public String toString() {
+      return "#<func:"+name+":"+((null == code) ? null : code.toString())+">";
+    }
+
+    @Override
+    public String getArgDescr() {
+      return code.getArgDescr();
+    }
+
+    @Override
+    public ArgSpec getArgSpec() {
+      return code.getArgSpec();
+    }
+
+    @Override
+    public String getCodeType() {
+      return code.getCodeType();
+    }
+
+    @Override
+    public String getDefLocation() {
+      return code.getDefLocation();
+    }
+
+    @Override
+    public String getDocstring() {
+      return code.getDocstring();
+    }
+
+    @Override
+    public ICompiled getInstance() {
+      return code.getInstance();
+    }
+
+    @Override
+    public String getPackageName() {
+      return code.getPackageName();
+    }
+
+    @Override
+    public boolean isBuiltIn() {
+      return code.isBuiltIn();
+    }
+    
+    
+  }
   
   /** (DEFUN FOO (arg1 arg2...) block block...) */
   @Package(name = Package.BASE_FUNCS)
@@ -1325,12 +1384,15 @@ public class Compiler {
 
     @Override
     public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
+      final String functabKey = Compiler.this.funcNameConverter.convert(name);
+      CodeProxy proxy = new CodeProxy(functabKey);
       final ICode obj = super.doEvaluate(backtrace, ctx);
+      proxy.setCode(obj);
       // FIXME!
       // obj.setName(name);
       // obj.setDebugInfo(this.debugInfo);
-      functab.put(Compiler.this.funcNameConverter.convert(name), obj);
-      return obj;
+      functab.put(functabKey, proxy);
+      return proxy;
     }
 
     @Override
