@@ -4076,8 +4076,19 @@ public class Funcs {
         throw new ExecutionException(
             backtrace, getName() + " first argument must be symbol, but got " + symObj);
       }
+      final String funcName = ((Symbol) symObj).getName();
       final Object obj = eargs.get(1, backtrace);
-      return eargs.getCompiler().putFun(((Symbol) symObj).getName(), (ICode) obj);
+      ICode code = eargs.getCompiler().getFunOrStub(funcName);
+      if (code instanceof Compiler.CodeProxy) {
+        final Compiler.CodeProxy proxy = (Compiler.CodeProxy) code;
+        Object prev = proxy.code;
+        proxy.setCode((ICode)obj);
+        return prev;
+      } else {
+        // FIXME
+        throw new ExecutionException(backtrace, "Cannot override builtin function " + funcName);
+      }
+      //return eargs.getCompiler().putFun(((Symbol) symObj).getName(), (ICode) obj);
     }
   }
 

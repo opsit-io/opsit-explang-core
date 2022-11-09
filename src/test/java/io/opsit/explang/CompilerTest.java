@@ -1865,6 +1865,7 @@ public class CompilerTest extends AbstractTest {
             p
           },
           // mutually recursive defun
+          //ONLY,
           { "(PROGN "
             + "(DEFUN isodd (x) (IF (= 0 x) FALSE (iseven (- x 1))))"
             + "(DEFUN iseven (x) (IF (= 0 x) TRUE (isodd (- x 1))))"
