@@ -1864,6 +1864,18 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          // mutually recursive defun
+          { "(PROGN "
+            + "(DEFUN isodd (x) (IF (= 0 x) FALSE (iseven (- x 1))))"
+            + "(DEFUN iseven (x) (IF (= 0 x) TRUE (isodd (- x 1))))"
+            + "(LIST "
+            + "    (iseven 0) (iseven 1) (iseven 2) (iseven 3)"
+            + "    (isodd 0)  (isodd  1) (isodd  2) (isodd  3)))" ,
+            list(true, false, true, false, false, true, false, true),
+            true,
+            null,
+            null,
+            p},
           {"(RE-PATTERN \"^F[0-9]$\")", Pattern.compile("^F[0-9]$"), true, null, null, p},
           {"(RE-GLOB \"g*b\")", Pattern.compile("g.*b"), true, null, null, p},
           {
