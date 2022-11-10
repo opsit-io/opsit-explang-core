@@ -374,6 +374,9 @@ public class Compiler {
     }
   }
 
+  /**
+   * Return named function or function stub if not defined.
+   */
   public ICode getFunOrStub(String name) {
     final String key = funcNameConverter.convert(name);
     ICode f = functab.get(key);
@@ -384,7 +387,9 @@ public class Compiler {
     return f;
   }
 
-  
+  /**
+   * Return named function. Strip CodeProxy if needed.
+   */
   public ICode getFun(String name) {
     ICode code =  functab.get(funcNameConverter.convert(name));
     if (code instanceof CodeProxy) {
@@ -649,54 +654,24 @@ public class Compiler {
         Object first = firstASTN.getObject();
         final String fName = ((Symbol) first).toString();
         ICode codeObj = getFunOrStub(fName);
-        if (null != codeObj /**&& codeObj.isBuiltIn()*/) {
-          try {
-            ICompiled compiled = codeObj.getInstance();
-            if (compiled instanceof IForm) {
-              ((IForm) compiled).setRawParams(restASTN);
-            } else {
-              List<ICompiled> compiledParams = compileExpList(restASTN);
-              ((IExpr) compiled).setParams(compiledParams);
-            }
-            compiled.setName(fName);
-            compiled.setDebugInfo(firstASTN.getPctx());
-            return compiled;
-          } catch (InvalidParametersException ipex) {
-            throw new CompilationException(pctx, ipex.getMessage());
-          } catch (RuntimeException rex) {
-            // FIXME: specific exception for instantiation troubles?
-            throw new CompilationException(
-                pctx, "failed to compile list " + astList + ":" + rex.getMessage());
+        try {
+          ICompiled compiled = codeObj.getInstance();
+          if (compiled instanceof IForm) {
+            ((IForm) compiled).setRawParams(restASTN);
+          } else {
+            List<ICompiled> compiledParams = compileExpList(restASTN);
+            ((IExpr) compiled).setParams(compiledParams);
           }
-        } else {
-          // FIXME: must call it dynamycally, otherwise
-          // we won't be able to perform recursive defun
-          // so we rewrite expression to use function call
-
-          // // defun
-          // final ICompiled compiled = (ICompiled)fobj;
-          // if (fobj instanceof IForm) {
-          //  ((IForm)compiled).setRawParams(rest);
-          // } else {
-          //  List<ICompiled> compiledParams = compileParams(rest);
-          //  ((IExpr)compiled).setParams(compiledParams);
-          // }
-          // return compiled;
-
-          ASTNList callfunc =
-              new ASTNList(
-                  Utils.list(
-                      new ASTNLeaf(new Symbol("FUNCALL"), pctx),
-                      new ASTNList(
-                          Utils.list(
-                              new ASTNLeaf(new Symbol("FUNCTION"), pctx),
-                              new ASTNLeaf(first, pctx)),
-                          pctx)),
-                  pctx);
-          callfunc.addAll(restASTN);
-          IExpr func = (IExpr) compile(callfunc);
-          func.setDebugInfo(pctx);
-          return func;
+          compiled.setName(fName);
+          compiled.setDebugInfo(firstASTN.getPctx());
+          return compiled;
+        } catch (InvalidParametersException ipex) {
+          throw new CompilationException(pctx, ipex.getMessage());
+        } catch (RuntimeException rex) {
+          // FIXME: specific exception for instantiation troubles?
+          throw new CompilationException(pctx,
+                                         "failed to compile list "
+                                         + astList + ":" + rex.getMessage());
         }
       } else {
         throw new CompilationException(
@@ -1333,15 +1308,16 @@ public class Compiler {
   }
 
   public static class InstanceProxy implements ICompiled, IExpr {
-    IExpr realInstance;
-    public InstanceProxy(CodeProxy codeProxy) {
-      this.codeProxy = codeProxy;
-      this.name = codeProxy.name;
-    }
+    protected IExpr realInstance;
     protected CodeProxy codeProxy;
     protected ParseCtx pctx;
     protected String name;
     protected List<ICompiled> params;
+
+    public InstanceProxy(CodeProxy codeProxy) {
+      this.codeProxy = codeProxy;
+      this.name = codeProxy.name;
+    }
     
     @Override
     public Object evaluate(Backtrace backtrace, ICtx ctx) {
@@ -1401,7 +1377,7 @@ public class Compiler {
 
     @Override
     public String toString() {
-      return "#<func:"+name+":"+((null == code) ? null : code.toString())+">";
+      return "#<func:" + name + ":" + code + ">";
     }
 
     @Override
@@ -1431,7 +1407,7 @@ public class Compiler {
 
     @Override
     public ICompiled getInstance() {
-      return new InstanceProxy (this);
+      return new InstanceProxy(this);
     }
 
     @Override
