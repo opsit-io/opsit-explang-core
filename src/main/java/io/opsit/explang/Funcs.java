@@ -3902,6 +3902,11 @@ public class Funcs {
       List<String> results = new ArrayList<String>();
       List<?> rest = (List<?>) eargs.get(0, backtrace);
       for (String key : eargs.getCompiler().getFunKeys()) {
+        final Object fun = eargs.getCompiler().getFun(key);
+        if (null == fun) {
+          // stub
+          continue;
+        }
         if (rest.size() > 0) {
           for (Object obj : rest) {
             if (obj instanceof Pattern) {
