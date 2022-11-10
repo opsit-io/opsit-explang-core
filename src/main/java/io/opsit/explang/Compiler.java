@@ -1428,8 +1428,13 @@ public class Compiler {
   @Arguments(spec = {"name","(", "arglist", ")", "body"})
   @Docstring(text = "Define named function")
   public class DEFUN extends LAMBDA {
-    // FIXME: this field is needed/ WHY?
+    // FIXME: why do we need this?
     private String name;
+
+    @Override
+    protected String getSymName() {
+      return this.name;
+    }
 
     @Override
     public ICode doEvaluate(Backtrace backtrace, ICtx ctx) {
@@ -1439,6 +1444,7 @@ public class Compiler {
         CodeProxy proxy = (CodeProxy) code;
         final ICode obj = super.doEvaluate(backtrace, ctx);
         proxy.setCode(obj);
+        proxy.name = this.getSymName();
         return proxy;
       } else {
         // FIXME
@@ -1492,12 +1498,22 @@ public class Compiler {
       return getICode();
     }
 
+    protected String getSymName() {
+      return "<lambda>";
+    }
+
     protected ICode getICode() {
+      final String symName = this.getSymName();
       return new ICode() {
         @Override
         public Funcs.AbstractExpr getInstance() {
           return new Funcs.AbstractExpr() {
             protected ArgList argList;
+
+            @Override
+            public String getName() {
+              return symName;
+            }
 
             @Override
             public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
