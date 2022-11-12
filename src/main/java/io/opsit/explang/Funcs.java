@@ -1103,14 +1103,13 @@ public class Funcs {
     }
   }
 
-  // FIXME: allow function be symbol (or function name?)
   @Arguments(spec = {"function", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "arguments"})
-  @Docstring(text = "Apply Arguments to a Function. Function must be a function object")
+  @Docstring(lines =
+             {"Call function `f` with `arguments`. ",
+              "`funcall` calls function `f` with given arguments."})
   @Package(name = Package.BASE_FUNCS)
   public static class FUNCALL extends AbstractExpr {
     private List<ICompiled> params = null;
-    // private ICode  code = null;
-    // private ICompiled func = null;
 
     @Override
     public void setParams(List<ICompiled> params) throws InvalidParametersException {
@@ -1125,53 +1124,20 @@ public class Funcs {
       this.params = params;
     }
 
-    // public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-    //     Object val = eargs.get(0, backtrace);
-    //     if (!(val  instanceof ICode)) {
-    //         throw new RuntimeException("Expected ICode object, but got "+val);
-    //     }
-    //     ICode code = (ICode) Utils.asObject(val);
-    //     if (code != this.code) {
-    //      IExpr instance = (IExpr)code.getInstance();
-    //      try {
-    //          instance.setParams(params.subList(1, params.size()));
-    //      } catch (InvalidParametersException e) {
-    //          throw new RuntimeException(String.format("%s: called function at %s: does not take
-    // parameter: %s",
-    //                                                   this.getName(),
-    //                                                   (null == e.getParseCtx() ? "?" :
-    // e.getParseCtx().toString()),
-    //                                                   e.getMessage()));
-    //      }
-    //      synchronized (this) {
-    //          this.code = code;
-    //          this.func = instance;
-    //      }
-    //     }
-    //     return this.func.evaluate(backtrace, eargs);
-    // }
-
-    // @Override
-    // public Eargs evaluateParameters(Backtrace backtrace, ICtx ctx) {
-    //    Object eargs[] = new Object[1];
-    //    eargs[0]=params.get(0).evaluate(backtrace, ctx);
-    //    return ctx.getCompiler().newEargs(eargs, ctx);
-    // }
-
     @Override
     public Object doEvaluate(Backtrace backtrace, ICtx ctx) {
       final Object functionObj = params.get(0).evaluate(backtrace, ctx);
-      // if (functionObj instanceof Symbol) {
-      //  functionObj = params.get(0)eargs.getCompiler().functab.get(fname);
-      // } else if (functionObj instanceof String) {
-      // }
-
       if (!(functionObj instanceof ICode)) {
         throw new RuntimeException("Expected ICode object, but got " + functionObj);
       }
       ICode function = (ICode) Utils.asObject(functionObj);
-      // if (code != this.code) {
       IExpr instance = (IExpr) function.getInstance();
+      if (null != backtrace) {
+        final Backtrace.Frame frame = backtrace.last();
+        if (null != frame) {
+          instance.setDebugInfo(frame.pctx);
+        }
+      }
       try {
         instance.setParams(params.subList(1, params.size()));
       } catch (InvalidParametersException e) {
@@ -1182,26 +1148,17 @@ public class Funcs {
                 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()),
                 e.getMessage()));
       }
-      // FIXME: put back  optimization!
-
-      // synchronized (this) {
-      //    this.code = code;
-      //    this.func = instance;
-      // }
-      // }
-      // return this.func.evaluate(backtrace, ctx);
       return instance.evaluate(backtrace, ctx);
-      // return evalWithArgs(backtrace, evaluateParameters(backtrace, ctx));
     }
   }
 
   // ****** MAPPING OPERATIONS
   // args is a spreadable list designator
   @Arguments(spec = {"f", ArgSpec.ARG_PIPE, ArgSpec.ARG_REST, "arguments"})
-  @Docstring(
-      text =
-          "Apply function to arguments. arguments must be a spreadable list designator, i.e. if the"
-              + " last argument is a list, it contents will be appended to the list of arguments.")
+  @Docstring(lines =
+             {"Call function `f` with `arguments` expanding the last one. ",
+              "`apply` calls function `f` with given arguments. If the last of the arguments",
+              "is a list, its contents will be appended to the list of arguments of `f`."})
   @Package(name = Package.BASE_FUNCS)
   public static class APPLY extends FuncExp {
     @Override
@@ -1230,6 +1187,12 @@ public class Funcs {
       }
       for (int i = 0; i < restSize; i++) {
         callParams.add(new ObjectExp(rest.get(i)));
+      }
+      if (null != backtrace) {
+        final Backtrace.Frame frame = backtrace.last();
+        if (null != frame) {
+          instance.setDebugInfo(frame.pctx);
+        }
       }
       try {
         instance.setParams(callParams);

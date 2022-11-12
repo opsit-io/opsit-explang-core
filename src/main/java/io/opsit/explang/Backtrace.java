@@ -25,6 +25,10 @@ public class Backtrace {
     return frames;
   }
 
+  public Frame last() {
+    return frames.size() > 0 ? frames.get(frames.size() - 1) : null;
+  }
+
   public Frame pop() {
     return frames.remove(frames.size() - 1);
     // return null;
