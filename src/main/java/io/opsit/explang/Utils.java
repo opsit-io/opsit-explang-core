@@ -873,8 +873,9 @@ public class Utils {
       || obj instanceof Class
       || obj instanceof Void
       || obj instanceof java.util.regex.Pattern 
-      // FIXME: kluge?
-      || obj.getClass().toString().startsWith("java.util.ImmutableCollections$");
+      // FIXME: kluge!!
+      || obj.getClass().getCanonicalName().startsWith("java.util.Collections.Unmodifiable")
+      || obj.getClass().getCanonicalName().startsWith("java.util.ImmutableCollections");
   }
   
   public static final String MAVEN_PROPS =

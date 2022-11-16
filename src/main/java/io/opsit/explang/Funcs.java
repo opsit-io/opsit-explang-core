@@ -3131,6 +3131,46 @@ public class Funcs {
     }
   }
 
+  protected static Object shallowCopy(Object obj, Backtrace backtrace) throws ExecutionException {
+    if (Utils.isKnownImmutable(obj)) {
+      return obj;
+    }
+    Exception seqError = null;
+    if (Seq.isSeq(obj)) {
+      try {
+        return Seq.shallowClone(obj);
+      } catch (Exception ex) {
+        seqError = ex;
+      }
+    }
+    Exception cloneError = null;
+    if (obj instanceof Cloneable) {
+      try {
+        return Utils.cloneObjectByClone((Cloneable) obj);
+      } catch (Exception ex) {
+        cloneError = ex;
+      }
+    }
+    Exception constrError = null;
+    try {
+      return Utils.copyObjectByCopyConstructor(obj);
+    } catch (Exception ex) {
+      constrError = ex;
+    }
+    throw new
+      ExecutionException(backtrace,
+                         "Failed to copy object:"
+                         + (null != seqError
+                            ? " Seq.shallowClone: " + seqError.getMessage() + ";"
+                            : "")
+                         + (null != cloneError
+                            ? " clone: " + cloneError.getMessage() + ";"
+                            : "")
+                         + (null != constrError
+                            ? " copy constr uctor: " + constrError.getMessage() + ";"
+                            : ""));
+  }
+  
   @Arguments(spec = {"object"})
   @Docstring(text = "Perform shallow copy of an object.")
   @Package(name = Package.BASE_SEQ)
@@ -3142,36 +3182,7 @@ public class Funcs {
         throw new ExecutionException(backtrace, "Unexpected number of arguments: " + size);
       }
       final Object obj = eargs.get(0, backtrace);
-      // null, Numbers, Char so on
-      if (Utils.isKnownImmutable(obj)) {
-        return obj;
-      }
-      Exception seqError = null;
-      if (Seq.isSeq(obj)) {
-        try {
-          return Seq.shallowClone(obj);
-        } catch (Exception ex) {
-          seqError = ex;
-        }
-      }
-      Exception cloneError = null;
-      if (obj instanceof Cloneable) {
-        try {
-          return Utils.cloneObjectByClone((Cloneable) obj);
-        } catch (Exception ex) {
-          cloneError = ex;
-        }
-      }
-      Exception constrError = null;
-      try {
-        return Utils.copyObjectByCopyConstructor(obj);
-      } catch (Exception ex) {
-        constrError = ex;
-      }
-      throw new ExecutionException(backtrace, "Failed to copy object:"
-          + (null != seqError ? " Seq.shallowClone: " + seqError.getMessage() + ";" : "")
-          + (null != cloneError ? " clone: " + cloneError.getMessage() + ";" : "")
-          + (null != constrError ? " copy constr uctor: " + constrError.getMessage() + ";" : ""));
+      return shallowCopy(obj, backtrace);
     }
   }
 
@@ -4060,29 +4071,55 @@ public class Funcs {
     }
   }
 
-  @Docstring(
-      text = "Put element value into an associative structure."
-              + " Set value of element at index/key in the target structure to object. "
-              + " If target ibject is a Java array and the object type does not match the type"
-              + " of this array this function will attempt to perform necessary coercion"
-              + " operations. The coercions  work in the same way as INT, FLOAT, STRING"
-              + " and rest of the built-in coercion functions."
-              + " If target object is a list or and array and happens out of bound exception"
-              + " the function returns normally without any change to the target structure"
-              + " The function returns previous value of the element or NIL if it did not exist"
-              + " or no change has been made.")
+  @Docstring(lines =
+             {"Put element value into an associative structure.",
+              " Set value of element at index/key in the target structure to object. ",
+              " If target ibject is a Java array and the object type does not match the type",
+              " of this array this function will attempt to perform necessary coercion",
+              " operations. The coercions  work in the same way as INT, FLOAT, STRING",
+              " and rest of the built-in coercion functions.",
+              "",
+              " If target object is a list or and array and happens out of bound exception",
+              " the function returns normally without any change to the target structure",
+              "",
+              " The function returns previous value of the element or NIL if it did not exist",
+              " or no change has been made."})
   @Arguments(spec = {"target", "key", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class NPUT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
+      final Object targetObj = Utils.asObject(eargs.get(0, backtrace));
       final Object index = Utils.asObject(eargs.get(1, backtrace));
       final Object obj = Utils.asObject(eargs.get(2, backtrace));
-      return Seq.putElement(arrayObj, index, obj);
+      return Seq.putElement(targetObj, index, obj);
     }
   }
 
+  @Docstring(lines =
+             {"Put element value into an associative structure (non-mutating).",
+              " Set value of element at index/key in the target structure to object. ",
+              " If target ibject is a Java array and the object type does not match the type",
+              " of this array this function will attempt to perform necessary coercion",
+              " operations. The coercions  work in the same way as INT, FLOAT, STRING",
+              " and rest of the built-in coercion functions.",
+              "",
+              " If target object is a list or and array and happens out of bound exception",
+              " the function returns normally without any change to the target structure",
+              "",
+              " The function returns copy of the target object with the requested change."})
+  @Arguments(spec = {"target", "key", "object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class PUT extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object srcObj = Utils.asObject(eargs.get(0, backtrace));
+      final Object index = Utils.asObject(eargs.get(1, backtrace));
+      final Object obj = Utils.asObject(eargs.get(2, backtrace));
+      return Seq.roPutElement(srcObj, index, obj);
+    }
+  }
+  
   @Docstring(text = "Append element to the end of a seqence modifying the sequence."
              + " Returns the sequence")
   @Arguments(spec = {"seq", "object"})

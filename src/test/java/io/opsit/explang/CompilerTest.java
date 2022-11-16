@@ -785,6 +785,33 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {"(APPEND () (RANGE 1 -4 -1))", list(1, 0, -1, -2, -3), true, null, null, p},
+          // FIXME: test more types of copy
+          {"(LET ((o ()) (t (COPY o))) (LIST (== o t) (=== o t)))",
+           list(true, false), true, null, null, p},
+          {"(LET ((o (LIST 1 2 3)) (t (COPY o))) (LIST (== o t) (=== o t)))",
+           list(true, false), true, null, null, p},
+          {"(LET ((o (HASHMAP 1 2 3 4)) (t (COPY o))) (LIST (== o t) (=== o t)))",
+           list(true, false), true, null, null, p},
+          {"(LET ((o (MAKE-ARRAY 1 2 3 4)) (t (COPY o))) (LIST (== o t) (=== o t)))",
+           list(true, false), true, null, null, p},
+          // FIXME: test more types of PUT
+          {"(LET ((o (HASHMAP 1 2 )) (t (PUT o 3 4))) (LIST o t ))",
+           list(map(1,2), map(1,2,3,4)), true, null, null, p},
+          {"(LET ((o (LIST 1 2 )) (t (PUT o 1 3))) (LIST o t ))",
+           list(list(1,2), list(1,3)), true, null, null, p},
+          {"(LET ((o (LIST 1 2 )) (t (PUT o 2 3))) (LIST o t ))",
+           list(list(1,2), list(1,2,3)), true, null, null, p},
+          {"(LET ((o (MAKE-ARRAY 1 2 )) (t (PUT o 1 3))) (IF (=== t o) false t))",
+           Utils.arrayOfObjects(1,3), true, null, null, p},
+          {"(LET ((o \"ABC\" ) (t (PUT o 1 (CHAR 68)))) (LIST o t))",
+           list("ABC","ADC"), true, null, null, p},
+          {"(LET ((o (STRING-BUILDER \"ABC\") ) (t (PUT o 1 (CHAR 68)))) (IF (=== t o) false t))",
+           new StringBuilder("ADC"), true, null, null, p},
+          {"(LET ((o (STRING-BUFFER \"ABC\") ) (t (PUT o 1 (CHAR 68)))) (IF (=== t o) false t))",
+           new StringBuffer("ADC"), true, null, null, p},
+          {"(LET ((o (.S \"java.util.Collections\" \"unmodifiableList\" (LIST (LIST 1 2 3))))"
+           + "    (t (PUT o 1 22))) (LIST o t))",
+           list(list(1,2,3),list(1,22,3)), true, null, null, p},          
           {
             "(LET ((R (RANGE 0 1 0.05)) (I (. R \"iterator\" ()))) (. I  \"next\" ()) (. I "
                 + " \"next\" ()))",
