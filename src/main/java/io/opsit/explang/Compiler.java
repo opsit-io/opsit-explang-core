@@ -533,6 +533,7 @@ public class Compiler {
             "GET-IN", GET_IN.class,
             "GET", GET.class,
             "HASKEY", HASKEY.class,
+            "PUSH", PUSH.class,
             "PUSH!", NPUSH.class,            
             "PUT", PUT.class,
             "PUT!", NPUT.class,

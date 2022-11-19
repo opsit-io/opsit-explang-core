@@ -2729,7 +2729,7 @@ public class Funcs {
       spec = {"map", "key", "val", ArgSpec.ARG_REST, "kvpairs"})
   @Docstring(
       text =
-          "Associates value with key in an map structure. \n"
+          "Associates values with keys in an map structure. \n"
               + "Return new instance of the structure, the original is left unchanged.")
   @Package(name = Package.BASE_SEQ)
   @SuppressWarnings("unchecked")
@@ -2761,7 +2761,7 @@ public class Funcs {
       spec = {"map", "key", "val", ArgSpec.ARG_REST, "kvpairs"})
   @Docstring(
       text =
-          "Associates value with key in an map structure. \n"
+          "Associates values with keys in an map structure. \n"
               + "Modifies the object and returns it as the result.")
   @Package(name = Package.BASE_SEQ)
   @SuppressWarnings("unchecked")
@@ -4120,8 +4120,8 @@ public class Funcs {
     }
   }
   
-  @Docstring(text = "Append element to the end of a seqence modifying the sequence."
-             + " Returns the sequence")
+  @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
+             + "Returns the sequence")
   @Arguments(spec = {"seq", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class NPUSH extends FuncExp {
@@ -4134,6 +4134,20 @@ public class Funcs {
     }
   }
 
+  @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
+             + "Returns copy of the target object with the requested change")
+  @Arguments(spec = {"seq", "object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class PUSH extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object list = Utils.asObject(eargs.get(0, backtrace));
+      final Object obj = Utils.asObject(eargs.get(1, backtrace));
+      return Seq.roPutElement(list, Seq.getLength(list, false), obj);
+    }
+  }
+
+  
   @Docstring(text = "Insert element into given position in the indexed sequence."
              + " Returns the sequence")
   @Arguments(spec = {"seq", "index","object"})

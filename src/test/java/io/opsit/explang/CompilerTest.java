@@ -306,6 +306,9 @@ public class CompilerTest extends AbstractTest {
           {"(LET ((a (MAKE-ARRAY 1))) (PUT! a 0 2) a)", Utils.arrayOfObjects(2), true, null, null, p},
           {"(LET ((a (MAKE-ARRAY :elementType \"int\" 1))) (PUT! a 0 2) a)", Utils.array(2), true, null, null, p},
           {"(PUT! (MAKE-ARRAY 1) 0 2)",1, true, null, null, p},
+
+          {"(LET ((seq ())) (PUSH! seq 1) (PUSH! seq 2) seq)",list(1,2), true, null, null, p},
+          {"(LET ((o ()) (t (PUSH (PUSH o 1) 2))) (LIST o t))",list(list(),list(1,2)), true, null, null, p},
           
           {
             "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))",
