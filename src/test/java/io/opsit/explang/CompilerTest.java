@@ -309,6 +309,42 @@ public class CompilerTest extends AbstractTest {
 
           {"(LET ((seq ())) (PUSH! seq 1) (PUSH! seq 2) seq)",list(1,2), true, null, null, p},
           {"(LET ((o ()) (t (PUSH (PUSH o 1) 2))) (LIST o t))",list(list(),list(1,2)), true, null, null, p},
+
+          {"(LET ((L ())) (INSERT! L 0 10) (INSERT! L 0 11))", list(11, 10), true, null, null, p},
+          {"(LET ((L ())) (INSERT! L 0 10) (INSERT! L 1 11))", list(10, 11), true, null, null, p},
+
+          {"(LET ((L (STRING-BUILDER \"A\"))) (INSERT! L 0 (CHAR 66)) (INSERT! L 0 (CHAR 67)))",
+           new StringBuilder("CBA"), true, null, null, p},
+          {"(LET ((L (STRING-BUILDER \"A\"))) (INSERT! L 1 (CHAR 66)) (INSERT! L 2 (CHAR 67)))",
+           new StringBuilder("ABC"), true, null, null, p},
+
+          {"(LET ((L (STRING-BUFFER \"A\"))) (INSERT! L 0 (CHAR 66)) (INSERT! L 0 (CHAR 67)))",
+           new StringBuffer("CBA"), true, null, null, p},
+          {"(LET ((L (STRING-BUFFER \"A\"))) (INSERT! L 1 (CHAR 66)) (INSERT! L 2 (CHAR 67)))",
+           new StringBuffer("ABC"), true, null, null, p},
+
+          
+          {"(LET ((L ()) (T (INSERT (INSERT L 0 10) 0 11))) (LIST L T))", list(list(), list(11, 10)), true, null, null, p},
+          {"(LET ((L ()) (T (INSERT (INSERT L 0 10) 1 11))) (LIST L T))", list(list(), list(10, 11)), true, null, null, p},
+
+          {"(LET ((L (STRING-BUILDER \"A\")) (T (INSERT (INSERT L 0 (CHAR 66))  0 (CHAR 67)))) (IF (=== L T) false T))",
+           new StringBuilder("CBA"), true, null, null, p},
+          {"(LET ((L (STRING-BUILDER \"A\")) (T (INSERT (INSERT L 1 (CHAR 66))  2 (CHAR 67)))) (IF (=== L T) false T))",
+           new StringBuilder("ABC"), true, null, null, p},
+
+          {"(LET ((L (STRING-BUFFER \"A\")) (T (INSERT (INSERT L 0 (CHAR 66))  0 (CHAR 67)))) (IF (=== L T) false T))",
+           new StringBuffer("CBA"), true, null, null, p},
+          {"(LET ((L (STRING-BUFFER \"A\")) (T (INSERT (INSERT L 1 (CHAR 66))  2 (CHAR 67)))) (IF (=== L T) false T))",
+           new StringBuffer("ABC"), true, null, null, p},
+
+          {"(LET ((L \"A\") (T (INSERT (INSERT L 0 (CHAR 66))  0 (CHAR 67)))) (IF (=== L T) false T))",
+           "CBA", true, null, null, p},
+          {"(LET ((L \"A\") (T (INSERT (INSERT L 1 (CHAR 66))  2 (CHAR 67)))) (IF (=== L T) false T))",
+           "ABC", true, null, null, p},
+          {"(LET ((o (HASHMAP 1 2 )) (t (INSERT o 3 4))) (LIST o t ))",
+           list(map(1,2), map(1,2,3,4)), true, null, null, p},
+          {"(LET ((o (.S \"java.util.Collections\" \"unmodifiableMap\" (LIST (HASHMAP 1 2 )))) (t (INSERT o 3 4))) (LIST o t ))",
+           list(map(1,2), map(1,2,3,4)), true, null, null, p},
           
           {
             "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))",

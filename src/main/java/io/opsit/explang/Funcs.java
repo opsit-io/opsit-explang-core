@@ -4121,7 +4121,7 @@ public class Funcs {
   }
   
   @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
-             + "Returns the sequence")
+             + "Returns the sequence.")
   @Arguments(spec = {"seq", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class NPUSH extends FuncExp {
@@ -4135,7 +4135,7 @@ public class Funcs {
   }
 
   @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
-             + "Returns copy of the target object with the requested change")
+             + "Returns copy of the target object with the requested change.")
   @Arguments(spec = {"seq", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class PUSH extends FuncExp {
@@ -4155,14 +4155,25 @@ public class Funcs {
   public static class NINSERT extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      if (eargs.size() != 3) {
-        throw new ExecutionException(backtrace, getName() 
-                                     + " expects 3 arguments, but got " + eargs.size());
-      }
       final Object listObject = Utils.asObject(eargs.get(0, backtrace));
       final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
       final Object object = Utils.asObject(eargs.get(2, backtrace));
       return Seq.insertElementByIndex(listObject, index, object);
+    }
+  }
+
+
+  @Docstring(text = "Insert element into given position in the indexed sequence."
+             + " Returns a copy of the target sequence with the requested modification.")
+  @Arguments(spec = {"seq", "index","object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class INSERT extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object listObject = Utils.asObject(eargs.get(0, backtrace));
+      final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
+      final Object object = Utils.asObject(eargs.get(2, backtrace));
+      return Seq.roInsertElementByIndex(listObject, index, object);
     }
   }
 

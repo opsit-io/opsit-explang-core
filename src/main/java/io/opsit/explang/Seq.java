@@ -245,6 +245,8 @@ public class Seq {
 
     Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
 
+    Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
+
     Object remove(Object seq, int idx) throws IndexOutOfBoundsException;
 
     Object shallowClone(Object seq);
@@ -283,7 +285,7 @@ public class Seq {
     public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final List<Object> lst = (List<Object>)seq;
       try {
-        List newList = (List)shallowClone(lst);
+        final List newList = (List)shallowClone(lst);
         checkNonMutatingChange(newList, seq);
         this.set(newList, idx, element);
         return newList;
@@ -297,6 +299,13 @@ public class Seq {
       }
     }
 
+
+    public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      final List newList = (List)shallowClone(seq);
+      checkNonMutatingChange(newList, seq);
+      this.insert(newList, idx, element);
+      return newList;
+    }
       
     public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
       final List<Object> lst = (List<Object>)seq;
@@ -384,6 +393,10 @@ public class Seq {
       throw cannotChangeError(seq);
     }
 
+    public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+      throw new RuntimeException("NOTIMPLEMENTED");
+    }
+      
     public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
       throw cannotChangeError(seq);
     }
@@ -419,6 +432,10 @@ public class Seq {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("NOTIMPLEMENTED");
+        }
+        
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           throw new RuntimeException("Get by index not supported for Set objects");
         }
@@ -490,6 +507,13 @@ public class Seq {
           return chr;
         }
 
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          StringBuffer nb = new StringBuffer((StringBuffer) seq);
+          this.insert(nb, idx, element);
+          return nb;
+        }
+
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuffer buf = (StringBuffer) seq;
           if (element instanceof CharSequence) {
@@ -558,6 +582,12 @@ public class Seq {
           return chr;
         }
 
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          StringBuilder nb = new StringBuilder((StringBuilder) seq);
+          this.insert(nb, idx, element);
+          return nb;
+        }
+
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuilder buf = (StringBuilder) seq;
           if (element instanceof CharSequence) {
@@ -611,6 +641,12 @@ public class Seq {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
         }
 
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          StringBuilder b = new StringBuilder((String)seq);
+          stringBuilderAdapter.insert(b, idx,element);
+          return b.toString();
+        }
+        
         public Object insert(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot insert into  object of type " + seq.getClass());
         }
@@ -648,6 +684,10 @@ public class Seq {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
         }
 
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Cannot insert (non-mutating) into  object of type " + seq.getClass());
+        }
+        
         public Object insert(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot insert into  object of type " + seq.getClass());
         }
@@ -689,6 +729,11 @@ public class Seq {
           throw new RuntimeException("Cannot insert into object of type " + seq.getClass());
         }
 
+        @Override
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Cannot insert (non-mutating) into  object of type " + seq.getClass());
+        }
+                
         @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return Array.get(seq, idx);
@@ -736,6 +781,10 @@ public class Seq {
           return ((Map<Object, Object>) seq).put(idx, element);
         }
 
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          return this.roPutByKey(seq, idx, element);
+        }
+        
         public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
           return ((Map<Object, Object>) seq).remove(idx);
         }
@@ -788,7 +837,11 @@ public class Seq {
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
-
+        
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          return this.roPutByKey(seq, idx, element);
+        }
+        
         public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
@@ -842,6 +895,10 @@ public class Seq {
           return null;
         }
 
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          return null;
+        }
+        
         public Object remove(Object seq, int idx) throws IndexOutOfBoundsException {
           return null;
         }
@@ -964,13 +1021,11 @@ public class Seq {
     SeqAdapter adapter = getAssociativeSeqAdapter(m);
     return adapter.roPutByKey(m, key, value);
   }
-
   
   public static Object roSetElementByIndex(Object seq, int index, Object element) {
     SeqAdapter adapter = getAssociativeSeqAdapter(seq);
     return adapter.roSet(seq, index, element);
   }
-  
   
   /**
    * put sequence element by index. Return old value at this index.
@@ -990,6 +1045,16 @@ public class Seq {
     return adapter.insert(seq, index, element);
   }
 
+  /**
+   * Put sequence element by index.
+   * Return copy of the target object with the change applied.
+   */
+  public static Object roInsertElementByIndex(Object seq, int index, Object element)
+      throws IndexOutOfBoundsException {
+    SeqAdapter adapter = getAssociativeSeqAdapter(seq);
+    return adapter.roInsert(seq, index, element);
+  }
+  
   /**
    * put sequence element by key. Return old value at this index.
    */
