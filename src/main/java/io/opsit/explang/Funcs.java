@@ -4073,17 +4073,17 @@ public class Funcs {
 
   @Docstring(lines =
              {"Put element value into an associative structure.",
-              " Set value of element at index/key in the target structure to object. ",
-              " If target ibject is a Java array and the object type does not match the type",
-              " of this array this function will attempt to perform necessary coercion",
-              " operations. The coercions  work in the same way as INT, FLOAT, STRING",
-              " and rest of the built-in coercion functions.",
+              "Set value of element at index/key in the target structure to object. ",
+              "If target ibject is a Java array and the object type does not match the type",
+              "of this array this function will attempt to perform necessary coercion",
+              "operations. The coercions  work in the same way as INT, FLOAT, STRING",
+              "and rest of the built-in coercion functions.",
               "",
-              " If target object is a list or and array and happens out of bound exception",
-              " the function returns normally without any change to the target structure",
+              "If target object is a list or and array and happens out of bound exception",
+              "the function returns normally without any change to the target structure",
               "",
-              " The function returns previous value of the element or NIL if it did not exist",
-              " or no change has been made."})
+              "The function returns previous value of the element or NIL if it did not exist",
+              "or no change has been made."})
   @Arguments(spec = {"target", "key", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class NPUT extends FuncExp {
@@ -4098,16 +4098,16 @@ public class Funcs {
 
   @Docstring(lines =
              {"Put element value into an associative structure (non-mutating).",
-              " Set value of element at index/key in the target structure to object. ",
-              " If target ibject is a Java array and the object type does not match the type",
-              " of this array this function will attempt to perform necessary coercion",
-              " operations. The coercions  work in the same way as INT, FLOAT, STRING",
-              " and rest of the built-in coercion functions.",
+              "Set value of element at index/key in the target structure to object. ",
+              "If target ibject is a Java array and the object type does not match the type",
+              "of this array this function will attempt to perform necessary coercion",
+              "operations. The coercions  work in the same way as INT, FLOAT, STRING",
+              "and rest of the built-in coercion functions.",
               "",
-              " If target object is a list or and array and happens out of bound exception",
-              " the function returns normally without any change to the target structure",
+              "If target object is a list or and array and happens out of bound exception",
+              "the function returns normally without any change to the target structure",
               "",
-              " The function returns copy of the target object with the requested change."})
+              "The function returns copy of the target object with the requested change."})
   @Arguments(spec = {"target", "key", "object"})
   @Package(name = Package.BASE_SEQ)
   public static class PUT extends FuncExp {
