@@ -540,6 +540,7 @@ public class Compiler {
             "PUT-IN!", NPUT_IN.class,
             "INSERT", INSERT.class,
             "INSERT!", NINSERT.class,
+            "REMOVE",  REMOVE.class,
             "REMOVE!", NREMOVE.class,
             "ASSOC", ASSOC.class,
             "ASSOC!", NASSOC.class,

@@ -4177,23 +4177,33 @@ public class Funcs {
     }
   }
 
-  @Docstring(text = "delete element from  sequence by qey or index."
-             + " Returns the removed element")
+  @Docstring(text = "Delete an element from a sequence by key or index."
+             + " Returns the removed element.")
   @Arguments(spec = {"seq", "key"})
   @Package(name = Package.BASE_SEQ)
   public static class NREMOVE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      if (eargs.size() != 2) {
-        throw new ExecutionException(backtrace, getName() 
-                                     + " expects 2 arguments, but got " + eargs.size());
-      }
       final Object listObject = Utils.asObject(eargs.get(0, backtrace));
       final Object key = eargs.get(1, backtrace);
       return Seq.removeElementByKeyOrIndex(listObject, key);
     }
   }
 
+  @Docstring(text = "Delete an element from a sequence by key or index."
+             + " Returns a copy of the target object with the requested element removed.")
+  @Arguments(spec = {"seq", "key"})
+  @Package(name = Package.BASE_SEQ)
+  public static class REMOVE extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object listObject = Utils.asObject(eargs.get(0, backtrace));
+      final Object key = eargs.get(1, backtrace);
+      return Seq.roRemoveElementByKeyOrIndex(listObject, key);
+    }
+  }
+
+  
   
   @Docstring(
       text = "Set indexed sequence (array, list, character sequence) element value."
