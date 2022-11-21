@@ -376,6 +376,51 @@ public class CompilerTest extends AbstractTest {
           {"(LET ((S (STRING-BUFFER \"ABC\")) (R (DELETE! S 200))) (LIST S R))",
            list(new StringBuffer("ABC"),null), true, null, null, p},
 
+
+          {"(LET ((L NIL) (R (DELETE L 0))) (LIST L R))",
+           list(null, null), true, null, null, p},
+          {"(LET ((L (LIST 10 20 30)) (R (DELETE L 0))) (LIST L R))",
+           list(list(10,20,30),list(20,30)), true, null, null, p},
+          {"(LET ((L (LIST 10 20 30)) (R (DELETE L 2))) (LIST L R))",
+           list(list(10,20,30),list(10,20)), true, null, null, p},
+          {"(LET ((L (LIST 10 20 30)) (R (DELETE L 3))) (LIST L R))",
+           list(list(10,20,30), list(10,20,30)), true, null, null, p},
+
+          {"(LET ((M (HASHMAP 1 10 2 20)) (R (DELETE M 1))) (LIST M R))",
+           list(map(1,10,2,20), map(2,20)), true, null, null, p},
+          {"(LET ((M (HASHMAP 1 10 2 20)) (R (DELETE M 3))) (LIST M R))",
+           list(map(1,10,2,20), map(1,10,2,20)), true, null, null, p},
+
+          {"(LET ((S (HASHSET 10 20 30)) (R (DELETE S 20))) (LIST S R))",
+           list(set(10, 20, 30), set(10,30)), true, null, null, p},
+          {"(LET ((S (HASHSET 10 20 30)) (R (DELETE S 200))) (LIST S R))",
+           list(set(10, 20,30), set(10,20,30)), true, null, null, p},
+
+          {"(LET ((S (STRING-BUILDER \"ABC\")) (R (DELETE S 0))) (LIST S R))",
+           list(new StringBuilder("ABC"), new StringBuilder("BC")), true, null, null, p},
+          {"(LET ((S (STRING-BUILDER \"ABC\")) (R (DELETE S 200))) (LIST S R))",
+           list(new StringBuilder("ABC"), new StringBuilder("ABC")), true, null, null, p},
+          
+          {"(LET ((S (STRING-BUFFER \"ABC\")) (R (DELETE S 0))) (LIST S R))",
+           list(new StringBuffer("ABC"), new StringBuffer("BC")), true, null, null, p},
+          {"(LET ((S (STRING-BUFFER \"ABC\")) (R (DELETE S 200))) (LIST S R))",
+           list(new StringBuffer("ABC"), new StringBuffer("ABC")), true, null, null, p},
+
+          {"(LET ((S \"ABC\") (R (DELETE S 0))) (LIST S R))",
+           list("ABC", "BC"), true, null, null, p},
+          {"(LET ((S  \"ABC\") (R (DELETE S 200))) (LIST S R))",
+           list("ABC", "ABC"), true, null, null, p},
+
+
+          {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableList\" (LIST (LIST 1 2 3))))"
+           + "    (R (DELETE L 1))) (LIST L R))",
+           list(list(1,2,3),list(1,3)), true, null, null, p},
+          {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableMap\" (LIST (HASHMAP 1 2 3 4))))"
+           + "    (R (DELETE L 1))) (LIST L R))",
+           list(map(1,2,3,4),map(3,4)), true, null, null, p},
+          {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableSet\" (LIST (HASHSET 1 2 3 4))))"
+           + "    (R (DELETE L 2))) (LIST L R))",
+           list(set(1,2,3,4),set(1,3,4)), true, null, null, p},
           
           
           {

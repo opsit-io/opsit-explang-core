@@ -236,15 +236,11 @@ public class Seq {
    * Remove element from  sequence  by key or index.
    */
   public static Object roRemoveElementByKeyOrIndex(Object seq, Object key) {
-    if (null == seq) {
-      return null;
-    } else if (seq instanceof Map) {
-      return ((Map<?,?>) seq).remove(key);
-    } else if (seq instanceof Set) {
-      boolean removed =  ((Set<?>) seq).remove(key);
-      return removed ? key : null;
-    } else {
-      return removeElementByIndex(seq, Utils.asNumber(key).intValue());
+    SeqAdapter adapter = getSeqAdapter(seq);
+    try {
+      return adapter.roRemoveByKeyOrIndex(seq, key);
+    } catch (IndexOutOfBoundsException ex) {
+      return adapter.shallowClone(seq);
     }
   }
 
@@ -442,7 +438,11 @@ public class Seq {
     }
 
     public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      throw new RuntimeException("NOTIMPLEMENTED");
+      final List lst = (List) seq;
+      final List newList = new ArrayList(lst.size());
+      newList.addAll(lst);
+      listAdapter.removeByKeyOrIndex(newList, keyidx);
+      return Collections.unmodifiableList(newList);
     }
 
     public Object removeValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
@@ -462,6 +462,78 @@ public class Seq {
     }
   };
 
+
+  @SuppressWarnings("unchecked")
+  protected static final SeqAdapter immutableSetAdapter =
+      new SeqAdapter() {
+        public Object roPutByKey(Object seq, Object key, Object element) {
+          throw invalidOp(seq, "non-mutating putByKey");
+        }
+        public Object putByKey(Object seq, Object key, Object element) {
+          throw invalidOp(seq, "putByKey");
+        }
+        
+        public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Set by index not supported for Set objects");
+        }
+        
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Set by index not supported for Set objects");
+        }
+
+        public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Insert by index not supported for Set objects");
+        }
+
+        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Insert by index not supported for Set objects");          
+        }
+        
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          throw new RuntimeException("Get by index not supported for Set objects");
+        }
+
+        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+          throw invalidOp(seq, "removeByKeyOrIndex");
+        }
+
+        public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {
+          throw invalidOp(seq, "removeByKeyOrIndex");
+        }
+
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {          return this.roRemoveValue(seq, keyidx);
+        }
+
+        public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
+          final Set<Object> set = (Set<Object>) seq;
+          final Set newSet = new HashSet();
+          newSet.addAll(set);
+          newSet.remove(value);
+          return Collections.unmodifiableSet(newSet);
+        }
+
+        public Object shallowClone(Object seq) {
+          Class<?> clz = seq.getClass();
+          try {
+            Constructor<?> constr = clz.getConstructor();
+            if (null == constr) {
+              throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+            }
+            Set<Object> set = (Set<Object>) constr.newInstance();
+            set.addAll((Set) seq);
+            return set;
+          } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+          } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+          } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+          } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+          }
+        }
+      };
+  
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter setAdapter =
       new SeqAdapter() {
@@ -502,7 +574,7 @@ public class Seq {
         }
 
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-          throw invalidOp(seq, "removeByKeyOrIndex");
+          return this.roRemoveValue(seq, keyidx);
         }
 
         public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
@@ -520,7 +592,7 @@ public class Seq {
               throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
             }
             Set<Object> set = (Set<Object>) constr.newInstance();
-            set.addAll((List<Object>) seq);
+            set.addAll((Set) seq);
             return set;
           } catch (InstantiationException ex) {
             throw new RuntimeException(ex);
@@ -758,7 +830,7 @@ public class Seq {
 
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
           StringBuilder b = new StringBuilder((String)seq);
-          stringBuilderAdapter.roRemoveByKeyOrIndex(b, keyidx);
+          stringBuilderAdapter.removeByKeyOrIndex(b, keyidx);
           return b.toString();
         }
 
@@ -1132,9 +1204,9 @@ public class Seq {
         }
       };
 
-      protected static SeqAdapter getSeqAdapter(Object seq) {
+  protected static SeqAdapter getSeqAdapter(Object seq) {
     if (seq instanceof Set) {
-      return setAdapter;
+      return Utils.isKnownImmutable(seq) ? immutableSetAdapter : setAdapter;
     } else {
       return getAssociativeSeqAdapter(seq);
     }
