@@ -346,7 +346,7 @@ public class Seq {
 
     public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
       final List<Object> lst = (List<Object>)seq;
-      return lst.remove(Utils.asNumber(keyidx));
+      return lst.remove((int)Utils.asNumber(keyidx));
     }
 
     public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {

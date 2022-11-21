@@ -2,6 +2,7 @@ package io.opsit.explang;
 
 import static io.opsit.explang.Utils.list;
 import static io.opsit.explang.Utils.map;
+import static io.opsit.explang.Utils.set;
 
 import io.opsit.explang.Compiler.Eargs;
 import io.opsit.explang.parser.lisp.LispParser;
@@ -345,6 +346,37 @@ public class CompilerTest extends AbstractTest {
            list(map(1,2), map(1,2,3,4)), true, null, null, p},
           {"(LET ((o (.S \"java.util.Collections\" \"unmodifiableMap\" (LIST (HASHMAP 1 2 )))) (t (INSERT o 3 4))) (LIST o t ))",
            list(map(1,2), map(1,2,3,4)), true, null, null, p},
+
+          {"(LET ((L NIL) (R (DELETE! L 0))) (LIST L R))",
+           list(null, null), true, null, null, p},
+          {"(LET ((L (LIST 10 20 30)) (R (DELETE! L 0))) (LIST L R))",
+           list(list(20,30), 10), true, null, null, p},
+          {"(LET ((L (LIST 10 20 30))) (DELETE! L 2) L)",
+           list(10,20), true, null, null, p},
+          {"(LET ((L (LIST 10 20 30)) (R (DELETE! L 3))) (LIST L R))",
+           list(list(10,20,30), null), true, null, null, p},
+
+          {"(LET ((M (HASHMAP 1 10 2 20)) (R (DELETE! M 1))) (LIST M R))",
+           list(map(2,20),10), true, null, null, p},
+          {"(LET ((M (HASHMAP 1 10 2 20)) (R (DELETE! M 3))) (LIST M R))",
+           list(map(1,10,2,20), null), true, null, null, p},
+
+          {"(LET ((S (HASHSET 10 20 30)) (R (DELETE! S 20))) (LIST S R))",
+           list(set(10,30), 20), true, null, null, p},
+          {"(LET ((S (HASHSET 10 20 30)) (R (DELETE! S 200))) (LIST S R))",
+           list(set(10,20,30),null), true, null, null, p},
+
+          {"(LET ((S (STRING-BUILDER \"ABC\")) (R (DELETE! S 0))) (LIST S R))",
+           list(new StringBuilder("BC"), 'A'), true, null, null, p},
+          {"(LET ((S (STRING-BUILDER \"ABC\")) (R (DELETE! S 200))) (LIST S R))",
+           list(new StringBuilder("ABC"),null), true, null, null, p},
+          
+          {"(LET ((S (STRING-BUFFER \"ABC\")) (R (DELETE! S 0))) (LIST S R))",
+           list(new StringBuffer("BC"), 'A'), true, null, null, p},
+          {"(LET ((S (STRING-BUFFER \"ABC\")) (R (DELETE! S 200))) (LIST S R))",
+           list(new StringBuffer("ABC"),null), true, null, null, p},
+
+          
           
           {
             "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))",
@@ -2845,7 +2877,8 @@ public class CompilerTest extends AbstractTest {
         log("XPC: " + Utils.asString(result));
         log("LXPC:" + logResult);
         if (i == parsed.size()) {
-          if ((result instanceof Double) && (expVal instanceof Double)) {
+          checkResult(expVal, result, 0, null);
+          /*if ((result instanceof Double) && (expVal instanceof Double)) {
             Assert.assertEquals((double) result, (double) expVal, 0.0000000000001);
           } else if ((result instanceof Float) && (expVal instanceof Float)) {
             Assert.assertEquals((float) result, (float) expVal, 0.000001);
@@ -2864,7 +2897,7 @@ public class CompilerTest extends AbstractTest {
             Assert.assertEquals(result.toString(), expVal.toString());
           } else {
             Assert.assertEquals(result, Utils.asObject(expVal));
-          }
+            }*/
           Assert.assertEquals(Utils.asBoolean(expVal), logResult);
         }
       }
@@ -2892,6 +2925,40 @@ public class CompilerTest extends AbstractTest {
     }
   }
 
+  public void checkResult(Object expVal, Object result, int recLevel, Integer checkIdx) {
+    final String msg = "checkResult: rec_level=" + recLevel + ", index=" + checkIdx;
+    if ((result instanceof Double) && (expVal instanceof Double)) {
+      Assert.assertEquals(msg, (double) result, (double) expVal, 0.0000000000001);
+    } else if ((result instanceof Float) && (expVal instanceof Float)) {
+      Assert.assertEquals(msg, (float) result, (float) expVal, 0.000001);
+    } else if (null != result && null != expVal && expVal.getClass().isArray()
+               && result.getClass().isArray()) {
+      Assert.assertTrue(msg, Utils.arraysDeepEquals(expVal, result));
+    } else if (((result instanceof Pattern) && (expVal instanceof Pattern))
+               || ((result instanceof Matcher) && (expVal instanceof Matcher))) {
+      // FIXME: string repr. works, but how to do it properly?
+      Assert.assertEquals(msg, result.toString(), expVal.toString());
+    } else if ((result instanceof StringBuilder) && (expVal instanceof StringBuilder)) {
+      Assert.assertEquals(msg, result.toString(), expVal.toString());
+    } else if ((result instanceof StringBuffer) && (expVal instanceof StringBuffer)) {
+      Assert.assertEquals(msg, result.toString(), expVal.toString());
+    } else if ((result instanceof List) && (expVal instanceof List)) {
+      final List expList = (List)expVal;
+      final List resultList = (List)result;
+      
+      Assert.assertEquals(msg, (Object)expList.size(), (Object)resultList.size());
+      for (int idx = 0; idx < expList.size(); idx++) {
+        checkResult(expList.get(idx), resultList.get(idx), recLevel + 1, idx);
+        //Assert.assertEquals("list element  rec level=" + recLevel +" index="+idx,
+        //expList.get(idx), resultList.get(idx));
+        
+      }
+    } else {
+      Assert.assertEquals(msg, result, Utils.asObject(expVal));
+    }
+  
+  }
+    
   public boolean areEqual(Throwable a, Throwable b) {
     Assert.assertNotNull(a);
     Assert.assertNotNull(b);

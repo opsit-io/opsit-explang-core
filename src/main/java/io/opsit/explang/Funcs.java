@@ -4181,12 +4181,12 @@ public class Funcs {
              + " Returns the removed element.")
   @Arguments(spec = {"seq", "key"})
   @Package(name = Package.BASE_SEQ)
-  public static class NREMOVE extends FuncExp {
+  public static class NDELETE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object listObject = Utils.asObject(eargs.get(0, backtrace));
-      final Object key = eargs.get(1, backtrace);
-      return Seq.removeElementByKeyOrIndex(listObject, key);
+      final Object keyidx = eargs.get(1, backtrace);
+      return Seq.removeElementByKeyOrIndex(listObject, keyidx);
     }
   }
 
@@ -4194,12 +4194,12 @@ public class Funcs {
              + " Returns a copy of the target object with the requested element removed.")
   @Arguments(spec = {"seq", "key"})
   @Package(name = Package.BASE_SEQ)
-  public static class REMOVE extends FuncExp {
+  public static class DELETE extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object listObject = Utils.asObject(eargs.get(0, backtrace));
-      final Object key = eargs.get(1, backtrace);
-      return Seq.roRemoveElementByKeyOrIndex(listObject, key);
+      final Object keyidx = eargs.get(1, backtrace);
+      return Seq.roRemoveElementByKeyOrIndex(listObject, keyidx);
     }
   }
 
