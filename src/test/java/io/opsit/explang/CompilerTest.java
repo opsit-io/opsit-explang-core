@@ -311,6 +311,40 @@ public class CompilerTest extends AbstractTest {
           {"(LET ((seq ())) (PUSH! seq 1) (PUSH! seq 2) seq)",list(1,2), true, null, null, p},
           {"(LET ((o ()) (t (PUSH (PUSH o 1) 2))) (LIST o t))",list(list(),list(1,2)), true, null, null, p},
 
+
+          {"(POP! NIL)",
+           null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
+
+          {"(LET ((L (LIST 10 20 30))) (LIST (POP! L) (POP! L) (POP! L) L))",
+           list(30,20,10,list()), true, null, null, p},
+          {"(POP! (LIST))",
+           null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
+          
+
+          {"(LET ((L (STRING-BUFFER \"ABC\"))) (LIST (POP! L) (POP! L) (POP! L) L))",
+           list('C','B','A', new StringBuffer()), true, null, null, p},
+          {"(POP! (STRING-BUFFER))",
+           null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
+
+
+          {"(LET ((L (STRING-BUILDER \"ABC\"))) (LIST (POP! L) (POP! L) (POP! L)  L))",
+           list('C','B','A', new StringBuilder()), true, null, null, p},
+          {"(POP! (STRING-BUILDER))",
+           null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
+
+          
+          {"(LET ((L (HASHMAP 0 10 1 20 2 30))) (LIST (POP! L) (POP! L) (POP! L)  L))",
+           list(30,20,10, map()), true, null, null, p},
+          {"(POP! (HASHMAP))",
+           null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
+
+
+          {"(LET ((L (HASHSET 10 20 30))) (LIST (HASHSET (POP! L) (POP! L) (POP! L))  L))",
+           list(set(30,20,10), set()), true, null, null, p},
+          {"(POP! (HASHSET))",
+           null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
+
+
           {"(LET ((L ())) (INSERT! L 0 10) (INSERT! L 0 11))", list(11, 10), true, null, null, p},
           {"(LET ((L ())) (INSERT! L 0 10) (INSERT! L 1 11))", list(10, 11), true, null, null, p},
 

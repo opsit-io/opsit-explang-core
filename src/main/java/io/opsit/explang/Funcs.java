@@ -4119,6 +4119,23 @@ public class Funcs {
       return Seq.roPutElement(srcObj, index, obj);
     }
   }
+
+  @Docstring(text = "Remove an element from the end of a sequence modifying the sequence. "
+             + "Returns the removed element.")
+  @Arguments(spec = {"seq"})
+  @Package(name = Package.BASE_SEQ)
+  public static class NPOP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object list = Utils.asObject(eargs.get(0, backtrace));
+      // FIXME: must be atomic
+      if (null == list || Seq.getLength(list, false) < 1) {
+        throw new ExecutionException(backtrace, this.getName() + " from an empty sequence");
+      }
+      return Seq.removeLastElement(list);
+    }
+  }
+
   
   @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
              + "Returns the sequence.")
@@ -4129,12 +4146,13 @@ public class Funcs {
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object list = Utils.asObject(eargs.get(0, backtrace));
       final Object obj = Utils.asObject(eargs.get(1, backtrace));
+      // FIXME: atomic push must be supported
       Seq.putElement(list, Seq.getLength(list, false), obj);
       return list;
     }
   }
 
-  @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
+  @Docstring(text = "Append element to the end of a seqence. "
              + "Returns copy of the target object with the requested change.")
   @Arguments(spec = {"seq", "object"})
   @Package(name = Package.BASE_SEQ)

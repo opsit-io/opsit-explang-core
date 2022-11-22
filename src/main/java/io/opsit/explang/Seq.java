@@ -216,6 +216,35 @@ public class Seq {
     }
   }
 
+  public static Object removeLastElement(Object seq) {
+    if (null == seq) {
+      return null;
+    } else if (seq instanceof Set) {
+      // FIXME: atomic operation
+      // Ugly, move into adapters
+      final Set set = (Set)seq;
+      if (set.isEmpty()) {
+        return null;
+      }
+      final SeqAdapter adapter = getSeqAdapter(seq);
+      final Iterator iter = set.iterator();
+      if (iter.hasNext()) {
+        final Object value = iter.next();
+        return  Utils.asBoolean(adapter.removeValue(seq, value)) ? value : null;
+      } else {
+        return null;
+      }
+    }
+    int index = getLength(seq, false) - 1;
+    if (index >= 0) {
+      // FIXME: must be atomic
+      final Object result = removeElementByKeyOrIndex(seq, index);
+      return result;
+    } else {
+      return null;
+    }
+  }
+
   /**
    * Remove element from  sequence  by key or index.
    */
