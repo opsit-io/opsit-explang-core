@@ -4136,6 +4136,23 @@ public class Funcs {
     }
   }
 
+
+  @Docstring(text = "Remove an element from the end of a sequence. "
+             + "Returns list with the removed element and a copy of the sequence with this element removed.")
+  @Arguments(spec = {"seq"})
+  @Package(name = Package.BASE_SEQ)
+  public static class POP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object list = Utils.asObject(eargs.get(0, backtrace));
+      // FIXME: must be atomic
+      if (null == list || Seq.getLength(list, false) < 1) {
+        throw new ExecutionException(backtrace, this.getName() + " from an empty sequence");
+      }
+      return Seq.roRemoveLastElement(list);
+    }
+  }
+
   
   @Docstring(text = "Append element to the end of a seqence modifying the sequence. "
              + "Returns the sequence.")
@@ -4144,11 +4161,15 @@ public class Funcs {
   public static class NPUSH extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object list = Utils.asObject(eargs.get(0, backtrace));
+      final Object seq = Utils.asObject(eargs.get(0, backtrace));
       final Object obj = Utils.asObject(eargs.get(1, backtrace));
       // FIXME: atomic push must be supported
-      Seq.putElement(list, Seq.getLength(list, false), obj);
-      return list;
+      if (seq instanceof Set) {
+        Seq.addValue(seq, obj);
+      } else {
+        Seq.putElement(seq, Seq.getLength(seq, false), obj);
+      }
+      return seq;
     }
   }
 
@@ -4159,9 +4180,13 @@ public class Funcs {
   public static class PUSH extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      final Object list = Utils.asObject(eargs.get(0, backtrace));
+      final Object seq = Utils.asObject(eargs.get(0, backtrace));
       final Object obj = Utils.asObject(eargs.get(1, backtrace));
-      return Seq.roPutElement(list, Seq.getLength(list, false), obj);
+      if (seq instanceof Set) {
+        return Seq.roAddValue(seq, obj);
+      } else {
+        return Seq.roPutElement(seq, Seq.getLength(seq, false), obj);
+      }
     }
   }
 

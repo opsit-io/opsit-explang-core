@@ -308,10 +308,26 @@ public class CompilerTest extends AbstractTest {
           {"(LET ((a (MAKE-ARRAY :elementType \"int\" 1))) (PUT! a 0 2) a)", Utils.array(2), true, null, null, p},
           {"(PUT! (MAKE-ARRAY 1) 0 2)",1, true, null, null, p},
 
-          {"(LET ((seq ())) (PUSH! seq 1) (PUSH! seq 2) seq)",list(1,2), true, null, null, p},
+          {"(LET ((seq ())) (PUSH! seq 1) (PUSH! seq 2) seq)", list(1, 2), true, null, null, p},
+          {"(LET ((seq (HASHSET))) (PUSH! seq 1) (PUSH! seq 2) seq)", set(1, 2), true, null, null, p},
+          {"(LET ((seq (STRING-BUFFER))) (PUSH! seq (CHAR 65)) (PUSH! seq (CHAR 66)) seq)",
+           new StringBuffer("AB"), true, null, null, p},
+          {"(LET ((seq (STRING-BUILDER))) (PUSH! seq (CHAR 65)) (PUSH! seq (CHAR 66)) seq)",
+           new StringBuilder("AB"), true, null, null, p},
+
+          {"(LET ((seq \"\")) (PUSH (PUSH seq 65)  66))", "AB", true, null, null, p},
+          {"(LET ((seq (STRING-BUFFER \"\"))) (LIST seq (PUSH (PUSH seq 65)  66)))",
+           list(new StringBuffer(), new StringBuffer("AB")), true, null, null, p},
+          {"(LET ((seq (STRING-BUILDER \"\"))) (LIST seq (PUSH (PUSH seq 65)  66)))",
+           list(new StringBuilder(), new StringBuilder("AB")), true, null, null, p},
           {"(LET ((o ()) (t (PUSH (PUSH o 1) 2))) (LIST o t))",list(list(),list(1,2)), true, null, null, p},
+          {"(LET ((o (.S \"java.util.Collections\" \"unmodifiableList\" (LIST ()))) (t (PUSH (PUSH o 1) 2))) (LIST o t))",
+           list(list(),list(1,2)), true, null, null, p},
+          {"(LET ((o (HASHSET)) (t (PUSH (PUSH o 1) 2))) (LIST o t))",list(set(),set(1,2)), true, null, null, p},
+          {"(LET ((o (.S \"java.util.Collections\" \"unmodifiableSet\" (LIST (HASHSET)))) (t (PUSH (PUSH o 1) 2))) (LIST o t))",
+           list(set(),set(1,2)), true, null, null, p},
 
-
+          // POP!
           {"(POP! NIL)",
            null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
 
@@ -344,6 +360,90 @@ public class CompilerTest extends AbstractTest {
           {"(POP! (HASHSET))",
            null, false, new ExecutionException(null,  "POP! from an empty sequence"), null, p},
 
+          // POP
+          {"(POP NIL)",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+          {"(POP (LIST))",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+          {"(POP (HASHSET))",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+          {"(POP (HASHMAP))",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+          {"(POP (STRING-BUFFER))",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+          {"(POP (STRING-BUILDER))",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+                    {"(POP \"\")",
+           null, false, new ExecutionException(null,  "POP from an empty sequence"), null, p},
+
+          {"(LET ((L (LIST 10 20 30)))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list(30,list(10,20)), list(20,list(10)), list(10,list())), true, null, null, p},
+
+          {"(LET ((L (STRING-BUFFER \"ABC\")))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list('C',new StringBuffer("AB")),
+                list('B',new StringBuffer("A")),
+                list('A',new StringBuffer(""))), true, null, null, p},
+
+          {"(LET ((L (STRING-BUILDER \"ABC\")))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list('C',new StringBuilder("AB")),
+                list('B',new StringBuilder("A")),
+                list('A',new StringBuilder(""))), true, null, null, p},
+
+          {"(LET ((L \"ABC\"))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list('C',"AB"),
+                list('B',"A"),
+                list('A',"")), true, null, null, p},
+
+          {"(LET ((L (HASHMAP 0 10 1 20 2 30)))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list(30, map(0,10,1,20)),
+                list(20, map(0,10)),
+                list(10, map())), true, null, null, p},
+
+
+          {"(LET ((L (HASHSET 1)))"
+            + "(LIST L  (POP L)))",
+            list(set(1), list(1, set())), true, null, null, p},
+
+          {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableList\" (LIST (LIST 10 20 30)))))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list(30,list(10,20)), list(20,list(10)), list(10,list())), true, null, null, p},
+
+          {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableMap\" (LIST (HASHMAP 0 10 1 20 2 30)))))"
+           + " (LIST (SETF (LIST V1 L1) (POP L)) "
+           + "       (SETF (LIST V2 L2) (POP L1))"
+           + "       (SETF (LIST V3 L3) (POP L2))))",
+           list(list(30, map(0,10,1,20)),
+                list(20, map(0,10)),
+                list(10, map())), true, null, null, p},
+
+          {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableSet\" (LIST (HASHSET 1)))))"
+            + "(LIST L  (POP L)))",
+            list(set(1), list(1, set())), true, null, null, p},
+
+          
 
           {"(LET ((L ())) (INSERT! L 0 10) (INSERT! L 0 11))", list(11, 10), true, null, null, p},
           {"(LET ((L ())) (INSERT! L 0 10) (INSERT! L 1 11))", list(10, 11), true, null, null, p},

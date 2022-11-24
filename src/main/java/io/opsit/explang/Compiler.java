@@ -535,6 +535,7 @@ public class Compiler {
             "HASKEY", HASKEY.class,
             "PUSH", PUSH.class,
             "PUSH!", NPUSH.class,
+            "POP", POP.class,
             "POP!", NPOP.class,
             "PUT", PUT.class,
             "PUT!", NPUT.class,
