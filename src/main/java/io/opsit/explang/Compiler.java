@@ -593,7 +593,8 @@ public class Compiler {
             // arrays
             "MAKE-ARRAY", MAKE_ARRAY.class,
             "AREF", AREF.class,
-            "ASET!", ASET.class,
+            "ASET!", NASET.class,
+            "ASET", ASET.class,
             // help system
             "DESCRIBE-FUNCTION", Funcs.DESCRIBE_FUNCTION.class,
             "DOCUMENTATION", Funcs.DOCUMENTATION.class,

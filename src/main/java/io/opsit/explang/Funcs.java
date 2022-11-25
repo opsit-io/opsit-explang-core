@@ -4248,17 +4248,19 @@ public class Funcs {
 
   
   
-  @Docstring(
-      text = "Set indexed sequence (array, list, character sequence) element value."
-              + " Set value of element at index to object. "
-              + " If target ibject is a Java array and object type does not match type of this"
-              + " array this function will attempt to perform necessary coercion operations. "
-              + " The coercions  work in the same way as INT, FLOAT, STRING and rest of the "
-              + " built-in coercion functions. May fail with index out of bound exception."
-              + " The function returns previous value of the element.")
+  @Docstring(lines = {"Set value of element at index to object.",
+                      "",
+                      "Set indexed sequence (array, list, character sequence) element value.",
+                      "",
+                      "If target ibject is a Java array and object type does not match type of this",
+                      "array this function will attempt to perform necessary coercion operations. ",
+                      "The coercions  work in the same way as INT, FLOAT, STRING and rest of the ",
+                      "built-in coercion functions. May fail with index out of bound exception.",
+                      "",
+                      "The function returns previous value of the element."})
   @Arguments(spec = {"obj", "key", "object"})
   @Package(name = Package.BASE_SEQ)
-  public static class ASET extends FuncExp {
+  public static class NASET extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
       final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
@@ -4272,6 +4274,34 @@ public class Funcs {
     }
   }
 
+  @Docstring(lines = {"Set value of element at index to object. ",
+                      "",
+                      "Set indexed sequence (array, list, character sequence) element value.",
+                      "May fail with index out of bound exception.",
+                      "",
+                      "If target ibject is a Java array and object type does not match type of this",
+                      "array this function will attempt to perform necessary coercion operations. ",
+                      "The coercions  work in the same way as INT, FLOAT, STRING and rest of the ",
+                      "built-in coercion functions. ",
+                      "",
+                      "The function returns new sequence with the requested change, the original",
+                      "object is not modified"})  
+  @Arguments(spec = {"obj", "key", "object"})
+  @Package(name = Package.BASE_SEQ)
+  public static class ASET extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object arrayObj = Utils.asObject(eargs.get(0, backtrace));
+      final int index = Utils.asNumber(eargs.get(1, backtrace)).intValue();
+      final Object obj = Utils.asObject(eargs.get(2, backtrace));
+      try {
+        return Seq.roSetElementByIndex(arrayObj, Utils.asNumber(index).intValue(), obj);
+      } catch (IndexOutOfBoundsException ex) {
+        throw new ExecutionException(ex);
+      }
+    }
+  }
+  
   
   @Arguments(spec = {"array", "index"})
   @Docstring(

@@ -963,6 +963,32 @@ public class CompilerTest extends AbstractTest {
             null,
             null,
             p
+          },
+          {
+            "(LET ((ar (MAKE-ARRAY NIL NIL NIL)) (ar2 (ASET (ASET (ASET ar 0 2) 1 3) 2 4))) (LIST ar ar2))",
+            list(new Object[] {null,null,null}, new Object[] {2, 3, 4}),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((ar (LIST NIL NIL NIL)) (ar2 (ASET (ASET (ASET ar 0 2) 1 3) 2 4))) (LIST ar ar2))",
+            list(list(null,null,null), list(2, 3, 4)),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((ar (.S \"java.util.Collections\" \"unmodifiableList\" (LIST (LIST NIL NIL NIL)))) "
+            + "    (ar2 (ASET (ASET (ASET ar 0 2) 1 3) 2 4))) "
+            + "  (LIST ar ar2))",
+            list(list(null,null,null), list(2, 3, 4)),
+            true,
+            null,
+            null,
+            p
           },          
           {"(AS-> (+ 1 0) foo)", 1, true, null, null, p},
           {"(AS-> (+ 1 0) foo (* 10 foo))", 10, true, null, null, p},
