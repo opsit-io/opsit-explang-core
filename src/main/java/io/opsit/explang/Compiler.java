@@ -561,6 +561,7 @@ public class Compiler {
             //"FIELDS2", FIELDS2.class,
             "TYPEP", TYPEP.class,
             "COPY", COPY.class,
+            "DEEP-COPY", DEEP_COPY.class,
             // mapping functions
             "MAP", MAP.class,
             "MAPPROD", MAPPROD.class,

@@ -3131,6 +3131,62 @@ public class Funcs {
     }
   }
 
+  // FIXME: list types
+  protected static Object deepCopy(List lst, Backtrace backtrace) throws ExecutionException {
+    final int size = lst.size();
+    List copy = new ArrayList(size);
+    for (int idx = 0; idx < size; idx++) {
+      final Object item = lst.get(idx);
+      final Object itemCopy = deepCopy(item, backtrace);
+      copy.add(itemCopy);
+    }
+    return copy;
+  }
+
+  // FIXME: Set types
+  protected static Object deepCopy(Set set, Backtrace backtrace) throws ExecutionException {
+    final int size = set.size();
+    final Set copy = new HashSet(size);
+    for (Object item : set) {
+      final Object itemCopy = deepCopy(item, backtrace);
+      copy.add(itemCopy);
+    }
+    return copy;
+  }
+
+  // FIXME: Set types
+  protected static Map deepCopy(Map<?, ?> map, Backtrace backtrace) throws ExecutionException {
+    final int size = map.size();
+    final HashMap copy = new HashMap(size);
+    for (Map.Entry<?, ?> item : map.entrySet()) {
+      final Object key = item.getKey();
+      final Object value = item.getValue();
+      final Object keyCopy = deepCopy(key, backtrace);
+      final Object valueCopy = deepCopy(value, backtrace);
+      copy.put(keyCopy, valueCopy);
+    }
+    return copy;
+  }
+
+  // FIXME: very crude, need to care for arrays, collection types
+  protected static Object deepCopy(Object obj, Backtrace backtrace) throws ExecutionException {
+    Object copy;
+    if (obj == null) {
+      copy =  null;
+    } else if (obj instanceof List) {
+      copy = deepCopy((List)obj, backtrace);
+    } else if (obj instanceof Set) {
+      copy = deepCopy((Set)obj, backtrace);
+    } else if (obj instanceof Map) {
+      copy = deepCopy((Map) obj, backtrace);
+      /*} FIXME: else if (obj.getClass().isArray()) {
+        copy = deepCopyArray(obj, backtrace);*/
+    } else {
+      copy = shallowCopy(obj, backtrace);
+    }
+    return copy;
+  }
+
   protected static Object shallowCopy(Object obj, Backtrace backtrace) throws ExecutionException {
     if (Utils.isKnownImmutable(obj)) {
       return obj;
@@ -3186,6 +3242,18 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Perform deep copy of an object.")
+  @Package(name = Package.BASE_SEQ)
+  public static class DEEP_COPY extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object obj = eargs.get(0, backtrace);
+      return deepCopy(obj, backtrace);
+    }
+  }
+
+    
   @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
   @Docstring(lines = {
       "Concatenate sequences (non-destructive). ",
