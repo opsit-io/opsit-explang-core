@@ -2669,6 +2669,29 @@ public class Funcs {
   }
 
 
+  @Arguments(spec = {"structure", "keys", "value","&OPTIONAL", "new-col"})
+  @Docstring(lines = {"Put value into an hierarchy of associative structures according list of keys ks. ",
+                      "Returns copy of the structure with the required modification."})
+  @Package(name = Package.BASE_SEQ)
+  @SuppressWarnings("unchecked")
+  public static class PUT_IN extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final int argsnum = eargs.size();
+      if (argsnum != 4) {
+        throw new ExecutionException(
+            backtrace, "Unexpected number of arguments: expected 4, but got " + eargs.size());
+      }
+      final Object src = eargs.get(0, backtrace);
+      final List<Object> ksObj = (List<Object>)eargs.get(1, backtrace);
+      final Object object = eargs.get(2, backtrace);
+      final Object nf = eargs.get(3, backtrace);
+      final Object target = deepCopy(src, backtrace);
+      final Object result = setIn(target, ksObj, object, nf);
+      return result;
+    }
+  }
+  
   @Arguments(spec = {"structure", "ks", "value","&OPTIONAL", "new-col"})
   @Docstring(text = "Put value into an hierarchy of associative structures "
              + "according list of keys ks.")

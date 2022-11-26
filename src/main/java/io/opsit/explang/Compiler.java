@@ -540,6 +540,7 @@ public class Compiler {
             "PUT", PUT.class,
             "PUT!", NPUT.class,
             "PUT-IN!", NPUT_IN.class,
+            "PUT-IN", PUT_IN.class,
             "INSERT", INSERT.class,
             "INSERT!", NINSERT.class,
             "DELETE",  DELETE.class,
