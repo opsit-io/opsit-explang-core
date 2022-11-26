@@ -8,13 +8,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /** Utility class for operations on sequences of various types. */
 public class Seq {
@@ -216,18 +215,23 @@ public class Seq {
     }
   }
 
+  /**
+   * Remove last element of indexed sequence or arbitrary
+   * from a set. Returns null if no elements left.
+   */
+  @SuppressWarnings("unchecked")
   public static Object removeLastElement(Object seq) {
     if (null == seq) {
       return null;
     } else if (seq instanceof Set) {
       // FIXME: atomic operation
       // Ugly, move into adapters
-      final Set set = (Set)seq;
+      final Set<Object> set = (Set<Object>)seq;
       if (set.isEmpty()) {
         return null;
       }
       final SeqAdapter adapter = getSeqAdapter(seq);
-      final Iterator iter = set.iterator();
+      final Iterator<Object> iter = set.iterator();
       if (iter.hasNext()) {
         final Object value = iter.next();
         return  Utils.asBoolean(adapter.removeValue(seq, value)) ? value : null;
@@ -245,18 +249,22 @@ public class Seq {
     }
   }
 
-
+  /**
+   * Non-mutating remove last element.
+   */
+  @SuppressWarnings("unchecked")
   public static List<Object> roRemoveLastElement(Object seq) {
-    Object newSeq = null, obj = null;
+    Object newSeq = null;
+    Object obj = null;
     if (seq instanceof Set) {
       // FIXME: atomic operation
       // Ugly, move into adapters
-      final Set set = (Set)seq;
+      final Set<Object> set = (Set<Object>)seq;
       if (set.isEmpty()) {
         return null;
       }
       final SeqAdapter adapter = getSeqAdapter(seq);
-      final Iterator iter = set.iterator();
+      final Iterator<Object> iter = set.iterator();
       if (iter.hasNext()) {
         obj = iter.next();
         newSeq = adapter.roRemoveValue(seq, obj);
@@ -289,7 +297,7 @@ public class Seq {
     }
   }
 
-    /**
+  /**
    * Remove element from  sequence  by key or index.
    */
   public static Object roRemoveElementByKeyOrIndex(Object seq, Object key) {
@@ -301,6 +309,9 @@ public class Seq {
     }
   }
 
+  /**
+   * Add value to sequence.
+   */
   public static Object addValue(Object seq, Object value) {
     SeqAdapter adapter = getSeqAdapter(seq);
     adapter.addValue(seq, value);
@@ -312,16 +323,15 @@ public class Seq {
     return adapter.roAddValue(seq, value);
   }
 
-
   protected static interface SeqAdapter {
     Object addValue(Object seq, Object element);
 
     Object roAddValue(Object seq, Object element);
-    
+
     Object roPutByKey(Object seq, Object key, Object element);
-    
+
     Object putByKey(Object seq, Object key, Object element);
-    
+
     Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
 
     Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException;
@@ -340,242 +350,159 @@ public class Seq {
 
     Object roRemoveValue(Object seq, Object value);
 
-
     Object shallowClone(Object seq);
   }
 
   private static RuntimeException invalidOp(Object obj, String op) {
-    return new RuntimeException("Cannot do " + op + " object of type " + obj.getClass().getCanonicalName());      
+    return new RuntimeException(
+        "Cannot do " + op + " object of type " + obj.getClass().getCanonicalName());
   }
 
   private static RuntimeException cannotChangeError(Object obj) {
-    return new RuntimeException("Cannot do mutating change for object of type " + obj.getClass().getCanonicalName());      
+    return new RuntimeException(
+        "Cannot do mutating change for object of type " + obj.getClass().getCanonicalName());
   }
 
   static void checkNonMutatingChange(Object a, Object b) {
     if (a == b) {
-          throw new RuntimeException("Cannot do non-mutating change for object of type " + a.getClass().getCanonicalName());
+      throw new RuntimeException(
+          "Cannot do non-mutating change for object of type " + a.getClass().getCanonicalName());
     }
   }
-  
-  @SuppressWarnings("unchecked")
-  protected static final SeqAdapter listAdapter = new SeqAdapter() {
-    public Object roAddValue(Object seq, Object element) {
-      final List<Object> lst = (List<Object>) seq;
-      final List newList = (List) shallowClone(lst);
-      checkNonMutatingChange(newList, seq);
-      this.addValue(newList, element);
-      return newList;
-    }
-
-      
-    public Object addValue(Object seq, Object element) {
-      final List lst = (List) seq;
-      lst.add(element);
-      return lst;
-    }
-      
-    public Object roPutByKey(Object seq, Object key, Object element) {
-      throw invalidOp(seq, "non-mutating putByKey");
-    }
-      
-    public Object putByKey(Object seq, Object key, Object element) {
-      throw invalidOp(seq, "putByKey");
-    }
-      
-    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final List<Object> lst = (List<Object>)seq;
-      try {
-        return lst.set(idx, element);
-      } catch (IndexOutOfBoundsException ex) {
-        if (idx == lst.size()) {
-          lst.add(element);
-          return null;
-        } else {
-          throw ex;
-        }
-      }
-    }
-
-    public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final List<Object> lst = (List<Object>)seq;
-      try {
-        final List newList = (List)shallowClone(lst);
-        checkNonMutatingChange(newList, seq);
-        this.set(newList, idx, element);
-        return newList;
-      } catch (IndexOutOfBoundsException ex) {
-        if (idx == lst.size()) {
-          lst.add(element);
-          return null;
-        } else {
-          throw ex;
-        }
-      }
-    }
-
-
-    public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final List newList = (List)shallowClone(seq);
-      checkNonMutatingChange(newList, seq);
-      this.insert(newList, idx, element);
-      return newList;
-    }
-      
-    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      final List<Object> lst = (List<Object>)seq;
-      lst.add(idx, element);
-      return lst;
-    }
-
-    public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      final List<Object> lst = (List<Object>)seq;
-      return lst.remove((int)Utils.asNumber(keyidx));
-    }
-
-    public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {
-      final List<Object> lst = (List<Object>)seq;
-      return lst.remove((Object)value);
-    }
-
-    public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      final List newList = (List)shallowClone(seq);
-      checkNonMutatingChange(newList, seq);
-      this.removeByKeyOrIndex(newList, keyidx);
-      return newList;
-    }
-
-    public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
-      final List newList = (List)shallowClone(seq);
-      checkNonMutatingChange(newList, seq);
-      this.removeValue(newList, value);
-      return newList;
-    }
-      
-    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-      return ((List) seq).get(idx);
-    }
-      
-    public Object shallowClone(Object seq) {
-      Class<?> clz = seq.getClass();
-      try {
-        Constructor<?> constr = clz.getConstructor();
-        if (null == constr) {
-          throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
-        }
-        List<Object> lst = (List<Object>)constr.newInstance();
-        lst.addAll((List<Object>)seq);
-        return lst;
-      } catch (InstantiationException ex) {
-        throw new RuntimeException(ex);
-      } catch (InvocationTargetException ex) {
-        throw new RuntimeException(ex);
-      } catch (IllegalAccessException ex) {
-        throw new RuntimeException(ex);
-      } catch (NoSuchMethodException ex) {
-        throw new RuntimeException(ex);
-      }
-    }
-  };
-
-
-  
-  @SuppressWarnings("unchecked")
-  protected static final SeqAdapter immutableListAdapter = new SeqAdapter() {
-    public Object roAddValue(Object seq, Object element) {
-      final List<Object> lst = (List<Object>)seq;
-      List newList = new ArrayList(lst.size());
-      newList.addAll(lst);
-      listAdapter.addValue(newList,  element);
-      return Collections.unmodifiableList(newList);
-    }
-      
-    public Object addValue(Object seq, Object element) {
-      throw cannotChangeError(seq);
-    }
-      
-
-    public Object roPutByKey(Object seq, Object key, Object element) {
-      throw invalidOp(seq, "non-mutating putByKey");
-    }
-      
-    public Object putByKey(Object seq, Object key, Object element) {
-      throw invalidOp(seq, "putByKey");
-    }
-      
-    public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      throw cannotChangeError(seq);
-    }
-
-    public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      // FIXME: fixed type of immutable list
-      final List<Object> lst = (List<Object>)seq;
-      try {
-        List newList = new ArrayList(lst.size());
-        newList.addAll(lst);
-        listAdapter.set(newList, idx, element);
-        return Collections.unmodifiableList(newList);
-      } catch (IndexOutOfBoundsException ex) {
-        if (idx == lst.size()) {
-          lst.add(element);
-          return null;
-        } else {
-          throw ex;
-        }
-      }
-    }
-
-      
-    public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      throw cannotChangeError(seq);
-    }
-
-    public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-      throw new RuntimeException("NOTIMPLEMENTED");
-    }
-      
-    public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      throw cannotChangeError(seq);
-    }
-
-    public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      final List lst = (List) seq;
-      final List newList = new ArrayList(lst.size());
-      newList.addAll(lst);
-      listAdapter.removeByKeyOrIndex(newList, keyidx);
-      return Collections.unmodifiableList(newList);
-    }
-
-    public Object removeValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      throw cannotChangeError(seq);
-    }
-
-    public Object roRemoveValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-      throw new RuntimeException("NOTIMPLEMENTED");
-    }
-      
-    public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-      return ((List) seq).get(idx);
-    }
-      
-    public Object shallowClone(Object seq) {
-      return seq;
-    }
-  };
-
 
   @SuppressWarnings("unchecked")
-  protected static final SeqAdapter immutableSetAdapter =
+  protected static final SeqAdapter listAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
-          final Set<Object> set = (Set<Object>) seq;
-          final Set newSet = new HashSet();
-          newSet.addAll(set);
-          setAdapter.addValue(newSet, element);
-          return Collections.unmodifiableSet(newSet);
+          final List<Object> lst = (List<Object>) seq;
+          final List<Object> newList = (List<Object>) shallowClone(lst);
+          checkNonMutatingChange(newList, seq);
+          this.addValue(newList, element);
+          return newList;
         }
 
-        
+        public Object addValue(Object seq, Object element) {
+          final List<Object> lst = (List<Object>) seq;
+          lst.add(element);
+          return lst;
+        }
+
+        public Object roPutByKey(Object seq, Object key, Object element) {
+          throw invalidOp(seq, "non-mutating putByKey");
+        }
+
+        public Object putByKey(Object seq, Object key, Object element) {
+          throw invalidOp(seq, "putByKey");
+        }
+
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final List<Object> lst = (List<Object>) seq;
+          try {
+            return lst.set(idx, element);
+          } catch (IndexOutOfBoundsException ex) {
+            if (idx == lst.size()) {
+              lst.add(element);
+              return null;
+            } else {
+              throw ex;
+            }
+          }
+        }
+
+        public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final List<Object> lst = (List<Object>) seq;
+          try {
+            final List<Object> newList = (List<Object>) shallowClone(lst);
+            checkNonMutatingChange(newList, seq);
+            this.set(newList, idx, element);
+            return newList;
+          } catch (IndexOutOfBoundsException ex) {
+            if (idx == lst.size()) {
+              lst.add(element);
+              return null;
+            } else {
+              throw ex;
+            }
+          }
+        }
+
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          final List<Object> newList = (List<Object>) shallowClone(seq);
+          checkNonMutatingChange(newList, seq);
+          this.insert(newList, idx, element);
+          return newList;
+        }
+
+        public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          final List<Object> lst = (List<Object>) seq;
+          lst.add(idx, element);
+          return lst;
+        }
+
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          final List<Object> lst = (List<Object>) seq;
+          return lst.remove((int) Utils.asNumber(keyidx));
+        }
+
+        public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {
+          final List<Object> lst = (List<Object>) seq;
+          return lst.remove(value);
+        }
+
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          final List<Object> newList = (List<Object>) shallowClone(seq);
+          checkNonMutatingChange(newList, seq);
+          this.removeByKeyOrIndex(newList, keyidx);
+          return newList;
+        }
+
+        public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
+          final List<Object> newList = (List<Object>) shallowClone(seq);
+          checkNonMutatingChange(newList, seq);
+          this.removeValue(newList, value);
+          return newList;
+        }
+
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          return ((List<Object>) seq).get(idx);
+        }
+
+        public Object shallowClone(Object seq) {
+          Class<?> clz = seq.getClass();
+          try {
+            Constructor<?> constr = clz.getConstructor();
+            if (null == constr) {
+              throw new RuntimeException("Cannot clone object " + clz + ": constructor not found");
+            }
+            List<Object> lst = (List<Object>) constr.newInstance();
+            lst.addAll((List<Object>) seq);
+            return lst;
+          } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+          } catch (InvocationTargetException ex) {
+            throw new RuntimeException(ex);
+          } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+          } catch (NoSuchMethodException ex) {
+            throw new RuntimeException(ex);
+          }
+        }
+      };
+
+  @SuppressWarnings("unchecked")
+  protected static final SeqAdapter immutableListAdapter =
+      new SeqAdapter() {
+        public Object roAddValue(Object seq, Object element) {
+          final List<Object> lst = (List<Object>) seq;
+          List<Object> newList = new ArrayList<Object>(lst.size());
+          newList.addAll(lst);
+          listAdapter.addValue(newList, element);
+          return Collections.unmodifiableList(newList);
+        }
+
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
@@ -583,14 +510,100 @@ public class Seq {
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
-        
+
+        public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw cannotChangeError(seq);
+        }
+
+        public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          // FIXME: fixed type of immutable list
+          final List<Object> lst = (List<Object>) seq;
+          try {
+            List<Object> newList = new ArrayList<Object>(lst.size());
+            newList.addAll(lst);
+            listAdapter.set(newList, idx, element);
+            return Collections.unmodifiableList(newList);
+          } catch (IndexOutOfBoundsException ex) {
+            if (idx == lst.size()) {
+              lst.add(element);
+              return null;
+            } else {
+              throw ex;
+            }
+          }
+        }
+
+        public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+          throw cannotChangeError(seq);
+        }
+
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          throw new RuntimeException("NOTIMPLEMENTED");
+        }
+
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          throw cannotChangeError(seq);
+        }
+
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          final List<Object> lst = (List<Object>) seq;
+          final List<Object> newList = new ArrayList<Object>(lst.size());
+          newList.addAll(lst);
+          listAdapter.removeByKeyOrIndex(newList, keyidx);
+          return Collections.unmodifiableList(newList);
+        }
+
+        public Object removeValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+          throw cannotChangeError(seq);
+        }
+
+        public Object roRemoveValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+          throw new RuntimeException("NOTIMPLEMENTED");
+        }
+
+        public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
+          return ((List) seq).get(idx);
+        }
+
+        public Object shallowClone(Object seq) {
+          return seq;
+        }
+      };
+
+  @SuppressWarnings("unchecked")
+  protected static final SeqAdapter immutableSetAdapter =
+      new SeqAdapter() {
+        public Object roAddValue(Object seq, Object element) {
+          final Set<Object> set = (Set<Object>) seq;
+          final Set<Object> newSet = new HashSet<Object>();
+          newSet.addAll(set);
+          setAdapter.addValue(newSet, element);
+          return Collections.unmodifiableSet(newSet);
+        }
+
+        public Object addValue(Object seq, Object element) {
+          throw cannotChangeError(seq);
+        }
+
+        public Object roPutByKey(Object seq, Object key, Object element) {
+          throw invalidOp(seq, "non-mutating putByKey");
+        }
+
+        public Object putByKey(Object seq, Object key, Object element) {
+          throw invalidOp(seq, "putByKey");
+        }
+
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
-        
+
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
@@ -599,15 +612,17 @@ public class Seq {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-          throw new RuntimeException("Insert by index not supported for Set objects");          
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          throw new RuntimeException("Insert by index not supported for Set objects");
         }
-        
+
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           throw new RuntimeException("Get by index not supported for Set objects");
         }
 
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw invalidOp(seq, "removeByKeyOrIndex");
         }
 
@@ -615,12 +630,14 @@ public class Seq {
           throw invalidOp(seq, "removeByKeyOrIndex");
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {          return this.roRemoveValue(seq, keyidx);
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          return this.roRemoveValue(seq, keyidx);
         }
 
         public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final Set<Object> set = (Set<Object>) seq;
-          final Set newSet = new HashSet();
+          final Set<Object> newSet = new HashSet<Object>();
           newSet.addAll(set);
           newSet.remove(value);
           return Collections.unmodifiableSet(newSet);
@@ -647,33 +664,34 @@ public class Seq {
           }
         }
       };
-  
+
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter setAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
           final Set<Object> set = (Set<Object>) seq;
-          final Set newSet = (Set) this.shallowClone(seq);
+          final Set<Object> newSet = (Set<Object>) this.shallowClone(seq);
           newSet.add(element);
           return newSet;
         }
-        
+
         public Object addValue(Object seq, Object element) {
-          ((Set) seq).add(element);
+          ((Set<Object>) seq).add(element);
           return seq;
         }
 
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
-        
+
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
-        
+
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
@@ -682,15 +700,17 @@ public class Seq {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-          throw new RuntimeException("Insert by index not supported for Set objects");          
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          throw new RuntimeException("Insert by index not supported for Set objects");
         }
-        
+
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           throw new RuntimeException("Get by index not supported for Set objects");
         }
 
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw invalidOp(seq, "removeByKeyOrIndex");
         }
 
@@ -699,13 +719,14 @@ public class Seq {
           return set.remove(value);
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           return this.roRemoveValue(seq, keyidx);
         }
 
         public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final Set<Object> set = (Set<Object>) seq;
-          final Set newSet = (Set) this.shallowClone(seq);
+          final Set<Object> newSet = (Set<Object>) this.shallowClone(seq);
           newSet.remove(value);
           return newSet;
         }
@@ -732,14 +753,14 @@ public class Seq {
         }
       };
 
-      protected static final SeqAdapter stringBufferAdapter =
+  protected static final SeqAdapter stringBufferAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
           csb.append(element);
           return csb;
         }
-        
+
         public Object addValue(Object seq, Object element) {
           ((StringBuffer) seq).append(element);
           return seq;
@@ -748,18 +769,17 @@ public class Seq {
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
-        
+
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
           this.set(csb, idx, element);
           return csb;
         }
 
-        
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuffer buf = (StringBuffer) seq;
           try {
@@ -776,7 +796,8 @@ public class Seq {
           }
         }
 
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           final StringBuffer buf = (StringBuffer) seq;
           int idx = Utils.asNumber(keyidx).intValue();
           final Character chr = buf.charAt(idx);
@@ -784,7 +805,8 @@ public class Seq {
           return chr;
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
           this.removeByKeyOrIndex(csb, keyidx);
           return csb;
@@ -845,7 +867,7 @@ public class Seq {
         }
       };
 
-      protected static final SeqAdapter stringBuilderAdapter =
+  protected static final SeqAdapter stringBuilderAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
           StringBuilder csb = new StringBuilder((StringBuffer) seq);
@@ -853,16 +875,15 @@ public class Seq {
           return csb;
         }
 
-        
         public Object addValue(Object seq, Object element) {
           ((StringBuilder) seq).append(element);
           return seq;
         }
-        
+
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
@@ -872,7 +893,7 @@ public class Seq {
           this.set(csb, idx, element);
           return csb;
         }
-        
+
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuilder buf = (StringBuilder) seq;
           try {
@@ -888,13 +909,16 @@ public class Seq {
             }
           }
         }
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           StringBuilder csb = new StringBuilder((StringBuilder) seq);
           this.removeByKeyOrIndex(csb, keyidx);
           return csb;
         }
 
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           final StringBuilder buf = (StringBuilder) seq;
           final int idx = Utils.asNumber(keyidx).intValue();
           final Character chr = buf.charAt(idx);
@@ -921,8 +945,8 @@ public class Seq {
           return null;
         }
 
-
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
           StringBuilder nb = new StringBuilder((StringBuilder) seq);
           this.insert(nb, idx, element);
           return nb;
@@ -960,7 +984,7 @@ public class Seq {
   protected static final SeqAdapter stringAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
-          StringBuilder b = new StringBuilder((String)seq);
+          StringBuilder b = new StringBuilder((String) seq);
           b.append(element);
           return b.toString();
         }
@@ -972,37 +996,40 @@ public class Seq {
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
-        
+
         public Object roSet(Object seq, int idx, Object element) {
-          StringBuilder b = new StringBuilder((String)seq);
-          stringBuilderAdapter.set(b, idx,element);
+          StringBuilder b = new StringBuilder((String) seq);
+          stringBuilderAdapter.set(b, idx, element);
           return b.toString();
         }
-        
+
         public Object set(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-          StringBuilder b = new StringBuilder((String)seq);
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          StringBuilder b = new StringBuilder((String) seq);
           stringBuilderAdapter.removeByKeyOrIndex(b, keyidx);
           return b.toString();
         }
 
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-          StringBuilder b = new StringBuilder((String)seq);
-          stringBuilderAdapter.insert(b, idx,element);
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          StringBuilder b = new StringBuilder((String) seq);
+          stringBuilderAdapter.insert(b, idx, element);
           return b.toString();
         }
-        
+
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
@@ -1026,7 +1053,6 @@ public class Seq {
         }
       };
 
-
   // FIXME: implement RO operations
   protected static final SeqAdapter charSequenceAdapter =
       new SeqAdapter() {
@@ -1041,32 +1067,34 @@ public class Seq {
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
-        
+
         public Object roSet(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
-        
         public Object set(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
-        
+
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
@@ -1093,7 +1121,7 @@ public class Seq {
         public Object roAddValue(Object seq, Object element) {
           throw invalidOp(seq, "addValue");
         }
-        
+
         public Object addValue(Object seq, Object element) {
           throw invalidOp(seq, "addValue");
         }
@@ -1101,7 +1129,7 @@ public class Seq {
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
@@ -1118,32 +1146,35 @@ public class Seq {
           Utils.aset(seq, idx, element);
           return result;
         }
-        
+
         @Override
         public Object insert(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot insert into object of type " + seq.getClass());
         }
 
         @Override
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-          throw new RuntimeException("Cannot insert (non-mutating) into  object of type " + seq.getClass());
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
+          throw new RuntimeException(
+              "Cannot insert (non-mutating) into  object of type " + seq.getClass());
         }
-                
+
         @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return Array.get(seq, idx);
         }
 
         @Override
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
         }
 
         @Override
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
         }
-
 
         public Object roRemoveValue(Object seq, Object value) {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
@@ -1168,7 +1199,7 @@ public class Seq {
   protected static final SeqAdapter mapAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
-          Map cm = (Map) this.shallowClone(seq);
+          Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(seq);
           checkNonMutatingChange(seq, cm);
           this.addValue(cm, element);
           return cm;
@@ -1176,8 +1207,8 @@ public class Seq {
 
         public Object addValue(Object seq, Object element) {
           if (element instanceof Map.Entry) {
-            final Map.Entry e = (Map.Entry)element;
-            ((Map) seq).put(e.getKey(), e.getValue());
+            final Map.Entry<Object, Object> e = (Map.Entry<Object, Object>) element;
+            ((Map<Object, Object>) seq).put(e.getKey(), e.getValue());
           } else {
             throw new RuntimeException("Cannot add object of type " + seq.getClass() + " to a Map");
           }
@@ -1185,12 +1216,12 @@ public class Seq {
         }
 
         public Object roPutByKey(Object m, Object key, Object value) {
-          Map cm = (Map) this.shallowClone(m);
+          Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(m);
           checkNonMutatingChange(m, cm);
           this.putByKey(cm, key, value);
           return cm;
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           return ((Map) seq).put(key, element);
         }
@@ -1198,7 +1229,7 @@ public class Seq {
         public Object roSet(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot modify object of type " + seq.getClass());
         }
-          
+
         public Object set(Object seq, int idx, Object element) {
           return ((Map<Object, Object>) seq).put(idx, element);
         }
@@ -1207,16 +1238,19 @@ public class Seq {
           return ((Map<Object, Object>) seq).put(idx, element);
         }
 
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
           return this.roPutByKey(seq, idx, element);
         }
-        
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           return ((Map<Object, Object>) seq).remove(keyidx);
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-          Map cm = (Map) this.shallowClone(seq);
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(seq);
           checkNonMutatingChange(seq, cm);
           this.removeByKeyOrIndex(cm, keyidx);
           return cm;
@@ -1227,17 +1261,17 @@ public class Seq {
         }
 
         public Object roRemoveValue(Object m, Object value) {
-          Map cm = (Map) this.shallowClone(m);
+          Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(m);
           checkNonMutatingChange(m, cm);
           this.removeValue(cm, value);
           return cm;
         }
 
         public Object removeValue(Object seq, Object value) {
-          Map<Object,Object> map = (Map) seq;
+          Map<Object, Object> map = (Map) seq;
           if (map.containsValue(value)) {
-            Map.Entry entry = null;
-            for (Map.Entry<Object,Object> e : map.entrySet()) {
+            Map.Entry<Object, Object> entry = null;
+            for (Map.Entry<Object, Object> e : map.entrySet()) {
               if (Utils.equal(e.getValue(), value)) {
                 entry = e;
               }
@@ -1273,21 +1307,21 @@ public class Seq {
   protected static final SeqAdapter immutableMapAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
-          Map cm = new HashMap((Map) seq);
+          Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) seq);
           mapAdapter.addValue(cm, element);
           return Collections.unmodifiableMap(cm);
         }
-        
+
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
 
         public Object roPutByKey(Object m, Object key, Object value) {
-          Map cm = new HashMap((Map)m);
+          Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) m);
           mapAdapter.putByKey(cm, key, value);
           return Collections.unmodifiableMap(cm);
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           throw new RuntimeException("Cannot modify object of type " + seq.getClass());
         }
@@ -1295,7 +1329,7 @@ public class Seq {
         public Object roSet(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot modify object of type " + seq.getClass());
         }
-          
+
         public Object set(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
@@ -1303,17 +1337,20 @@ public class Seq {
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
-        
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
+
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
           return this.roPutByKey(seq, idx, element);
         }
-        
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
-          final Map cm = new HashMap((Map)seq);
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          final Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) seq);
           mapAdapter.removeByKeyOrIndex(cm, keyidx);
           return Collections.unmodifiableMap(cm);
         }
@@ -1323,7 +1360,7 @@ public class Seq {
         }
 
         public Object roRemoveValue(Object seq, Object value) {
-          final Map cm = new HashMap((Map)seq);
+          final Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) seq);
           mapAdapter.removeValue(cm, value);
           return Collections.unmodifiableMap(cm);
         }
@@ -1352,8 +1389,7 @@ public class Seq {
         }
       };
 
-  
-      protected static final SeqAdapter nullAdapter =
+  protected static final SeqAdapter nullAdapter =
       new SeqAdapter() {
         public Object roAddValue(Object seq, Object element) {
           return null;
@@ -1362,21 +1398,19 @@ public class Seq {
         public Object addValue(Object seq, Object element) {
           return null;
         }
-        
+
         public Object roPutByKey(Object seq, Object key, Object element) {
           return null;
         }
-        
+
         public Object putByKey(Object seq, Object key, Object element) {
           return null;
         }
 
-        
         public Object roSet(Object seq, int idx, Object element) {
           return null;
         }
 
-        
         public Object set(Object seq, int idx, Object element) {
           return null;
         }
@@ -1385,15 +1419,18 @@ public class Seq {
           return null;
         }
 
-        public Object roInsert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
-          return null;
-        }
-        
-        public Object removeByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object roInsert(Object seq, int idx, Object element)
+            throws IndexOutOfBoundsException {
           return null;
         }
 
-        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx) throws IndexOutOfBoundsException {
+        public Object removeByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
+          return null;
+        }
+
+        public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
+            throws IndexOutOfBoundsException {
           return null;
         }
 
@@ -1421,7 +1458,7 @@ public class Seq {
       return getAssociativeSeqAdapter(seq);
     }
   }
-    
+
   protected static SeqAdapter getAssociativeSeqAdapter(Object seq) {
     if (null == seq) {
       return nullAdapter;
@@ -1483,19 +1520,24 @@ public class Seq {
     }
   }
 
-
-   @SuppressWarnings("unchecked")
-   public static Object putElement(Object seq, Object key, Object element) {
-     if (seq instanceof Map) {
-       return putToMap((Map)seq, key, element);
-     } else {
-       try {
-         return setElementByIndex(seq, Utils.asNumber(key).intValue(), element);
-       } catch (IndexOutOfBoundsException ex) {
-         return null;
-       }
-     }
-   }
+  /**
+   * Put element into associative structure by key or index.
+   * Returns previous value of the entry.
+   * In case of IndexOutOfBoundsException does not modify
+   * the structure and returns null.
+  */
+  @SuppressWarnings("unchecked")
+  public static Object putElement(Object seq, Object key, Object element) {
+    if (seq instanceof Map) {
+      return putToMap((Map)seq, key, element);
+    } else {
+      try {
+        return setElementByIndex(seq, Utils.asNumber(key).intValue(), element);
+      } catch (IndexOutOfBoundsException ex) {
+        return null;
+      }
+    }
+  }
 
   
   /**
@@ -1514,12 +1556,12 @@ public class Seq {
     }
   }
 
-  public static Object putToMap(Map m, Object key, Object  value) {
+  public static Object putToMap(Map<Object,Object> m, Object key, Object  value) {
     SeqAdapter adapter = getAssociativeSeqAdapter(m);
     return adapter.putByKey(m, key, value);
   }
 
-  public static Object roPutToMap(Map m, Object key, Object  value) {
+  public static Object roPutToMap(Map<Object,Object> m, Object key, Object  value) {
     SeqAdapter adapter = getAssociativeSeqAdapter(m);
     return adapter.roPutByKey(m, key, value);
   }

@@ -5,7 +5,7 @@ import java.util.List;
 
 public class ParserExceptions extends ParserException {
   public static final long serialVersionUID = 1L;
-  protected final List<ParserException> errList;
+  protected final ArrayList<ParserException> errList;
 
   public List<ParserException> getExceptions() {
     return errList;
@@ -26,7 +26,9 @@ public class ParserExceptions extends ParserException {
   public ParserExceptions(ParseCtx pctx, List<ParserException> errList) {
     super(pctx, mkMessage(pctx, errList));
     this.pctx = pctx;
-    this.errList = errList;
+    this.errList = (errList instanceof ArrayList) ? (ArrayList<ParserException>)errList :
+      // this is kinda stupid. Do we really need exceptions serialization to be workin?
+      null != errList ? new ArrayList<ParserException>(errList) : new ArrayList<ParserException>();
   }
 
   private static String mkMessage(ParseCtx pctx, List<ParserException> errList) {

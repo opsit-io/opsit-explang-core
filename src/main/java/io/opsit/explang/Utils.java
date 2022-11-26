@@ -7,8 +7,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -406,12 +406,14 @@ public class Utils {
     }
   }
 
-
+  protected static final Locale numLocale = Locale.forLanguageTag("en-US");
+  
   /** Parse string as Number. FIXME: exc. handling is ugly */
   public static Number parseNumber(String str) {
     if (((str.length() > 1) && (str.startsWith("+") || str.startsWith("-") || str.startsWith(".")))
         || ((str.length() > 0) && (str.charAt(0) >= '0' && str.charAt(0) <= '9'))) {
-      NumberFormat nf = NumberFormat.getInstance(new Locale("en)", "US"));
+      // FIXME: NumberFormat is not therad safe, need make it per thread
+      NumberFormat nf = NumberFormat.getInstance(numLocale);
       ParsePosition pos = new ParsePosition(str.startsWith("+") ? 1 : 0);
       try {
         Number num = (Number) nf.parseObject(str.toUpperCase(), pos);

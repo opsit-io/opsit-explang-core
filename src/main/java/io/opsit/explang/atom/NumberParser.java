@@ -6,12 +6,14 @@ import java.text.ParsePosition;
 import java.util.Locale;
 
 public class NumberParser implements AtomParser {
+  protected static final Locale numLocale = Locale.forLanguageTag("en-US");
+
   @Override
-  // FIXME: DRY with Utils.parseNumber(), exc. handling
+  // FIXME: DRY with Utils.parseNumber(), exc. handling, configurable Locale
   public boolean parse(String str, Object[] holder, ParseCtx pctx) throws AtomParseException {
     if (((str.length() > 1) && (str.startsWith("+") || str.startsWith("-")))
         || ((str.length() > 0) && (str.charAt(0) >= '0' && str.charAt(0) <= '9'))) {
-      NumberFormat nf = NumberFormat.getInstance(new Locale("en", "US"));
+      NumberFormat nf = NumberFormat.getInstance(numLocale);
       ParsePosition pos = new ParsePosition(str.startsWith("+") ? 1 : 0);
       try {
         // FIXME: toUpperCase here  looks like kluge, what a proper way to handle it?

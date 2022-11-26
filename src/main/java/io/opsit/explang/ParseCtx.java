@@ -1,10 +1,13 @@
 package io.opsit.explang;
 
+import java.io.Serializable;
+
 /**
  * Parse Contexts represents location of parsed source code.
  *
  */
-public class ParseCtx {
+public class ParseCtx implements Serializable {
+  public static final long serialVersionUID = 1L;
   public String input = "<INPUT>";
   private int line = -1;
   private int pos = -1;

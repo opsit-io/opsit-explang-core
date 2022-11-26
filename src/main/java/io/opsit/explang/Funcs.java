@@ -2668,9 +2668,8 @@ public class Funcs {
     }
   }
 
-
   @Arguments(spec = {"structure", "keys", "value","&OPTIONAL", "new-col"})
-    @Docstring(lines =
+  @Docstring(lines =
              {"Put `value` into an hierarchy of associative structures according list of keys.",
               "",
               "The function deep-copies the target structurem performs modifications and returns ",
@@ -2679,9 +2678,9 @@ public class Funcs {
               "Arguments:",
               "",
               "- structure - the target hierarchical structure of nested Maps, Lists, arrays, etc.",
-              "- keys - list of keys/indexes. The function will navigate into the nested structures",
-              "         using the keys up to the last key in the list. The last one will be used to",
-              "         insert the `value` into the structure.",
+              "- keys - list of keys/indexes.  The function will navigate into the nested objects",
+              "         using the keys up to the last key in the list. The last one will be used",
+              "         to insert the `value` into the structure.",
               "- value - value to be inserted",
               "- new-col - This collection will be copied and inserted into the target structure",
               "            in case the function navigates into missing values or NIL in the target",
@@ -2715,9 +2714,9 @@ public class Funcs {
               "Arguments:",
               "",
               "- structure - the target hierarchical structure of nested Maps, Lists, arrays, etc.",
-              "- keys - list of keys/indexes. The function will navigate into the nested structures",
-              "         using the keys up to the last key in the list. The last one will be used to",
-              "         insert the `value` into the structure.",
+              "- keys - list of keys/indexes. The function will navigate into the nested objects",
+              "         using the keys up to the last key in the list. The last one will be used",
+              "         to insert the `value` into the structure.",
               "- value - value to be inserted",
               "- new-col - This collection will be copied and inserted into the target structure",
               "            in case the function navigates into missing values or NIL in the target",
@@ -3183,9 +3182,10 @@ public class Funcs {
 
   // FIXME: list types
   // FIXME: move into adapters
-  protected static Object deepCopy(List lst, Backtrace backtrace) throws ExecutionException {
+  protected static Object deepCopy(List<Object> lst, Backtrace backtrace)
+      throws ExecutionException {
     final int size = lst.size();
-    List copy = new ArrayList(size);
+    List<Object> copy = new ArrayList<Object>(size);
     for (int idx = 0; idx < size; idx++) {
       final Object item = lst.get(idx);
       final Object itemCopy = deepCopy(item, backtrace);
@@ -3195,9 +3195,9 @@ public class Funcs {
   }
 
   // FIXME: Set types
-  protected static Object deepCopy(Set set, Backtrace backtrace) throws ExecutionException {
+  protected static Object deepCopy(Set<Object> set, Backtrace backtrace) throws ExecutionException {
     final int size = set.size();
-    final Set copy = new HashSet(size);
+    final Set<Object> copy = new HashSet<Object>(size);
     for (Object item : set) {
       final Object itemCopy = deepCopy(item, backtrace);
       copy.add(itemCopy);
@@ -3206,9 +3206,10 @@ public class Funcs {
   }
 
   // FIXME: Set types
-  protected static Map deepCopy(Map<?, ?> map, Backtrace backtrace) throws ExecutionException {
+  protected static Map<Object,Object> deepCopy(Map<Object, Object> map, Backtrace backtrace)
+      throws ExecutionException {
     final int size = map.size();
-    final HashMap copy = new HashMap(size);
+    final HashMap<Object,Object> copy = new HashMap<Object,Object>(size);
     for (Map.Entry<?, ?> item : map.entrySet()) {
       final Object key = item.getKey();
       final Object value = item.getValue();
@@ -3219,17 +3220,19 @@ public class Funcs {
     return copy;
   }
 
+  
   // FIXME: very crude, need to care for arrays, collection types
+  @SuppressWarnings("unchecked")
   protected static Object deepCopy(Object obj, Backtrace backtrace) throws ExecutionException {
     Object copy;
     if (obj == null) {
       copy =  null;
     } else if (obj instanceof List) {
-      copy = deepCopy((List)obj, backtrace);
+      copy = deepCopy((List<Object>)obj, backtrace);
     } else if (obj instanceof Set) {
-      copy = deepCopy((Set)obj, backtrace);
+      copy = deepCopy((Set<Object>)obj, backtrace);
     } else if (obj instanceof Map) {
-      copy = deepCopy((Map) obj, backtrace);
+      copy = deepCopy((Map<Object,Object>) obj, backtrace);
       /*} FIXME: else if (obj.getClass().isArray()) {
         copy = deepCopyArray(obj, backtrace);*/
     } else {
@@ -4257,7 +4260,8 @@ public class Funcs {
 
 
   @Docstring(text = "Remove an element from the end of a sequence. "
-             + "Returns list with the removed element and a copy of the sequence with this element removed.")
+             + "Returns list with the removed element and a copy of the sequence with"
+             + "this element removed.")
   @Arguments(spec = {"seq"})
   @Package(name = Package.BASE_SEQ)
   public static class POP extends FuncExp {
@@ -4371,9 +4375,9 @@ public class Funcs {
                       "",
                       "Set indexed sequence (array, list, character sequence) element value.",
                       "",
-                      "If target ibject is a Java array and object type does not match type of this",
-                      "array this function will attempt to perform necessary coercion operations. ",
-                      "The coercions  work in the same way as INT, FLOAT, STRING and rest of the ",
+                      "If target ibject is a Java array and object type does not match array type",
+                      "this function will attempt to perform necessary coercion operations. ",
+                      "The coercions  work in the same way as INT, FLOAT, STRING and rest of the",
                       "built-in coercion functions. May fail with index out of bound exception.",
                       "",
                       "The function returns previous value of the element."})
@@ -4398,7 +4402,7 @@ public class Funcs {
                       "Set indexed sequence (array, list, character sequence) element value.",
                       "May fail with index out of bound exception.",
                       "",
-                      "If target ibject is a Java array and object type does not match type of this",
+                      "If target ibject is a Java array and object type does not match type of the",
                       "array this function will attempt to perform necessary coercion operations. ",
                       "The coercions  work in the same way as INT, FLOAT, STRING and rest of the ",
                       "built-in coercion functions. ",

@@ -1,11 +1,14 @@
 package io.opsit.explang;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Backtrace {
+
+public class Backtrace implements Serializable {
+  public static final long serialVersionUID = 1L;
   // protected int size = 1024;
-  protected List<Frame> frames;
+  protected ArrayList<Frame> frames;
 
   public Backtrace() {
     frames = new ArrayList<Frame>(1024);
@@ -89,9 +92,10 @@ public class Backtrace {
     return b.toString();
   }
 
-  public static class Frame {
+  public static class Frame implements Serializable  {
+    public static final long serialVersionUID = 1L;
     protected ParseCtx pctx;
-    protected Compiler.ICtx ctx;
+    protected transient Compiler.ICtx ctx;
     protected String frameName;
 
     /**

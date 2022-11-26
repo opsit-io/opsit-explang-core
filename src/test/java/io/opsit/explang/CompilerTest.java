@@ -1911,7 +1911,7 @@ public class CompilerTest extends AbstractTest {
           {"(.N \"java.util.LinkedList\")", new LinkedList<Object>(), false, null, null, p},
           {
             "(.N \"java.util.Locale\" (LIST \"en\" \"US\"))",
-            new java.util.Locale("en", "US"),
+            java.util.Locale.forLanguageTag("en-US"),
             true,
             null,
             null,
@@ -3152,26 +3152,6 @@ public class CompilerTest extends AbstractTest {
         log("LXPC:" + logResult);
         if (i == parsed.size()) {
           checkResult(expVal, result, 0, null);
-          /*if ((result instanceof Double) && (expVal instanceof Double)) {
-            Assert.assertEquals((double) result, (double) expVal, 0.0000000000001);
-          } else if ((result instanceof Float) && (expVal instanceof Float)) {
-            Assert.assertEquals((float) result, (float) expVal, 0.000001);
-          } else if (null != result
-              && null != expVal
-              && expVal.getClass().isArray()
-              && result.getClass().isArray()) {
-            Assert.assertTrue(Utils.arraysDeepEquals(expVal, result));
-          } else if (((result instanceof Pattern) && (expVal instanceof Pattern))
-              || ((result instanceof Matcher) && (expVal instanceof Matcher))) {
-            // FIXME: string repr. works, but how to do it properly?
-            Assert.assertEquals(result.toString(), expVal.toString());
-          } else if ((result instanceof StringBuilder) && (expVal instanceof StringBuilder)) {
-            Assert.assertEquals(result.toString(), expVal.toString());
-          } else if ((result instanceof StringBuffer) && (expVal instanceof StringBuffer)) {
-            Assert.assertEquals(result.toString(), expVal.toString());
-          } else {
-            Assert.assertEquals(result, Utils.asObject(expVal));
-            }*/
           Assert.assertEquals(Utils.asBoolean(expVal), logResult);
         }
       }
@@ -3199,6 +3179,7 @@ public class CompilerTest extends AbstractTest {
     }
   }
 
+  @SuppressWarnings("unchecked")
   public void checkResult(Object expVal, Object result, int recLevel, Integer checkIdx) {
     final String msg = "checkResult: rec_level=" + recLevel + ", index=" + checkIdx;
     if ((result instanceof Double) && (expVal instanceof Double)) {
@@ -3217,15 +3198,12 @@ public class CompilerTest extends AbstractTest {
     } else if ((result instanceof StringBuffer) && (expVal instanceof StringBuffer)) {
       Assert.assertEquals(msg, result.toString(), expVal.toString());
     } else if ((result instanceof List) && (expVal instanceof List)) {
-      final List expList = (List)expVal;
-      final List resultList = (List)result;
+      final List<Object> expList = (List<Object>)expVal;
+      final List<Object> resultList = (List<Object>)result;
       
       Assert.assertEquals(msg, (Object)expList.size(), (Object)resultList.size());
       for (int idx = 0; idx < expList.size(); idx++) {
         checkResult(expList.get(idx), resultList.get(idx), recLevel + 1, idx);
-        //Assert.assertEquals("list element  rec level=" + recLevel +" index="+idx,
-        //expList.get(idx), resultList.get(idx));
-        
       }
     } else {
       Assert.assertEquals(msg, result, Utils.asObject(expVal));
