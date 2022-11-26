@@ -2320,6 +2320,7 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          // PUT-IN!
           {
             "(LET ((m (HASHMAP \"a\" 1 \"b\" 2 \"c\" (HASHMAP \"d\" 1 \"e\" 2)))) "+
             "       (PUT-IN! m (LIST \"f\") 3) m)",
@@ -2380,6 +2381,74 @@ public class CompilerTest extends AbstractTest {
             null,
             p
           },
+          // PUT-IN
+          {
+            "(LET ((m (HASHMAP \"a\" 1 \"b\" 2 \"c\" (HASHMAP \"d\" 1 \"e\" 2))) "+
+            "      (n (PUT-IN m (LIST \"f\") 3)))  (LIST m n))",
+            list(map("a",1,"b",2,"c",(map("d",1,"e",2))),
+                 map("a",1,"b",2,"f",3,"c",(map("d",1,"e",2)))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (HASHMAP \"a\" 1 \"b\" 2 \"c\" (HASHMAP \"d\" 1 \"e\" 2))) "+
+            "      (n (PUT-IN m (LIST \"c\" \"f\") 3))) (LIST m n))",
+            list(map("a",1,"b",2,"c",(map("d",1,"e",2))),
+                 map("a",1,"b",2,"c",(map("d",1,"e",2, "f", 3)))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (LIST 1  2 (LIST 3 4))) "+
+            "      (n (PUT-IN m (LIST 2 1) 5))) (LIST m n))",
+            list(list(1,2,list(3,4)) , list(1,2,(list(3,5)))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (LIST)) "+
+            "      (n (PUT-IN m (LIST 0) 1))) (LIST m n))",
+            list(list(),list(1)),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((m (HASHMAP)) "
+            + "    (n (PUT-IN m (LIST 1 2 3) 1 (HASHMAP)))) (LIST m n))",
+            list(map(),  map(1,map(2,map(3,1)))),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((L (LIST)) "
+            +"     (n (PUT-IN L (LIST 0 0 0) 1 (LIST)))) (LIST L n))",
+            list(list(),  list(list(list(1)) )),
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LET ((L (MAKE-ARRAY :size 1))"
+            +"    (n (PUT-IN L (LIST 0 0) 1 (MAKE-ARRAY :size 1)))) (LIST L n))",
+            list(Utils.arrayOfObjects((Object)null),
+                 Utils.arrayOfObjects((Object)Utils.arrayOfObjects(1))),
+            true,
+            null,
+            null,
+            p
+            },
+          
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"foo\"  \"Nope\")", "bar", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\"  \"Nope\")", "Nope", true, null, null, p},
           {"(GET  (HASHMAP \"foo\" \"bar\")  \"mmm\")", null, false, null, null, p},

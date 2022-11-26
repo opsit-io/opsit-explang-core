@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.text.NumberFormat;
 import java.text.ParsePosition;
 import java.util.ArrayList;
@@ -856,6 +857,7 @@ public class Utils {
   }
 
   // FIXME: make configurable
+  //        performance
   //        to enable user to add handling of
   //        various kinds of @Immutable annotations
   /**
@@ -871,8 +873,12 @@ public class Utils {
       || obj instanceof Boolean
       || obj instanceof Enum 
       || obj instanceof Class
+      || obj instanceof Field
+      || obj instanceof Method
+      || obj instanceof Constructor
       || obj instanceof Void
-      || obj instanceof java.util.regex.Pattern 
+      || obj instanceof java.util.regex.Pattern
+      || obj instanceof Symbol
       // FIXME: kluge!!
       || obj.getClass().getCanonicalName().startsWith("java.util.Collections.Unmodifiable")
       || obj.getClass().getCanonicalName().startsWith("java.util.ImmutableCollections");

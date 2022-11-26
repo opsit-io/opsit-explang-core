@@ -2670,8 +2670,22 @@ public class Funcs {
 
 
   @Arguments(spec = {"structure", "keys", "value","&OPTIONAL", "new-col"})
-  @Docstring(lines = {"Put value into an hierarchy of associative structures according list of keys ks. ",
-                      "Returns copy of the structure with the required modification."})
+    @Docstring(lines =
+             {"Put `value` into an hierarchy of associative structures according list of keys.",
+              "",
+              "The function deep-copies the target structurem performs modifications and returns ",
+              "the copy without touching the original structure.",
+              "",
+              "Arguments:",
+              "",
+              "- structure - the target hierarchical structure of nested Maps, Lists, arrays, etc.",
+              "- keys - list of keys/indexes. The function will navigate into the nested structures",
+              "         using the keys up to the last key in the list. The last one will be used to",
+              "         insert the `value` into the structure.",
+              "- value - value to be inserted",
+              "- new-col - This collection will be copied and inserted into the target structure",
+              "            in case the function navigates into missing values or NIL in the target",
+              "            structure."})
   @Package(name = Package.BASE_SEQ)
   @SuppressWarnings("unchecked")
   public static class PUT_IN extends FuncExp {
@@ -2692,9 +2706,22 @@ public class Funcs {
     }
   }
   
-  @Arguments(spec = {"structure", "ks", "value","&OPTIONAL", "new-col"})
-  @Docstring(text = "Put value into an hierarchy of associative structures "
-             + "according list of keys ks.")
+  @Arguments(spec = {"structure", "keys", "value","&OPTIONAL", "new-col"})
+  @Docstring(lines =
+             {"Put `value` into an hierarchy of associative structures according list of keys.",
+              "",
+              "The function returns the target structure after performing modifications.",
+              "",
+              "Arguments:",
+              "",
+              "- structure - the target hierarchical structure of nested Maps, Lists, arrays, etc.",
+              "- keys - list of keys/indexes. The function will navigate into the nested structures",
+              "         using the keys up to the last key in the list. The last one will be used to",
+              "         insert the `value` into the structure.",
+              "- value - value to be inserted",
+              "- new-col - This collection will be copied and inserted into the target structure",
+              "            in case the function navigates into missing values or NIL in the target",
+              "            structure."})
   @Package(name = Package.BASE_SEQ)
   @SuppressWarnings("unchecked")
   public static class NPUT_IN extends FuncExp {
@@ -3155,6 +3182,7 @@ public class Funcs {
   }
 
   // FIXME: list types
+  // FIXME: move into adapters
   protected static Object deepCopy(List lst, Backtrace backtrace) throws ExecutionException {
     final int size = lst.size();
     List copy = new ArrayList(size);
