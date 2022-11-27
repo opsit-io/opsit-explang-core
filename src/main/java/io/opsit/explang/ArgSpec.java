@@ -18,6 +18,7 @@ public class ArgSpec {
   public static final String ARG_EAGER = "&EAGER";
   public static final String ARG_LAZY = "&LAZY";
   public static final String ARG_PIPE = "&PIPE";
+  public static final String ARG_PIPE_REST = "&PIPE_REST";
 
   private static final Set<String> argSyms =
       Utils.set(ARG_REST, ARG_OPTIONAL, ARG_KEY, ARG_MANDATORY);
@@ -214,6 +215,7 @@ public class ArgSpec {
   private Arg []args;
   private Object[] argSpecs;
   private boolean hasRest = false;
+  private boolean pipeRest = false;
 
   /* &required               &opt
    *+---+                         +----+
@@ -260,6 +262,10 @@ public class ArgSpec {
 
   public boolean isHasRest() {
     return hasRest;
+  }
+
+  public boolean isPipeRest() {
+    return pipeRest;
   }
 
   private AF flagTrans(AF current, String spec) throws InvalidParametersException {
@@ -338,7 +344,9 @@ public class ArgSpec {
     boolean otherKeys = false;
     boolean lazy = false;
     boolean pipe = false;
+    boolean pipeRest = false;
     boolean hadPipe = false;
+    
     int argsIdx = 0;
     Arg arg;
     for (int specsIdx = 0; specsIdx < argSpecs.length; specsIdx++) {
@@ -375,6 +383,9 @@ public class ArgSpec {
         } else if (ARG_PIPE.equalsIgnoreCase(specSym.getName())) {
           pipe = true;
           continue;
+        } else if (ARG_PIPE_REST.equalsIgnoreCase(specSym.getName())) {
+          pipeRest = true;
+          continue;
         }
         arg = new Arg();
         arg.name = specSym.getName();
@@ -410,16 +421,21 @@ public class ArgSpec {
       arg.flag = flag;
       arg.allowOtherKeys = otherKeys;
       arg.lazy = lazy;
-      if (pipe && hadPipe) {
+      if ((pipe || pipeRest) && hadPipe) {
         throw new InvalidParametersException(
-            "Invalid parameter spec: only one " + ArgSpec.ARG_PIPE + " can be specified");
+            "Invalid parameter spec: only one " + ArgSpec.ARG_PIPE
+            + " or " + ArgSpec.ARG_PIPE_REST + " can be specified");
       }
       arg.pipe = pipe;
       if (pipe) {
         pipe = false;
         hadPipe = true;
       }
-      hasRest |= (AF.REST == flag);
+      if (pipeRest) {
+        hadPipe = true;
+      }
+      this.hasRest |= (AF.REST == flag);
+      this.pipeRest |= pipeRest;
       args[argsIdx] = arg;
       argsIdx++;
     }

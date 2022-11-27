@@ -134,7 +134,7 @@ public class Funcs {
   // **** ARITHMETIC FUNCTIONS
 
   /** Abstract class for addition type arithmetic functions. */
-  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   public abstract static class ABSTRACTADDOP extends FuncExp implements AbstractOp {
     protected abstract Number getNeutral();
 
@@ -230,7 +230,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   public abstract static class ABSTRACT_SUB extends FuncExp implements AbstractOp {
     protected abstract Number getNeutral();
 
@@ -334,7 +334,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"x", ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {"x", ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(lines = {
       "Find maximum. ",
       "Returns the maximum of numeric values of it's arguments,",
@@ -357,7 +357,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"x", ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {"x", ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(lines = {"Find minimum. ",
                       "Returns the maximum of numeric values of it's arguments,",
                       "performing any necessary type conversions in the process."})
@@ -464,7 +464,7 @@ public class Funcs {
   }
 
   // **** BOOLEAN FUNCTIONS
-  @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "forms"})
+  @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "forms"})
   @Docstring(lines = {
       "Logical `AND` operation.  ",
       "",
@@ -488,7 +488,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_LAZY, ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(lines = {
                "Logical `OR` operation.",
                "",
@@ -582,7 +582,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Arguments(spec = {"x", ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   public abstract static class NUMCOMP extends FuncExp implements AbstractOp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
@@ -633,7 +633,7 @@ public class Funcs {
     protected abstract boolean compareResult(int res);
   }
 
-  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Arguments(spec = {"x", ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(
       text =
           "Test numeric equality. Returns True if all arguments are numerically equal. "
@@ -646,7 +646,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Arguments(spec = {"x", ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(
       text =
           "Greater Than - Numeric comparison. Returns True if all arguments are monotonically "
@@ -659,7 +659,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"x", ARG_REST, "args"})
+  @Arguments(spec = {"x", ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(
       text =
           "Greater or Equal - Numeric comparison. "
@@ -2895,7 +2895,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"format", ArgSpec.ARG_REST, "values"})
+  @Arguments(spec = {"format", ArgSpec.ARG_PIPE_REST, ArgSpec.ARG_REST, "values"})
   @Docstring(
       text =
           "Format String. "
@@ -2916,7 +2916,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(text = "Print Arguments on standard output.")
   @Package(name = Package.IO)
   public static class PRINT extends FuncExp {
@@ -2931,7 +2931,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(text = "Print Arguments on standard output and print newline.")
   @Package(name = Package.IO)
   public static class PRINTLN extends FuncExp {
@@ -3007,7 +3007,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, "values"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "values"})
   @Docstring(
       text =
           "Concatenate Strings. Returns concatenation "
@@ -3180,6 +3180,18 @@ public class Funcs {
     }
   }
 
+  // FIXME: Set types
+  protected static Object deepCopyArray(Object ar, Backtrace backtrace)
+      throws ExecutionException {
+    final int length = Array.getLength(ar);
+    Object copy = Array.newInstance(ar.getClass().getComponentType(), Array.getLength(ar));
+    for (int idx = 0; idx < length; idx++) {
+      Array.set(copy, idx, deepCopy(Array.get(ar, idx), backtrace));
+    }
+    return copy;
+  }
+  
+
   // FIXME: list types
   // FIXME: move into adapters
   protected static Object deepCopy(List<Object> lst, Backtrace backtrace)
@@ -3220,8 +3232,7 @@ public class Funcs {
     return copy;
   }
 
-  
-  // FIXME: very crude, need to care for arrays, collection types
+  // FIXME: very crude, need to care for arrays, collection types, recursive references
   @SuppressWarnings("unchecked")
   protected static Object deepCopy(Object obj, Backtrace backtrace) throws ExecutionException {
     Object copy;
@@ -3233,8 +3244,8 @@ public class Funcs {
       copy = deepCopy((Set<Object>)obj, backtrace);
     } else if (obj instanceof Map) {
       copy = deepCopy((Map<Object,Object>) obj, backtrace);
-      /*} FIXME: else if (obj.getClass().isArray()) {
-        copy = deepCopyArray(obj, backtrace);*/
+    } else if (obj.getClass().isArray()) {
+      copy = deepCopyArray(obj, backtrace);
     } else {
       copy = shallowCopy(obj, backtrace);
     }
@@ -3308,7 +3319,7 @@ public class Funcs {
   }
 
     
-  @Arguments(spec = {ArgSpec.ARG_REST, "sequences"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "sequences"})
   @Docstring(lines = {
       "Concatenate sequences (non-destructive). ",
       "`append` returns a new sequence that is the concatenation of the ",
@@ -3513,7 +3524,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(text = "Create a list. Returns a list containing the supplied objects. ")
   @Package(name = Package.BASE_SEQ)
   public static class LIST extends FuncExp implements LValue {
@@ -3580,7 +3591,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
   @Docstring(text = "Create a HashSet. Returns a set containing the supplied objects. ")
   @Package(name = Package.BASE_SEQ)
   public static class HASHSET extends FuncExp {
@@ -4454,7 +4465,7 @@ public class Funcs {
   }
 
 
-  @Arguments(spec = {ArgSpec.ARG_PIPE, "seq", ArgSpec.ARG_REST, "sep"})
+  @Arguments(spec = {ArgSpec.ARG_PIPE, "seq", ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "sep"})
   @Docstring(text = "Return sequence elements of seq separated by elements in sep. "
              + "Currently only lists are supported.")
   @Package(name = Package.BASE_SEQ)
@@ -4539,7 +4550,8 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_KEY, "size", "elementType", ArgSpec.ARG_REST, "elements"})
+  @Arguments(spec = {ArgSpec.ARG_KEY, "size", "elementType",
+                     ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "elements"})
   @Docstring(
       text =
           "Create an Array. Creates array of objects of specified size. Optional :elementType"

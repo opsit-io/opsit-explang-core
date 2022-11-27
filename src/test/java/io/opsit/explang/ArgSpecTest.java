@@ -105,7 +105,7 @@ public class ArgSpecTest extends  AbstractTest {
           { list("&PIPE", "a", "b", "&PIPE", "c"),
             null,
             new InvalidParametersException("Invalid parameter spec: only one " +
-                                           ArgSpec.ARG_PIPE+ " can be specified")
+                                           ArgSpec.ARG_PIPE + " or " + ArgSpec.ARG_PIPE_REST  + " can be specified")
           },
                     
           { list("&LAZY", "a"),

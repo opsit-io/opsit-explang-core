@@ -1104,12 +1104,9 @@ public class Compiler {
   @Package(name = Package.BASE_CONTROL)
   public class TH_PIPE extends TH_X {
     protected ASTNList insertVar(ASTNList expr) {
-      // this.getDebugInfo().
+      boolean pipeRest = false;
       int idx = 1;
-      final List<ASTN> lst = Utils.list();
-      lst.addAll(expr.getList());
-      final ASTN objASTN = lst.get(0);
-      // FIXME: ugly and must not be here
+      final ASTN objASTN = expr.get(0);
       if (objASTN instanceof ASTNLeaf) {
         Object obj = objASTN.getObject();
         if (obj instanceof Symbol) {
@@ -1118,24 +1115,39 @@ public class Compiler {
           if (null != code) {
             ArgSpec argspec = code.getArgSpec();
             if (null != argspec && null != argspec.getArgs()) {
-              int argIdx = 0;
-              for (ArgSpec.Arg arg : argspec.getArgs()) {
-                if (arg.isPipe()) {
-                  // list contains function itself
-                  if (argIdx + 1 <= lst.size()) {
-                    idx = argIdx + 1;
+              if (argspec.isPipeRest()) {
+                pipeRest = true;
+              } else {
+                int argIdx = 0;
+                for (ArgSpec.Arg arg : argspec.getArgs()) {
+                  if (arg.isPipe()) {
+                    // list contains function itself
+                    if (argIdx + 1 <= expr.size()) {
+                      idx = argIdx + 1;
+                    }
+                    break;
                   }
-                  break;
+                  argIdx++;
                 }
-                argIdx++;
               }
             }
           }
         }
       }
-      lst.add(idx, new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
+      final List<ASTN> lst = Utils.list();
+      if (pipeRest) {
+        lst.add(new ASTNLeaf(new Symbol("APPLY"), expr.getPctx()));
+        lst.add(new ASTNList(Utils.list(new ASTNLeaf(new Symbol("FUNCTION"), expr.getPctx()),
+                                        objASTN), expr.getPctx()));
+        lst.addAll(expr.subList(1,expr.size()).getList());
+        lst.add(new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
+      } else {
+        lst.addAll(expr.getList());
+        lst.add(idx, new ASTNLeaf(new Symbol(getVarName()), expr.getPctx()));
+      }
       final ASTNList result = new ASTNList(lst, expr.getPctx());
       return result;
+
     }
   }
 

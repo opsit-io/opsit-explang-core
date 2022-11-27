@@ -1025,6 +1025,16 @@ public class CompilerTest extends AbstractTest {
           {"(@->  (LIST 1 2 3 4 5) (TAKE 3) (SUBSEQ 1))", list(2, 3), true, null, null, p},
           {"(@->  (LIST 1 2 3 4 5) (APPLY (FUNCTION *)))", 120, true, null, null, p},
           {"(@->  (RANGE 1 6) (APPLY (FUNCTION *)))", 120, true, null, null, p},
+          // implicit apply with REST_PIPE
+          {"(@->  (RANGE 1 6) (*))", 120, true, null, null, p},
+          {"(@->  (RANGE 1 6) (+))", 15, true, null, null, p},
+          {"(@->  (RANGE 1 6) (+ (+ 1 4)))", 20, true, null, null, p},
+          {"(@->  (RANGE 1 6) (MIN))", 1, true, null, null, p},
+          {"(@->  (RANGE 1 6) (MAX))", 5, true, null, null, p},
+          {"(@->  (RANGE 1 6) (MIN 0))", 0, false, null, null, p},
+          {"(PROGN (EVAL (READ-FROM-STRING \"(DEFUN fff (&REST &PIPE_REST c) c)\")) "
+           + "(EVAL (READ-FROM-STRING \"(@-> (LIST 1 2 3 4 5) (fff))\")))",
+           list(1,2,3,4,5), true, null, null, p},
           // {"(PROGN (DEFUN FFF (X &PIPE Y) (TAKE X Y)) (@-> (LIST 1 2 3 4 5) (FFF 3)))",
           // list(1,2,3), true, null, null, p},
           // FIXME: does not work when DEFUN is defined in smae expr:
