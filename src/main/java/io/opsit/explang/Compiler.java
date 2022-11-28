@@ -1149,6 +1149,28 @@ public class Compiler {
       return result;
 
     }
+
+    @Override
+    public void setRawParams(ASTNList params) throws InvalidParametersException {
+      this.startExpr = compile(params.get(0));
+      for (int i = 1; i < params.size(); i++) {
+        ASTN expr = params.get(i);
+        ASTNList callExpr;
+        if (expr instanceof ASTNList) {
+          callExpr = (ASTNList) expr;
+        } else if ((expr.getObject() instanceof Symbol)
+                   && (getFun(expr.getObject().toString()) != null)) {
+          callExpr = new ASTNList(Utils.list(expr), expr.getPctx());
+        } else {
+          throw new InvalidParametersException(this.getName()
+                                               + ": argument "
+                                               + i + " must be a function or function call, "
+                                               + "but got " + expr);
+        }
+        final ASTNList blockExpr = insertVar(callExpr);
+        blocks.add(compile(blockExpr));
+      }
+    }
   }
 
   @Docstring(text = "Threading form on last argument.")

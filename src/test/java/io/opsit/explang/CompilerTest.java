@@ -1032,6 +1032,7 @@ public class CompilerTest extends AbstractTest {
           {"(@->  (RANGE 1 6) (MIN))", 1, true, null, null, p},
           {"(@->  (RANGE 1 6) (MAX))", 5, true, null, null, p},
           {"(@->  (RANGE 1 6) (MIN 0))", 0, false, null, null, p},
+          {"(@-> (LIST (LIST 1 2) (LIST 3 4)) APPEND +)", 10, true, null, null, p},
           {"(PROGN (EVAL (READ-FROM-STRING \"(DEFUN fff (&REST &PIPE_REST c) c)\")) "
            + "(EVAL (READ-FROM-STRING \"(@-> (LIST 1 2 3 4 5) (fff))\")))",
            list(1,2,3,4,5), true, null, null, p},
