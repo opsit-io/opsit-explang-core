@@ -3002,6 +3002,14 @@ public class CompilerTest extends AbstractTest {
           {
             "(DWIM_FIELDS (LIST) (LIST \"A\" \"B\"))", list(), false, null,null, p
           },
+
+          { "(FOREACH (D (FUNCTIONS-NAMES)) "
+            + " (IF (NILP (GET (DESCRIBE-FUNCTION D) \"docstring\")) (THROW (STR \"NO docstring FOR \" D))))",
+            null, false, null,null, p},
+          { "(FOREACH (D (FUNCTIONS-NAMES)) "
+            + " (IF (NILP (GET (DESCRIBE-FUNCTION D) \"argDescr\")) (THROW (STR \"NO argDescr FOR \" D))))",
+            null, false, null,null, p},
+
           {
             "(VERSION \"1.2.3\")", Version.mkSemVersion(1L, 2L, 3L, null, null), true, null, null, p
           },

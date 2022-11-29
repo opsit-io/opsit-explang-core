@@ -4465,7 +4465,7 @@ public class Funcs {
   }
 
 
-  @Arguments(spec = {ArgSpec.ARG_PIPE, "seq", ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "sep"})
+  @Arguments(spec = {ArgSpec.ARG_PIPE, "seq", ArgSpec.ARG_REST, "sep"})
   @Docstring(text = "Return sequence elements of seq separated by elements in sep. "
              + "Currently only lists are supported.")
   @Package(name = Package.BASE_SEQ)
