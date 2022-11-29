@@ -555,7 +555,8 @@ public class CompilerTest extends AbstractTest {
           {"(LET ((L (.S \"java.util.Collections\" \"unmodifiableSet\" (LIST (HASHSET 1 2 3 4))))"
            + "    (R (DELETE L 2))) (LIST L R))",
            list(set(1,2,3,4),set(1,3,4)), true, null, null, p},
-          
+          {"(DELETE  (DWIM_FIELDS (HASHMAP \"a\" 1 \"b\" 2 \"c\" 3) (LIST \"a\" \"b\")) \"b\")",
+           map("a", 1), true, null, null, p},
           
           {
             "(== (HASHSET 1 2 3 \"foo\" null) (HASHSET null \"foo\" 1 2 3))",
@@ -1103,7 +1104,7 @@ public class CompilerTest extends AbstractTest {
            list(map(1,2), map(1,2,3,4)), true, null, null, p},
           {"(PUT  (DWIM_FIELDS (HASHMAP \"a\" 1 \"b\" 2) (LIST \"a\")) \"c\" 3)",
            map("a", 1, "c", 3), true, null, null, p},
-
+                  
           {
             "(LET ((R (RANGE 0 1 0.05)) (I (. R \"iterator\" ()))) (. I  \"next\" ()) (. I "
                 + " \"next\" ()))",

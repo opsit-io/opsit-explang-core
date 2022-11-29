@@ -106,7 +106,9 @@ public class FieldsMap implements Map<Object, Object> {
 
   @Override
   public Object remove(Object key) {
-    throw new RuntimeException("remove implemented for " + this.getClass().getSimpleName());
+    Object result = this.get(key);
+    this.fmap.remove(key);
+    return result;
   }
 
   @Override
