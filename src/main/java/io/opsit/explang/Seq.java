@@ -373,6 +373,7 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter listAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           final List<Object> lst = (List<Object>) seq;
           final List<Object> newList = (List<Object>) shallowClone(lst);
@@ -381,20 +382,24 @@ public class Seq {
           return newList;
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           final List<Object> lst = (List<Object>) seq;
           lst.add(element);
           return lst;
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final List<Object> lst = (List<Object>) seq;
           try {
@@ -409,6 +414,7 @@ public class Seq {
           }
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final List<Object> lst = (List<Object>) seq;
           try {
@@ -426,6 +432,7 @@ public class Seq {
           }
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           final List<Object> newList = (List<Object>) shallowClone(seq);
@@ -434,23 +441,27 @@ public class Seq {
           return newList;
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final List<Object> lst = (List<Object>) seq;
           lst.add(idx, element);
           return lst;
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           final List<Object> lst = (List<Object>) seq;
           return lst.remove((int) Utils.asNumber(keyidx));
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final List<Object> lst = (List<Object>) seq;
           return lst.remove(value);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           final List<Object> newList = (List<Object>) shallowClone(seq);
@@ -459,6 +470,7 @@ public class Seq {
           return newList;
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final List<Object> newList = (List<Object>) shallowClone(seq);
           checkNonMutatingChange(newList, seq);
@@ -466,10 +478,12 @@ public class Seq {
           return newList;
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return ((List<Object>) seq).get(idx);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           Class<?> clz = seq.getClass();
           try {
@@ -495,6 +509,7 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter immutableListAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           final List<Object> lst = (List<Object>) seq;
           List<Object> newList = new ArrayList<Object>(lst.size());
@@ -503,22 +518,27 @@ public class Seq {
           return Collections.unmodifiableList(newList);
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           // FIXME: fixed type of immutable list
           final List<Object> lst = (List<Object>) seq;
@@ -537,20 +557,24 @@ public class Seq {
           }
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           throw new RuntimeException("NOTIMPLEMENTED");
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           final List<Object> lst = (List<Object>) seq;
@@ -560,18 +584,22 @@ public class Seq {
           return Collections.unmodifiableList(newList);
         }
 
+        @Override
         public Object removeValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object keyidx) throws IndexOutOfBoundsException {
           throw new RuntimeException("NOTIMPLEMENTED");
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
-          return ((List) seq).get(idx);
+          return ((List<Object>) seq).get(idx);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           return seq;
         }
@@ -580,6 +608,7 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter immutableSetAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           final Set<Object> set = (Set<Object>) seq;
           final Set<Object> newSet = new HashSet<Object>();
@@ -588,53 +617,65 @@ public class Seq {
           return Collections.unmodifiableSet(newSet);
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           throw new RuntimeException("Get by index not supported for Set objects");
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw invalidOp(seq, "removeByKeyOrIndex");
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {
           throw invalidOp(seq, "removeByKeyOrIndex");
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           return this.roRemoveValue(seq, keyidx);
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final Set<Object> set = (Set<Object>) seq;
           final Set<Object> newSet = new HashSet<Object>();
@@ -643,6 +684,7 @@ public class Seq {
           return Collections.unmodifiableSet(newSet);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           Class<?> clz = seq.getClass();
           try {
@@ -668,6 +710,7 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter setAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           final Set<Object> set = (Set<Object>) seq;
           final Set<Object> newSet = (Set<Object>) this.shallowClone(seq);
@@ -675,55 +718,67 @@ public class Seq {
           return newSet;
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           ((Set<Object>) seq).add(element);
           return seq;
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Set by index not supported for Set objects");
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           throw new RuntimeException("Insert by index not supported for Set objects");
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           throw new RuntimeException("Get by index not supported for Set objects");
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw invalidOp(seq, "removeByKeyOrIndex");
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final Set<Object> set = (Set<Object>) seq;
           return set.remove(value);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           return this.roRemoveValue(seq, keyidx);
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) throws IndexOutOfBoundsException {
           final Set<Object> set = (Set<Object>) seq;
           final Set<Object> newSet = (Set<Object>) this.shallowClone(seq);
@@ -731,6 +786,7 @@ public class Seq {
           return newSet;
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           Class<?> clz = seq.getClass();
           try {
@@ -755,31 +811,37 @@ public class Seq {
 
   protected static final SeqAdapter stringBufferAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
           csb.append(element);
           return csb;
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           ((StringBuffer) seq).append(element);
           return seq;
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
           this.set(csb, idx, element);
           return csb;
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuffer buf = (StringBuffer) seq;
           try {
@@ -796,6 +858,7 @@ public class Seq {
           }
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           final StringBuffer buf = (StringBuffer) seq;
@@ -805,6 +868,7 @@ public class Seq {
           return chr;
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
@@ -812,12 +876,14 @@ public class Seq {
           return csb;
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) {
           StringBuffer csb = new StringBuffer((StringBuffer) seq);
           this.removeValue(csb, value);
           return csb;
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           final StringBuffer buf = (StringBuffer) seq;
           final String val = Utils.asStringOrNull(value);
@@ -831,6 +897,7 @@ public class Seq {
           return null;
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           StringBuffer nb = new StringBuffer((StringBuffer) seq);
@@ -838,6 +905,7 @@ public class Seq {
           return nb;
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuffer buf = (StringBuffer) seq;
           if (element instanceof CharSequence) {
@@ -858,10 +926,12 @@ public class Seq {
           return seq;
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return ((StringBuffer) seq).charAt(idx);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           return new StringBuffer((StringBuffer) seq);
         }
@@ -869,31 +939,37 @@ public class Seq {
 
   protected static final SeqAdapter stringBuilderAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           StringBuilder csb = new StringBuilder((StringBuffer) seq);
           csb.append(element);
           return csb;
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           ((StringBuilder) seq).append(element);
           return seq;
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           StringBuilder csb = new StringBuilder((StringBuilder) seq);
           this.set(csb, idx, element);
           return csb;
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuilder buf = (StringBuilder) seq;
           try {
@@ -910,6 +986,7 @@ public class Seq {
           }
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           StringBuilder csb = new StringBuilder((StringBuilder) seq);
@@ -917,6 +994,7 @@ public class Seq {
           return csb;
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           final StringBuilder buf = (StringBuilder) seq;
@@ -926,12 +1004,14 @@ public class Seq {
           return chr;
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) {
           StringBuilder csb = new StringBuilder((StringBuilder) seq);
           this.removeValue(csb, value);
           return csb;
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           final StringBuilder buf = (StringBuilder) seq;
           final String val = Utils.asStringOrNull(value);
@@ -945,6 +1025,7 @@ public class Seq {
           return null;
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           StringBuilder nb = new StringBuilder((StringBuilder) seq);
@@ -952,6 +1033,7 @@ public class Seq {
           return nb;
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) throws IndexOutOfBoundsException {
           final StringBuilder buf = (StringBuilder) seq;
           if (element instanceof CharSequence) {
@@ -972,10 +1054,12 @@ public class Seq {
           return seq;
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return ((StringBuilder) seq).charAt(idx);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           return new StringBuilder((StringBuilder) seq);
         }
@@ -983,34 +1067,41 @@ public class Seq {
 
   protected static final SeqAdapter stringAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           StringBuilder b = new StringBuilder((String) seq);
           b.append(element);
           return b.toString();
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) {
           StringBuilder b = new StringBuilder((String) seq);
           stringBuilderAdapter.set(b, idx, element);
           return b.toString();
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           StringBuilder b = new StringBuilder((String) seq);
@@ -1018,11 +1109,13 @@ public class Seq {
           return b.toString();
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           StringBuilder b = new StringBuilder((String) seq);
@@ -1030,24 +1123,29 @@ public class Seq {
           return b.toString();
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return ((CharSequence) seq).charAt(idx);
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) {
           StringBuilder csb = new StringBuilder((String) seq);
           stringBuilderAdapter.removeValue(csb, value);
           return csb.toString();
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           return new String((String) seq);
         }
@@ -1056,61 +1154,75 @@ public class Seq {
   // FIXME: implement RO operations
   protected static final SeqAdapter charSequenceAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           throw invalidOp(seq, "non-mutating addValue");
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object get(Object seq, int idx) throws IndexOutOfBoundsException {
           return ((CharSequence) seq).charAt(idx);
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           throw cannotChangeError(seq);
         }
@@ -1118,22 +1230,27 @@ public class Seq {
 
   protected static final SeqAdapter arrayAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           throw invalidOp(seq, "addValue");
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           throw invalidOp(seq, "addValue");
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "non-mutating putByKey");
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw invalidOp(seq, "putByKey");
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) {
           Object ac = this.shallowClone(seq);
           this.set(ac, idx, element);
@@ -1176,10 +1293,12 @@ public class Seq {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) {
           throw new RuntimeException("Cannot remove element from object of type " + seq.getClass());
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           throw new RuntimeException("Cannot remove value from object of type " + seq.getClass());
         }
@@ -1198,6 +1317,7 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter mapAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(seq);
           checkNonMutatingChange(seq, cm);
@@ -1205,6 +1325,7 @@ public class Seq {
           return cm;
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           if (element instanceof Map.Entry) {
             final Map.Entry<Object, Object> e = (Map.Entry<Object, Object>) element;
@@ -1215,6 +1336,7 @@ public class Seq {
           return seq;
         }
 
+        @Override
         public Object roPutByKey(Object m, Object key, Object value) {
           Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(m);
           checkNonMutatingChange(m, cm);
@@ -1222,32 +1344,39 @@ public class Seq {
           return cm;
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           return ((Map) seq).put(key, element);
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot modify object of type " + seq.getClass());
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) {
           return ((Map<Object, Object>) seq).put(idx, element);
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) {
           return ((Map<Object, Object>) seq).put(idx, element);
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           return this.roPutByKey(seq, idx, element);
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           return ((Map<Object, Object>) seq).remove(keyidx);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(seq);
@@ -1256,10 +1385,12 @@ public class Seq {
           return cm;
         }
 
+        @Override
         public Object get(Object seq, int idx) {
           return ((Map<Object, Object>) seq).get(idx);
         }
 
+        @Override
         public Object roRemoveValue(Object m, Object value) {
           Map<Object, Object> cm = (Map<Object, Object>) this.shallowClone(m);
           checkNonMutatingChange(m, cm);
@@ -1267,6 +1398,7 @@ public class Seq {
           return cm;
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           Map<Object, Object> map = (Map) seq;
           if (map.containsValue(value)) {
@@ -1283,6 +1415,7 @@ public class Seq {
           }
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           Class<?> clz = seq.getClass();
           try {
@@ -1306,48 +1439,58 @@ public class Seq {
   @SuppressWarnings("unchecked")
   protected static final SeqAdapter immutableMapAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) seq);
           mapAdapter.addValue(cm, element);
           return Collections.unmodifiableMap(cm);
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roPutByKey(Object m, Object key, Object value) {
           Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) m);
           mapAdapter.putByKey(cm, key, value);
           return Collections.unmodifiableMap(cm);
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           throw new RuntimeException("Cannot modify object of type " + seq.getClass());
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) {
           throw new RuntimeException("Cannot modify object of type " + seq.getClass());
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           return this.roPutByKey(seq, idx, element);
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           final Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) seq);
@@ -1355,20 +1498,24 @@ public class Seq {
           return Collections.unmodifiableMap(cm);
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           throw cannotChangeError(seq);
         }
 
+        @Override
         public Object roRemoveValue(Object seq, Object value) {
           final Map<Object, Object> cm = new HashMap<Object, Object>((Map<Object, Object>) seq);
           mapAdapter.removeValue(cm, value);
           return Collections.unmodifiableMap(cm);
         }
 
+        @Override
         public Object get(Object seq, int idx) {
           return ((Map<Object, Object>) seq).get(idx);
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           Class<?> clz = seq.getClass();
           try {
@@ -1391,61 +1538,75 @@ public class Seq {
 
   protected static final SeqAdapter nullAdapter =
       new SeqAdapter() {
+        @Override
         public Object roAddValue(Object seq, Object element) {
           return null;
         }
 
+        @Override
         public Object addValue(Object seq, Object element) {
           return null;
         }
 
+        @Override
         public Object roPutByKey(Object seq, Object key, Object element) {
           return null;
         }
 
+        @Override
         public Object putByKey(Object seq, Object key, Object element) {
           return null;
         }
 
+        @Override
         public Object roSet(Object seq, int idx, Object element) {
           return null;
         }
 
+        @Override
         public Object set(Object seq, int idx, Object element) {
           return null;
         }
 
+        @Override
         public Object insert(Object seq, int idx, Object element) {
           return null;
         }
 
+        @Override
         public Object roInsert(Object seq, int idx, Object element)
             throws IndexOutOfBoundsException {
           return null;
         }
 
+        @Override
         public Object removeByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           return null;
         }
 
+        @Override
         public Object roRemoveByKeyOrIndex(Object seq, Object keyidx)
             throws IndexOutOfBoundsException {
           return null;
         }
 
+        @Override
         public Object roRemoveValue(Object m, Object value) {
           return null;
         }
 
+        @Override
         public Object removeValue(Object seq, Object value) {
           return null;
         }
 
+        @Override
         public Object get(Object seq, int idx) {
           return null;
         }
 
+        @Override
         public Object shallowClone(Object seq) {
           return null;
         }
