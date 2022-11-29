@@ -1101,6 +1101,9 @@ public class CompilerTest extends AbstractTest {
            list(list(1,2,3),list(1,22,3)), true, null, null, p},
           {"(LET ((o (.S \"java.util.Collections\" \"unmodifiableMap\" (LIST (HASHMAP 1 2 )))) (t (PUT o 3 4))) (LIST o t ))",
            list(map(1,2), map(1,2,3,4)), true, null, null, p},
+          {"(PUT  (DWIM_FIELDS (HASHMAP \"a\" 1 \"b\" 2) (LIST \"a\")) \"c\" 3)",
+           map("a", 1, "c", 3), true, null, null, p},
+
           {
             "(LET ((R (RANGE 0 1 0.05)) (I (. R \"iterator\" ()))) (. I  \"next\" ()) (. I "
                 + " \"next\" ()))",

@@ -1,6 +1,7 @@
 package io.opsit.explang;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -19,6 +20,34 @@ public class FieldsMap implements Map<Object, Object> {
     this.fmap = fmap;
   }
 
+  /**
+   * Make new instance out of another FieldsMap.
+   */
+  public FieldsMap(FieldsMap fm) {
+    initFromFieldsMap(fm);
+    /*this.src = fm.src;
+    this.fmap = new HashMap<Object,Op>();
+    fmap.putAll(fm.fmap);*/
+  }
+
+  /**
+   * Make new instance out of any Map.
+   */
+  public FieldsMap(Map<?,?> o) {
+    if (o instanceof FieldsMap) {
+      initFromFieldsMap((FieldsMap) o);
+    } else {
+      this.src = o;
+      this.fmap = new HashMap<Object, Op>();
+    }
+  }
+
+  protected void initFromFieldsMap(FieldsMap fm) {
+    this.src = fm.src;
+    this.fmap = new HashMap<Object,Op>();
+    fmap.putAll(fm.fmap);
+  }
+  
   @Override
   public int size() {
     return keySet().size();
@@ -65,8 +94,14 @@ public class FieldsMap implements Map<Object, Object> {
   }
 
   @Override
-  public Object put(Object key, Object value) {
-    throw new RuntimeException("put not implemented for " + this.getClass().getSimpleName());
+  public Object put(final Object key, final Object value) {
+    Object result = this.get(key);
+    this.fmap.put(key, new Op() {
+          public Object get(Map<? extends Object, ? extends Object> srcMap) {
+            return value;
+          }
+    });
+    return result;
   }
 
   @Override
