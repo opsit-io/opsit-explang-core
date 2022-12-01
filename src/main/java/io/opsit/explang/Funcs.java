@@ -2921,7 +2921,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST,  "args"})
   @Docstring(text = "Print Arguments on standard output.")
   @Package(name = Package.IO)
   public static class PRINT extends FuncExp {
@@ -2936,7 +2936,7 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {ArgSpec.ARG_REST, ArgSpec.ARG_PIPE_REST, "args"})
+  @Arguments(spec = {ArgSpec.ARG_REST,  "args"})
   @Docstring(text = "Print Arguments on standard output and print newline.")
   @Package(name = Package.IO)
   public static class PRINTLN extends FuncExp {
