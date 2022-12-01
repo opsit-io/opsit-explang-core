@@ -2542,37 +2542,42 @@ public class Funcs {
     }
   }
 
+  protected static boolean isIn(Object elt, Object seq) {
+    if (seq instanceof Map) {
+      return ((Map<?,?>) seq).containsValue(elt);
+    }
+    final boolean[] holder = new boolean[1];
+    // FIXME: optimize for specigic types
+    Seq.forEach(seq,new Operation() {
+        public boolean perform(Object obj) {
+          if (null != obj && obj.equals(elt)) {
+            return (holder[0] = true);
+          } else if (null == obj && null == elt) {
+            return (holder[0] = true);
+          }
+          return false;
+        }
+      },false);
+    return holder[0];
+  }
+
   @Arguments(spec = {"elt", ArgSpec.ARG_PIPE, "col"})
   @Docstring(text = "Check if an element is contained in a collection. ")
   @Package(name = Package.BASE_SEQ)
   public static class IN extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      if (2 != eargs.size()) {
-        throw new ExecutionException(
-            backtrace, "Unexpected number of arguments: expected 2 but got " + eargs.size());
-      }
-      Object elt = eargs.get(0, backtrace);
-      Object seq = eargs.get(1, backtrace);
-      if (seq instanceof Map) {
-        return ((Map<?,?>) seq).containsValue(elt);
-      }
-      final boolean[] holder = new boolean[1];
-      // FIXME: optimize for specigic types
-      Seq.forEach(
-          seq,
-          new Operation() {
-            public boolean perform(Object obj) {
-              if (null != obj && obj.equals(elt)) {
-                return (holder[0] = true);
-              } else if (null == obj && null == elt) {
-                return (holder[0] = true);
-              }
-              return false;
-            }
-          },
-          false);
-      return holder[0];
+      return isIn(eargs.get(0, backtrace), eargs.get(1, backtrace));
+    }
+  }
+
+  @Arguments(spec = {"elt", ArgSpec.ARG_PIPE, "col"})
+  @Docstring(text = "Check if an element is not contained in a collection. ")
+  @Package(name = Package.BASE_SEQ)
+  public static class NOTIN extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      return ! isIn(eargs.get(0, backtrace), eargs.get(1, backtrace));
     }
   }
 

@@ -530,6 +530,7 @@ public class Compiler {
             "SUBSEQ", SUBSEQ.class,
             "TAKE", TAKE.class,
             "IN", IN.class,
+            "NOT-IN", NOTIN.class,
             "GET-IN", GET_IN.class,
             "GET", GET.class,
             "HASKEY", HASKEY.class,

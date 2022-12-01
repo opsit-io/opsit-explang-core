@@ -1557,6 +1557,14 @@ public class CompilerTest extends AbstractTest {
           {"(IN  NIL  \"Quagga\")", false, false, null, null, p},
           {"(IN \"FOO\"   (LIST \"BAR\" \"BAZ\"))", false, false, null, null, p},
           {"(IN \"QQQ\"   (LIST \"BAR\" \"FOO\" \"QQQ\"))", true, true, null, null, p},
+
+          {"(NOT-IN  (CHAR 81)  \"Quogga\")", false, false, null, null, p},
+          {"(NOT-IN  (CHAR 97)  \"Quogga\")", false, false, null, null, p},
+          {"(NOT-IN  (CHAR 97)  \"Quagga\")", false, false, null, null, p},
+          {"(NOT-IN  (CHAR 122)  \"Quagga\")", true, true, null, null, p},
+          {"(NOT-IN  NIL  \"Quagga\")", true, true, null, null, p},
+          {"(NOT-IN \"FOO\"   (LIST \"BAR\" \"BAZ\"))", true, true, null, null, p},
+          {"(NOT-IN \"QQQ\"   (LIST \"BAR\" \"FOO\" \"QQQ\"))", false, false, null, null, p},
           {
             "(LET ((A (MAKE-ARRAY :size 4))) (PUT! A 0 1) (PUT! A 1 2) (PUT! A 2 3) (PUT! A 3 4)  (SUBSEQ"
                 + " A 0))",
