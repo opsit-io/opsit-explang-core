@@ -3943,7 +3943,7 @@ public class Funcs {
       try {
         return new FileInputStream(file);
       } catch (IOException ex) {
-        throw new ExecutionException(bt, "I/O opening stream", ex);
+        throw new ExecutionException(bt, "I/O error opening stream", ex);
       }
     }
 
