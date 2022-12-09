@@ -3955,6 +3955,11 @@ public class Funcs {
       try {
         is = openInput(loadObj, bt);
         ASTNList astns = new ParserWrapper(ctx.getCompiler().getParser()).parse(is);
+        if (astns.hasProblems()) {
+          final List<ParserException> exList = Utils.collectParseErrors(astns);
+          final ParserExceptions exs = new ParserExceptions(astns.getPctx(), exList);
+          throw new ExecutionException(bt, exs);
+        }
         for (ASTN astn : astns) {
           ICompiled expr = ctx.getCompiler().compile(astn);
           expr.evaluate(bt, ctx);

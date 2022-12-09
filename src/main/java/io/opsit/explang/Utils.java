@@ -380,6 +380,30 @@ public class Utils {
     exprASTN.dispatchWalker(errCollector);
     return buf.toString();
   }
+
+
+  /** Print list of all parse errors for an AST subtree. */
+  public static List<ParserException> collectParseErrors(ASTN exprASTN) {
+    final  List<ParserException> errList = list();
+    ASTN.Walker errCollector =
+        new ASTN.Walker() {
+          public void walk(ASTN node) {
+            final Exception ex = node.getProblem();
+            if (null != ex) {
+              if (ex instanceof ParserExceptions) {
+                List<ParserException> lst = ((ParserExceptions) ex).getExceptions();
+                if (null != lst) {
+                  errList.addAll(lst);
+                }
+              } else if (ex instanceof ParserException) {
+                errList.add((ParserException) ex);
+              } 
+            }
+          }
+        };
+    exprASTN.dispatchWalker(errCollector);
+    return errList;
+  }
   
   /** Return argument as object. FIXME: do we need this? why it was added? */
   public static Object asObject(Object val) {
