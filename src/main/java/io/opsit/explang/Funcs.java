@@ -3922,13 +3922,19 @@ public class Funcs {
   }
 
   @Arguments(spec = {"file-spec"})
-  @Docstring(
-      text =
-          "Execute program from a file/stream. Sequentially executes each form it encounters in the"
-              + " input file/or stream named by resource-spec. Returns exception if input could not"
-              + " be read or there were exceptions while compiling or executing forms an exception"
-              + " will be raised. file-spec may be a java.io.File object, file path as String or"
-              + " opened InputStream.")
+  @Docstring(lines = {"Compile and execute from a text file/stream.",
+                      "Sequentially evaluates each expression it encounters in the input",
+                      "file/or stream named by `file-spec`.",
+                      "",
+                      "Throws an exception if the input cannot not be read or if there were",
+                      "exceptions while compiling or executing the code.",
+                      "",
+                      "`file-spec` may be a java.io.File object, file path as String or an ",
+                      " InputStream, which is open for reading.",
+                      "",
+                      "Returns value of the last expression that has been evaluated. If no",
+                      "expressions has been read it returns NIL."
+    })
   @Package(name = Package.IO)
   public static class LOAD extends FuncExp {
     protected InputStream openInput(Object loadObj, Backtrace bt) {
@@ -3947,11 +3953,12 @@ public class Funcs {
       }
     }
 
-    protected Boolean load(Backtrace bt, ICtx ctx, Object loadObj) {
+    protected Object load(Backtrace bt, ICtx ctx, Object loadObj) {
       if (loadObj == null) {
         return false;
       }
       InputStream is = null;
+      Object result = null;
       try {
         is = openInput(loadObj, bt);
         ASTNList astns = new ParserWrapper(ctx.getCompiler().getParser()).parse(is);
@@ -3962,9 +3969,9 @@ public class Funcs {
         }
         for (ASTN astn : astns) {
           ICompiled expr = ctx.getCompiler().compile(astn);
-          expr.evaluate(bt, ctx);
+          result = expr.evaluate(bt, ctx);
         }
-        return true;
+        return result;
       } finally {
         if (null != is) {
           try {
@@ -3983,12 +3990,18 @@ public class Funcs {
   }
 
   @Arguments(spec = {"resource-spec"})
-  @Docstring(
-      text =
-          "Execute program from Java resource. Sequentially executes each form it encounters in the"
-              + " java resource file named by resource-spec. Returns exception if file could not be"
-              + " read or there were exceptions while compiling or executing forms an exception"
-              + " will be raised.")
+  @Docstring(lines = {"Compile and execute from a java resource.",
+                      "Sequentially evaluates each expression it encounters in the resource",
+                      "stream spectified by `resource-spec`.",
+                      "",
+                      "Throws an exception if the input cannot not be read or if there were",
+                      "exceptions while compiling or executing the code",
+                      "",
+                      "`resource-spec` must be a resource path.",
+                      "",
+                      "Returns value of the last expression that has been evaluated. If no",
+                      "expressions has been read it returns NIL."
+    })  
   @Package(name = Package.IO)
   public static class LOADR extends LOAD {
     @Override
