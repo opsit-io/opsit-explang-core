@@ -8,6 +8,7 @@ import io.opsit.explang.Compiler.Eargs;
 import io.opsit.explang.parser.lisp.LispParser;
 import io.opsit.explang.parser.sexp.SexpParser;
 import io.opsit.version.Version;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -586,10 +587,40 @@ public class CompilerTest extends AbstractTest {
           {"(== \"git\" \"\")", false, false, null, null, p},
           {"(== \"\" \"\")", true, true, null, null, p},
 
-          // LOADR
+          // LOAD(R)
+          {
+            "(LOAD \"./src/test/resources/io/opsit/explang/resloadtest.l\")",
+            "some-result",
+            true,
+            null,
+            null,
+            p
+          },
+          {
+            "(LOAD \"./src/test/resources/io/opsit/explang/resloadtest_not_exists.l\")",
+            "some-result",
+            true,
+            new ExecutionException(
+                                   null, "I/O error opening stream", new FileNotFoundException("./src/test/resources/io/opsit/explang/resloadtest_not_exists.l (No such file or directory)")),
+            null,            
+            p
+          },
+          /* FIXME: need to fix lisp/sexp parsers to return identical parse context for errors
           {
             "(PROGN (SETV *loaded* NIL) (LIST (LOAD"
-                + " \"./src/test/resources/io/opsit/explang/resloadtest.lsp\") *loaded*))",
+                + " \"./src/test/resources/io/opsit/explang/resloadtest_parseerr.l\") *loaded*))",
+            list(true, "some-result"),
+            true,
+            new ExecutionException(null,
+                                   new ParserExceptions(new ParseCtx("<INPUT>", 4, 0, 0, 0),
+                                                        list(new ParserException(new ParseCtx("<INPUT>", 1, 40, 0, 0), 
+                                                                                 "Too many right parentheses")))),            
+            null,
+            p
+          },
+          {
+            "(PROGN (SETV *loaded* NIL) (LIST (LOAD"
+                + " \"./src/test/resources/io/opsit/explang/resloadtest_comperr.l\") *loaded*))",
             list(true, "some-result"),
             true,
             null,
@@ -597,9 +628,17 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(PROGN (SETV *loaded* NIL) (LIST (LOADR \"/io/opsit/explang/resloadtest.lsp\")"
-                + " *loaded*))",
+            "(PROGN (SETV *loaded* NIL) (LIST (LOAD"
+                + " \"./src/test/resources/io/opsit/explang/resloadtest_execerr.l\") *loaded*))",
             list(true, "some-result"),
+            true,
+            null,
+            null,
+            p
+          }, */         
+          {
+            "(LOADR \"/io/opsit/explang/resloadtest.l\")",
+            "some-result",
             true,
             null,
             null,
@@ -3199,7 +3238,7 @@ public class CompilerTest extends AbstractTest {
     } catch (ExecutionException ex) {
 
       if (null != expExc) {
-        if (areEqual(ex, expExc)) {
+        if (areEqual(expExc, ex)) {
           log("Got expected exception: " + ex);
         } else {
           log("Expected exception: " + expExc + ", but got " + ex);
@@ -3256,11 +3295,13 @@ public class CompilerTest extends AbstractTest {
     Assert.assertNotNull(a);
     Assert.assertNotNull(b);
     if (!(a.getClass().equals(b.getClass()))) {
+      log("Comparing exception class: expected: '" + a.getClass() + "', got '" + b.getClass() +"'");
       return false;
     }
     String msgA = a.getMessage();
     String msgB = b.getMessage();
     if (!((null == msgA) ? null == msgB : msgA.equals(msgB))) {
+      log("Comparing exception message: expected: '" + msgA + "', got '" + msgB +"'");
       return false;
     }
     Throwable causeA = a.getCause();
