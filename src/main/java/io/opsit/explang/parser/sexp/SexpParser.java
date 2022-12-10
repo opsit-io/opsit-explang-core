@@ -137,7 +137,7 @@ public class SexpParser implements IParser {
   }
 
   private void addParsedAtom(List<ASTN> sexp, StringBuffer buf, ParseCtx pctx, ParseCtx spctx) {
-    ((ASTNList) sexp.get(sexp.size() - 1)).add(parseAtom(buf.toString(), spctx.clone().upto(pctx)));
+    ((ASTNList) sexp.get(sexp.size() - 1)).add(parseAtom(buf.toString(), spctx.clone().uptoExcl(pctx)));
     clearBuf(buf);
   }
 

@@ -74,4 +74,9 @@ public class ParseCtx implements Serializable {
     this.len = pctx.off + 1 - this.off;
     return this;
   }
+
+  public ParseCtx uptoExcl(ParseCtx pctx) {
+    this.len = pctx.off  - this.off;
+    return this;
+  }
 }
