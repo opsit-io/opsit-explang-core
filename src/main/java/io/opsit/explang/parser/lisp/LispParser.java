@@ -152,15 +152,18 @@ public class LispParser implements IParser {
   }
 
   private static final ASTN readToken(ParseCtx pctx, char c, PushbackReader r, ReadTable rt) {
+    ParseCtx tokenPctx = pctx.clone();
     StringBuilder sb = new StringBuilder(String.valueOf(c));
     // final LispThread thread = LispThread.currentThread();
     BitSet flags = null;
     try {
       flags = doReadToken(pctx, r, sb, rt);
     } catch (ParserException ex) {
-      return new ASTNLeaf(null, pctx, ex);
+      tokenPctx.upto(pctx);
+      return new ASTNLeaf(null, tokenPctx, ex);
     }
-    return parseToken(sb.toString(), flags, pctx, null == flags ? tokenParsers : escTokenParsers);
+    tokenPctx.upto(pctx);
+    return parseToken(sb.toString(), flags, tokenPctx, null == flags ? tokenParsers : escTokenParsers);
   }
 
   private static ASTN parseToken(String string, BitSet flags, ParseCtx pctx, AtomParser[] parsers) {

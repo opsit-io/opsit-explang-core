@@ -153,6 +153,15 @@ public class MacroFuncs {
     }
   }
 
+  private static ASTNLeaf mkEOFErrNode(String nodeText, ParseCtx pctx, String errmsg) {
+    return new ASTNLeaf(nodeText , pctx, new ParserEOFException(pctx, errmsg));
+  }
+
+  private static ASTNLeaf mkParserErrNode(String nodeText, ParseCtx pctx, String errmsg,
+      Throwable e) {
+    return new ASTNLeaf(nodeText, pctx, new ParserException(pctx, errmsg, e));
+  }
+
   /**
    * Handler for string literals.
    */
@@ -162,20 +171,19 @@ public class MacroFuncs {
      */
     public ASTN execute(char terminator, PushbackReader is, ReadTable rt, ParseCtx pctx) {
       StringBuilder sb = new StringBuilder();
+      final ParseCtx spctx = pctx.clone();
       try {
         while (true) {
           int n = doReadChar(is, pctx);
           if (n < 0) {
-            // return error(new EndOfFile(this));
-            return new ASTNLeaf(sb.toString(), pctx, new ParserEOFException(pctx, "unclosed '\"'"));
+            return mkEOFErrNode(sb.toString(), pctx.clone(), "unclosed '\"'");
           }
           char c = (char) n;
           if (rt.getSyntaxType(c) == ReadTable.SYNTAX_TYPE_SINGLE_ESCAPE) {
             //          // Single escape.
             n = doReadChar(is, pctx);
             if (n < 0) {
-              return new ASTNLeaf(
-                  sb.toString(), pctx, new ParserEOFException(pctx, "unclosed '\"'"));
+              return mkEOFErrNode(sb.toString(), pctx.clone(), "unclosed '\"'");
             }
             // support JAVA escape characters
             switch (n) {
@@ -206,10 +214,10 @@ public class MacroFuncs {
           sb.append(c);
         }
       } catch (java.io.IOException e) {
-        return new ASTNLeaf(
-            sb.toString(), pctx, new ParserException(pctx, UNEXPECTED_IO_EXCEPTION, e));
+        return mkParserErrNode(sb.toString(), pctx.clone(), UNEXPECTED_IO_EXCEPTION, e);
       }
-      return new ASTNLeaf(sb.toString(), pctx);
+      spctx.upto(pctx);
+      return new ASTNLeaf(sb.toString(), spctx);
     }
   }
 
