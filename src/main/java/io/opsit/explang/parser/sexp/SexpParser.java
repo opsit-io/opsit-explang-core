@@ -91,7 +91,8 @@ public class SexpParser implements IParser {
             if (depth < 0) {
               sexp.add(
                   new ASTNLeaf(
-                      null, pctx, new ParserException(pctx, "Too many right parentheses")));
+                               null, pctx, (problem = new ParserException(pctx, "Too many right parentheses"))));
+              break;
             }
             if (buf.length() > 0) {
               addParsedAtom(sexp, buf, pctx, spctx);
