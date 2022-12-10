@@ -4101,22 +4101,24 @@ public class Funcs {
     }
   }
 
-  @Arguments(spec = {"string"})
-  @Docstring(
-      text =
-          "Parse expression from string. Reads expression from string using default parser. Returns"
-              + " expression or NIL if no expression has been read")
+  @Arguments(spec = {"string", ArgSpec.ARG_OPTIONAL, "return_ast"})
+  @Docstring(lines = {"Parse expression from string.",
+                      "",
+                      "Reads expression from `string` using default parser.",
+                      "If `return_ast' is true will return parsed expression as raw ASTN objects",
+                      "that include parsing contexts. Otherwise it will return expression data only."})
   @Package(name = Package.IO)
   public static class READ_FROM_STRING extends FuncExp {
     @Override
     public Object evalWithArgs(Backtrace bt, Eargs eargs) {
-      String str = (String) eargs.get(0, bt);
+      String str = Utils.asString(eargs.get(0, bt));
+      boolean returnAST = Utils.asBoolean(eargs.get(0, bt));
       ParseCtx pctx = new ParseCtx("<READ_FROM_STRING>");
       ASTNList astns = eargs.getCompiler().getParser().parse(pctx, str);
       if (null == astns || astns.size() == 0) {
         return null;
       }
-      return Utils.unAstnize(astns.get(0));
+      return returnAST ? astns.get(0) : Utils.unAstnize(astns.get(0));
     }
   }
 
