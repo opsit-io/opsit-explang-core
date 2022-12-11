@@ -48,7 +48,7 @@ public class SexpParser implements IParser {
 
   @Override
   public ASTNList parse(ParseCtx pctx, Reader reader, int maxExprs) {
-    final List<ASTN> sexp = list(new ASTNList(list(), pctx.clone()));
+    final List<ASTN> sexp = list(new ASTNList(list(), pctx));
     boolean inStr = false;
     boolean inComment = false;
     int depth = 0;
@@ -90,8 +90,10 @@ public class SexpParser implements IParser {
             depth--;
             if (depth < 0) {
               sexp.add(
-                  new ASTNLeaf(
-                               null, pctx, (problem = new ParserException(pctx, "Too many right parentheses"))));
+                  new ASTNLeaf(null,
+                               pctx,
+                               (problem = new ParserException(pctx,
+                                                              "Too many right parentheses"))));
               break;
             }
             if (buf.length() > 0) {
@@ -137,7 +139,8 @@ public class SexpParser implements IParser {
   }
 
   private void addParsedAtom(List<ASTN> sexp, StringBuffer buf, ParseCtx pctx, ParseCtx spctx) {
-    ((ASTNList) sexp.get(sexp.size() - 1)).add(parseAtom(buf.toString(), spctx.clone().uptoExcl(pctx)));
+    ((ASTNList) sexp.get(sexp.size() - 1))
+      .add(parseAtom(buf.toString(), spctx.clone().uptoExcl(pctx)));
     clearBuf(buf);
   }
 
