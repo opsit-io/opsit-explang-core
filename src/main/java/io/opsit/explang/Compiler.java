@@ -521,6 +521,7 @@ public class Compiler {
             "REVERSE", REVERSE.class,
             "REVERSE!", NREVERSE.class,
             "COLLP", COLLP.class,
+            "LISTP", LISTP.class,
             "SEQP", SEQP.class,
             "MAPP", MAPP.class,
             "INDEXEDP", INDEXEDP.class,

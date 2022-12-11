@@ -3700,6 +3700,16 @@ public class Funcs {
     }
   }
 
+  @Arguments(spec = {"object"})
+  @Docstring(text = "Check if an object is a List.")
+  @Package(name = Package.BASE_SEQ)
+  public static class LISTP extends FuncExp {
+    @Override
+    public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
+      final Object val = eargs.get(0, backtrace);
+      return val instanceof List;
+    }
+  }
 
   @Arguments(spec = {"object"})
   @Docstring(text = "Check if an object is a Set.")
