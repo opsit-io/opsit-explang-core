@@ -22,10 +22,12 @@ public class MacroFuncs {
   private static String UNEXPECTED_EOF_EXCEPTION = "Unexpected EOF";
 
   public static class ReadRightParen implements IReaderMacroFunc {
-
+    /** Read ')'. Only happens when extra right parenthesis encountered
+     **/
     public ASTN execute(char terminator, PushbackReader is, ReadTable rt, ParseCtx pctx) {
-      return new ASTNLeaf(
-          terminator, pctx, new ParserException(pctx, "Too many right parentheses"));
+      return mkParserErrNode(Utils.asString(terminator),
+                             pctx.clone(),
+                             "Too many right parentheses");
     }
   }
 
@@ -154,7 +156,7 @@ public class MacroFuncs {
   }
 
   private static ASTNLeaf mkEOFErrNode(String nodeText, ParseCtx pctx, String errmsg) {
-    return new ASTNLeaf(nodeText , pctx, new ParserEOFException(pctx, errmsg));
+    return new ASTNLeaf(nodeText, pctx, new ParserEOFException(pctx, errmsg));
   }
 
   private static ASTNLeaf mkParserErrNode(String nodeText, ParseCtx pctx, String errmsg,
@@ -162,6 +164,10 @@ public class MacroFuncs {
     return new ASTNLeaf(nodeText, pctx, new ParserException(pctx, errmsg, e));
   }
 
+  private static ASTNLeaf mkParserErrNode(String nodeText, ParseCtx pctx, String errmsg) {
+    return new ASTNLeaf(nodeText, pctx, new ParserException(pctx, errmsg));
+  }
+  
   /**
    * Handler for string literals.
    */

@@ -9,6 +9,7 @@ import java.io.Serializable;
 public class ParseCtx implements Serializable {
   public static final long serialVersionUID = 1L;
   public String input = "<INPUT>";
+  private int prevPos = -1;
   private int line = -1;
   private int pos = -1;
   private int off = -1;
@@ -70,6 +71,15 @@ public class ParseCtx implements Serializable {
     this.pos = pos;
   }
 
+  public int getPrevPos() {
+    return prevPos;
+  }
+
+  public void setPrevPos(int prevPos) {
+    this.prevPos = prevPos;
+  }
+
+  
   public ParseCtx upto(ParseCtx pctx) {
     this.len = pctx.off + 1 - this.off;
     return this;

@@ -163,7 +163,10 @@ public class LispParser implements IParser {
       return new ASTNLeaf(null, tokenPctx, ex);
     }
     tokenPctx.upto(pctx);
-    return parseToken(sb.toString(), flags, tokenPctx, null == flags ? tokenParsers : escTokenParsers);
+    return parseToken(sb.toString(),
+                      flags,
+                      tokenPctx,
+                      null == flags ? tokenParsers : escTokenParsers);
   }
 
   private static ASTN parseToken(String string, BitSet flags, ParseCtx pctx, AtomParser[] parsers) {
@@ -298,9 +301,10 @@ public class LispParser implements IParser {
       return -1;
     }
     pctx.setOff(pctx.getOff() + 1);
+    pctx.setPrevPos(pctx.getPos());
     if (n == '\n') {
       pctx.setLine(pctx.getLine() + 1);
-      pctx.setPos(0);
+      pctx.setPos(-1);
       return '\n';
     }
     pctx.setPos(pctx.getPos() + 1);
@@ -314,7 +318,7 @@ public class LispParser implements IParser {
     // }
     // FIXME! (how to return to end of prev line?
     pctx.setOff(pctx.getOff() - 1);
-    pctx.setPos(pctx.getPos() - 1);
+    pctx.setPos(pctx.getPrevPos());
     if (n == '\n') {
       // n = eolChar;
       pctx.setLine(pctx.getLine() - 1);
