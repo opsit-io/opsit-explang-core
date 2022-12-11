@@ -3961,10 +3961,14 @@ public class Funcs {
       Object result = null;
       try {
         is = openInput(loadObj, bt);
-        ASTNList astns = new ParserWrapper(ctx.getCompiler().getParser()).parse(is);
+        final ParserWrapper w = new ParserWrapper(ctx.getCompiler().getParser());
+        ASTNList astns = w.parse(is, Utils.asString(loadObj));
         if (astns.hasProblems()) {
           final List<ParserException> exList = Utils.collectParseErrors(astns);
-          final ParserExceptions exs = new ParserExceptions(astns.getPctx(), exList);
+          ParseCtx firstCtx = exList.size() > 0
+              ? exList.get(0).getPctx()
+              : astns.getPctx(); // should not happen 
+          final ParserExceptions exs = new ParserExceptions(firstCtx, exList);
           throw new ExecutionException(bt, exs);
         }
         for (ASTN astn : astns) {
@@ -4106,7 +4110,8 @@ public class Funcs {
                       "",
                       "Reads expression from `string` using default parser.",
                       "If `return_ast' is true will return parsed expression as raw ASTN objects",
-                      "that include parsing contexts. Otherwise it will return expression data only."})
+                      "that include parsing contexts. Otherwise it will return only expression",
+                      "data."})
   @Package(name = Package.IO)
   public static class READ_FROM_STRING extends FuncExp {
     @Override
