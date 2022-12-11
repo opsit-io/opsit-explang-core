@@ -61,6 +61,10 @@ public class CompilerTest extends AbstractTest {
     return c;
   }
 
+  private static String lspPath(String str) {
+    return "./src/test/resources/io/opsit/explang" + "/" + str;
+  }
+  
   @SuppressWarnings("serial")
   public static Collection<Object[]> data(IParser p) throws Exception {
     TestBean testBean = new TestBean();
@@ -589,7 +593,7 @@ public class CompilerTest extends AbstractTest {
 
           // LOAD(R)
           {
-            "(LOAD \"./src/test/resources/io/opsit/explang/resloadtest.l\")",
+            "(LOAD \"" + lspPath("resloadtest.l") + "\")",
             "some-result",
             true,
             null,
@@ -597,45 +601,51 @@ public class CompilerTest extends AbstractTest {
             p
           },
           {
-            "(LOAD \"./src/test/resources/io/opsit/explang/resloadtest_not_exists.l\")",
+            "(LOAD \"" + lspPath("resloadtest_not_exists.l") + "\")",
             "some-result",
             true,
-            new ExecutionException(
-                                   null, "I/O error opening stream", new FileNotFoundException("./src/test/resources/io/opsit/explang/resloadtest_not_exists.l (No such file or directory)")),
+            new ExecutionException(null,
+                                   "I/O error opening stream",
+                                   new FileNotFoundException(lspPath("resloadtest_not_exists.l")
+                                                             + " (No such file or directory)")),
             null,            
             p
           },
-          /* FIXME: need to fix lisp/sexp parsers to return identical parse context for errors
+          //ONLY,
+          /* FIXME: need to fix lisp/sexp parsers to return identical parse context for errors */
           {
             "(PROGN (SETV *loaded* NIL) (LIST (LOAD"
-                + " \"./src/test/resources/io/opsit/explang/resloadtest_parseerr.l\") *loaded*))",
+            + " \""+ lspPath("resloadtest_parseerr.l") + "\") *loaded*))",
             list(true, "some-result"),
             true,
             new ExecutionException(null,
-                                   new ParserExceptions(new ParseCtx("<INPUT>", 4, 0, 0, 0),
-                                                        list(new ParserException(new ParseCtx("<INPUT>", 1, 40, 0, 0), 
+                                   new ParserExceptions(new ParseCtx(lspPath("resloadtest_parseerr.l"), 1, 39, 0, 0),
+                                                        list(new ParserException(new ParseCtx(lspPath("resloadtest_parseerr.l"), 1, 39, 0, 0), 
                                                                                  "Too many right parentheses")))),            
             null,
             p
           },
+          //          ONLY,
           {
-            "(PROGN (SETV *loaded* NIL) (LIST (LOAD"
-                + " \"./src/test/resources/io/opsit/explang/resloadtest_comperr.l\") *loaded*))",
+            "(PROGN (SETV *loaded* NIL) "
+            +"      (LIST (LOAD \"" + lspPath("resloadtest_comperr.l") +"\") *loaded*))",
             list(true, "some-result"),
             true,
-            null,
+            new ExecutionException(null,
+                                   new CompilationException(new ParseCtx(lspPath("resloadtest_comperr.l"), 3, 1, 0, 0),
+                                                            "invalid parameters: Insufficient number of arguments given")),
             null,
             p
           },
           {
             "(PROGN (SETV *loaded* NIL) (LIST (LOAD"
-                + " \"./src/test/resources/io/opsit/explang/resloadtest_execerr.l\") *loaded*))",
+            + " \"" + lspPath("resloadtest_execerr.l") + "\") *loaded*))",
             list(true, "some-result"),
             true,
-            null,
+            new ExecutionException(null, new java.lang.ArithmeticException("/ by zero")),
             null,
             p
-          }, */         
+          },     // java.lang.ArithmeticException     
           {
             "(LOADR \"/io/opsit/explang/resloadtest.l\")",
             "some-result",
