@@ -1273,20 +1273,31 @@ public class Funcs {
     }
   }
 
-  @Docstring(
-      text =
-          "Filter operation. test is a function of one argument that returns boolean, seq is input"
-              + " sequence. Return a sequence from which the elements that do not satisfy the test"
-              + " have been removed.")
-  @Arguments(spec = {"test", ArgSpec.ARG_PIPE, "sequence"})
+  @Docstring(lines =
+             {"Filter a collections.",
+              "",
+              "Return a list with elements of `col` for which the predicate",
+              "function `test` returns logical true.",
+              "",
+              "`test` is a function of one argument.",
+              "`col` is the input collection."})
+  @Arguments(spec = {"test", ArgSpec.ARG_PIPE, "col"})
   @Package(name = Package.BASE_SEQ)
   public static class FILTER extends FuncExp {
+    @SuppressWarnings("unchecked")
+    protected void action(Object target, Object obj, Object checkResult) {
+      if (Utils.asBoolean(checkResult)) {
+        ((List<Object>) target).add(obj);
+      }
+    }
+
     @Override
     public Object evalWithArgs(Backtrace backtrace, Eargs eargs) {
-      Object val = eargs.get(0, backtrace);
-      ICode lambda = (ICode) Utils.asObject(val);
-      IExpr instance = (IExpr) lambda.getInstance();
-      List<?> list = (List<?>) eargs.get(1, backtrace);
+      final Object val = eargs.get(0, backtrace);
+      final ICode lambda = (ICode) Utils.asObject(val);
+      final IExpr instance = (IExpr) lambda.getInstance();
+      final Object list = eargs.get(1, backtrace);
+      // FIXME: gensym? short lambdas with implicit arg name?
       final String argname = "arg#0";
       final List<ICompiled> callParams = new ArrayList<ICompiled>(1);
       callParams.add(new VarExp(argname));
@@ -1298,15 +1309,16 @@ public class Funcs {
                 "FILTER: lambda at %s: does not take parameter: %s",
                 (null == e.getParseCtx() ? "?" : e.getParseCtx().toString()), e.getMessage()));
       }
-      List<Object> results = new ArrayList<Object>();
-      for (int i = 0; i < list.size(); i++) {
-        ICtx loopCtx = eargs.getCompiler().newCtx(eargs);
-        loopCtx.put(argname, list.get(i));
-        final Object result = instance.evaluate(backtrace, loopCtx);
-        if (Utils.asBoolean(result)) {
-          results.add(list.get(i));
-        }
-      }
+      final List<Object> results = new ArrayList<Object>();
+      Seq.forEach(list, new Operation() {
+          public boolean perform(Object obj) {
+            final ICtx loopCtx = eargs.getCompiler().newCtx(eargs);
+            loopCtx.put(argname, obj);
+            final Object checkResult = instance.evaluate(backtrace, loopCtx);
+            action(results, obj, checkResult);
+            return false;
+          }
+        }, false);
       return results;
     }
   }
