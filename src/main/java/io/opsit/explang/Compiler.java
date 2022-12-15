@@ -569,6 +569,7 @@ public class Compiler {
             "MAP", MAP.class,
             "MAPPROD", MAPPROD.class,
             "FILTER", FILTER.class,
+            "REMOVE", REMOVE.class,
             "REDUCE", REDUCE.class,
             // string handling
             "RE-PATTERN", RE_PATTERN.class,

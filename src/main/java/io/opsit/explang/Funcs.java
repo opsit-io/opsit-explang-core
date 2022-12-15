@@ -1323,6 +1323,25 @@ public class Funcs {
     }
   }
 
+  @Docstring(lines =
+             {"Remove elements a collection.",
+              "",
+              "Return a list with elements of `col` for which the predicate",
+              "function `test` returns logical false.",
+              "",
+              "`test` is a function of one argument.",
+              "`seq` is the input collection."})
+  @Arguments(spec = {"test", ArgSpec.ARG_PIPE, "sequence"})
+  @Package(name = Package.BASE_SEQ)
+  public static class REMOVE extends FILTER {
+    @SuppressWarnings("unchecked")
+    protected void action(Object target, Object obj, Object checkResult) {
+      if (!Utils.asBoolean(checkResult)) {
+        ((List<Object>) target).add(obj);
+      }
+    }
+  }
+
   // f &rest args
   public abstract static class ABSTRACTMAPOP extends FuncExp {
     @Override
