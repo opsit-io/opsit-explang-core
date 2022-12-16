@@ -1127,6 +1127,8 @@ public class Compiler {
                     // list contains function itself
                     if (argIdx + 1 <= expr.size()) {
                       idx = argIdx + 1;
+                    } else {
+                      idx = expr.size();
                     }
                     break;
                   }

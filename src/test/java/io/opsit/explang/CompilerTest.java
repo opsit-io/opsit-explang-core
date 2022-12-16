@@ -1095,6 +1095,10 @@ public class CompilerTest extends AbstractTest {
           // {"(@->  (LIST 1 2 3 4 5) ((LAMBDA (X &PIPE Y) (TAKE X Y)) 3))", list(1,2,3), true,
           // null, null, p},
 
+          {"(@-> (LIST 1 2 3) (REDUCE (FUNCTION LIST) -1))",
+           list(list(list(-1,1),2),3), true, null, null, p},
+          {"(@-> (LIST 1 2 3) (REDUCE (FUNCTION LIST)))",
+           list(list(1,2),3), true, null, null, p},
           // RANGE
           {"(APPEND ()  (RANGE 0 0))", list(), false, null, null, p},
           {"(APPEND ()  (RANGE 0 -2))", list(), false, null, null, p},
